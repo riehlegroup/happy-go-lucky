@@ -10,7 +10,7 @@ export class Course implements Serializable {
   protected name: string | null = null;
   protected term: Term | null = null;
   protected projects: CourseProject[] = []; // 1:N
-  protected schedular: CourseSchedule | null = null; // 1:1
+  protected schedule: CourseSchedule | null = null; // 1:1
   constructor(id: number) {
     this.id = id;
   }
