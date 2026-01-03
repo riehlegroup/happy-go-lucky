@@ -10,7 +10,7 @@ export class UserStatus {
 
     // Define valid transitions between states
     private static validTransitions: Record<UserStatusEnum, UserStatusEnum[]> = {
-        [UserStatusEnum.confirmed]: [UserStatusEnum.suspended],
+        [UserStatusEnum.confirmed]: [UserStatusEnum.suspended, UserStatusEnum.removed],
         [UserStatusEnum.unconfirmed]: [UserStatusEnum.confirmed, UserStatusEnum.suspended, UserStatusEnum.removed],
         [UserStatusEnum.suspended]: [UserStatusEnum.confirmed, UserStatusEnum.removed],
         [UserStatusEnum.removed]: [],
@@ -23,11 +23,28 @@ export class UserStatus {
         this.status = initialStatus;
     }
 
+    static isValidStatus(status: string): status is UserStatusEnum {
+        return Object.values(UserStatusEnum).includes(status as UserStatusEnum);
+    }
+
+    static fromString(status: string | null): UserStatus {
+        if (status === null) {
+            return new UserStatus(UserStatusEnum.unconfirmed);
+        }
+        if (!UserStatus.isValidStatus(status)) {
+            throw new Error(`Invalid initial status: ${status}`);
+        }
+        return new UserStatus(status);
+    }
+
     getStatus(): UserStatusEnum {
         return this.status;
     }
 
     canTransitionTo(newStatus: UserStatusEnum): boolean {
+        if (newStatus === this.status) {
+            return true;
+        }
         const allowedTransitions = UserStatus.validTransitions[this.status];
         return allowedTransitions.includes(newStatus);
     }

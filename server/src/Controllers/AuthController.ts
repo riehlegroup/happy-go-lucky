@@ -3,7 +3,7 @@ import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import { UserStatus, UserStatusEnum } from "../Utils/UserStatus";
+import { UserStatusEnum } from "../Utils/UserStatus";
 import { ObjectHandler } from "../ObjectHandler";
 import { comparePassword, hashPassword } from "../Utils/hash";
 import { Password } from "../Models/Password";
@@ -151,19 +151,18 @@ export class AuthController implements IAppController {
         }
       }
 
-      let st: string = user.getStatus();
-      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
-      if (userStatus.getStatus() == UserStatusEnum.unconfirmed) {
+      const userStatus = user.getStatus();
+      if (userStatus === UserStatusEnum.unconfirmed) {
         res
           .status(400)
           .json({ message: "Email not confirmed. Please contact system admin." });
         return;
-      } else if (userStatus.getStatus() == UserStatusEnum.suspended) {
+      } else if (userStatus === UserStatusEnum.suspended) {
         res.status(400).json({
           message: "User account is suspended. Please contact system admin.",
         });
         return;
-      } else if (userStatus.getStatus() == UserStatusEnum.removed) {
+      } else if (userStatus === UserStatusEnum.removed) {
         res.status(400).json({
           message: "User account is removed. Please contact system admin.",
         });
@@ -316,14 +315,15 @@ export class AuthController implements IAppController {
         return;
       }
 
-      await this.db.run(
-        'UPDATE users SET status = "confirmed", confirmEmailToken = NULL, confirmEmailExpire = NULL WHERE email = ?',
-        [user.email.toString()]
-      );
-      u.setStatus("confirmed");
+      try {
+        u.setStatus(UserStatusEnum.confirmed);
+      } catch (error) {
+        res.status(400).json({ message: (error as Error).message });
+        return;
+      }
       u.setConfirmEmailToken(null);
       u.setConfirmEmailExpire(null);
-      writer.writeRoot(u);
+      await writer.writeRoot(u);
 
       res.status(200).json({ message: "Email has been confirmed" });
     } catch (error) {
@@ -352,9 +352,8 @@ export class AuthController implements IAppController {
         res.status(400).json({ message: "User not found" });
         return;
       }
-      let st: string = user.getStatus();
-      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
-      if (userStatus.getStatus() != UserStatusEnum.unconfirmed) {
+      const userStatus = user.getStatus();
+      if (userStatus !== UserStatusEnum.unconfirmed) {
         res
           .status(400)
           .json({ message: "User not found or not unconfirmed" });

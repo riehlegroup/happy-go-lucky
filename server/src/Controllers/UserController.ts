@@ -3,6 +3,9 @@ import { Database } from "sqlite";
 import { hashPassword } from "../Utils/hash";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
+import { ObjectHandler } from "../ObjectHandler";
+import { DatabaseWriter } from "../Serializer/DatabaseWriter";
+import { UserStatus, UserStatusEnum } from "../Utils/UserStatus";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
 
@@ -73,14 +76,35 @@ export class UserController implements IAppController {
       return;
     }
 
-    if (status == "suspended") {
-      this.sendSuspendedEmail(userEmail);
-    } else if (status == "removed") {
-      this.sendRemovedEmail(userEmail);
+    if (typeof status !== "string" || !UserStatus.isValidStatus(status)) {
+      res.status(400).json({ message: "Invalid status" });
+      return;
     }
 
     try {
-      await this.db.run("UPDATE users SET status = ? WHERE email = ?", [status, userEmail]);
+      const oh = new ObjectHandler();
+      const user = await oh.getUserByMail(userEmail, this.db);
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      try {
+        user.setStatus(status as UserStatusEnum);
+      } catch (error) {
+        res.status(400).json({ message: (error as Error).message });
+        return;
+      }
+
+      const writer = new DatabaseWriter(this.db);
+      await writer.writeRoot(user);
+
+      if (status === UserStatusEnum.suspended) {
+        this.sendSuspendedEmail(userEmail);
+      } else if (status === UserStatusEnum.removed) {
+        this.sendRemovedEmail(userEmail);
+      }
+
       res.status(200).json({ message: "User status updated successfully" });
     } catch (error) {
       console.error("Error during updating user status:", error);
@@ -96,10 +120,24 @@ export class UserController implements IAppController {
       return;
     }
 
+    if (typeof status !== "string" || !UserStatus.isValidStatus(status)) {
+      res.status(400).json({ message: "Invalid status" });
+      return;
+    }
+
+    const targetStatus = status as UserStatusEnum;
+    const confirmedStatus = new UserStatus(UserStatusEnum.confirmed);
+    if (!confirmedStatus.canTransitionTo(targetStatus)) {
+      res
+        .status(400)
+        .json({ message: `Invalid transition from confirmed to ${status}` });
+      return;
+    }
+
     try {
       const result = await this.db.run(
         'UPDATE users SET status = ? WHERE status = "confirmed"',
-        [status]
+        [targetStatus]
       );
 
       if (result.changes === 0) {
