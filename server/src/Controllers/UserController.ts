@@ -127,6 +127,7 @@ export class UserController implements IAppController {
 
     const targetStatus = status as UserStatusEnum;
     const confirmedStatus = new UserStatus(UserStatusEnum.confirmed);
+    // Prevent bulk updates that would violate the status state machine.
     if (!confirmedStatus.canTransitionTo(targetStatus)) {
       res
         .status(400)

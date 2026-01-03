@@ -135,6 +135,7 @@ export class User extends Visitor implements Serializable {
     if (this.status.getStatus() === status) {
       return;
     }
+    // Enforce the status state machine via the value type.
     this.status = this.status.transitionTo(status);
   }
 
