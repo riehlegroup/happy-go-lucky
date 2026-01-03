@@ -1,5 +1,5 @@
 {
-  "name": "mini-meco",
+  "name": "happy-go-lucky",
   "version": "1.0.0",
   "description": "A web app that provides agile tooling",
   "scripts": {
@@ -37,3 +37,4 @@
     "sqlite": "^5.1.1"
   }
 }
+

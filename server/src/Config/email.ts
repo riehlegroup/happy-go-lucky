@@ -4,7 +4,7 @@
 
 export const EMAIL_CONFIG = {
   sender: {
-    name: "Mini-Meco",
+    name: "Happy Go Lucky",
     address: "dirk.riehle@fau.de"
   },
   smtp: {

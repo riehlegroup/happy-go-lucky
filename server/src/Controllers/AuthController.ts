@@ -383,7 +383,7 @@ export class AuthController implements IAppController {
     await this.emailService.sendEmail(
       email.toString(),
       "Confirm Email",
-      `You registered for Mini-Meco. Click the link to confirm your email: ${confirmedLink}`
+      `You registered for Happy Go Lucky! Click the link to confirm your email: ${confirmedLink}`
     );
   }
 

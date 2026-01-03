@@ -4,7 +4,7 @@ Happy Go Lucky (HGL) is a web-based application to support agile software develo
 
 HGL allows for the creation of courses and projects within courses as well as self-registration of users (students) for projects.
 
-The architecture is (supposed to be) modular. Functionality is provided as panels (the visual part of components). The three main out-of-the-box modules are
+The architecture is modular. Functionality is provided as panels (the visual part of modules). The three main out-of-the-box modules are
 
 1. happiness index,
 2. standup emails, and

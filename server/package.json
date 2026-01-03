@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "0.0.0",
-  "description": "Backend for mini-meco",
+  "description": "Backend for happy-go-lucky",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --watch src --ext .ts,.js --exec \"npm run build && node dist/server.js\"",
