@@ -206,6 +206,30 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User status updated successfully');
     });
 
+    it('should reject invalid status values', async () => {
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/user/status')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({ userEmail: 'test@test.com', status: 'invalid' })
+        .expect(400);
+
+      expect(response.body.message).toBe('Invalid status');
+    });
+
+    it('should reject invalid status transitions', async () => {
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/user/status')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({ userEmail: 'removed@test.com', status: 'confirmed' })
+        .expect(400);
+
+      expect(response.body.message).toBe('Invalid transition from removed to confirmed');
+    });
+
     it('should reject missing userEmail', async () => {
       const adminToken = generateAdminToken();
 
@@ -246,6 +270,15 @@ describe('User Management API', () => {
 
       const users = await db.all('SELECT * FROM users WHERE status = ?', ['suspended']);
       expect(users.length).toBeGreaterThan(0);
+    });
+
+    it('should reject invalid transitions for confirmed users', async () => {
+      const response = await request(app)
+        .post('/user/status/all')
+        .send({ status: 'unconfirmed' })
+        .expect(400);
+
+      expect(response.body.message).toBe('Invalid transition from confirmed to unconfirmed');
     });
 
     it('should reject missing status', async () => {
