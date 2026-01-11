@@ -33,8 +33,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "^7.0.12",
     "sqlite": "^5.1.1"
   }
 }
-
