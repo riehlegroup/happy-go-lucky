@@ -74,7 +74,7 @@ export class TermController implements IAppController {
 
   async deleteTerm(req: Request, res: Response): Promise<void> {
     try {
-      const termId = parseInt(req.params.id);
+      const termId = parseInt(String(req.params.id));
 
       if (isNaN(termId)) {
         res.status(400).json({
