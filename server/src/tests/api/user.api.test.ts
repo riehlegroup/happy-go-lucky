@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { Database } from 'sqlite';
-import { createTestDb, seedDatabase, getUserByEmail } from './helpers/testDb';
+import { createTestDb, seedDatabase, getUserByEmail, getRoleById } from './helpers/testDb';
 import { generateAdminToken, generateUserToken, createAuthHeader } from './helpers/authHelpers';
 import { Application } from 'express';
 import { createApp } from '../../createApp';
@@ -337,7 +337,8 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'test@test.com');
-      expect(user.userRole).toBe('ADMIN');
+      const role = await getRoleById(db, user.userRole);
+      expect(role.role_name).toBe('ADMIN');
     });
 
     it('should reject missing email', async () => {
@@ -367,7 +368,8 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'admin@test.com');
-      expect(user.userRole).toBe('USER');
+      const role = await getRoleById(db, user.userRole);
+      expect(role.role_name).toBe('USER');
     });
   });
 });

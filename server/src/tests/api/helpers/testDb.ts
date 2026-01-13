@@ -1,6 +1,7 @@
 import { Database } from 'sqlite';
 import { initializeDB } from '../../../databaseInitializer';
 import { hashPassword } from '../../../Utils/hash';
+import { UserRole } from '../../../ValueTypes/UserRole';
 
 /**
  * Creates an in-memory SQLite database for testing
@@ -13,34 +14,38 @@ export async function createTestDb(): Promise<Database> {
  * Seeds the database with test data
  */
 export async function seedDatabase(db: Database) {
+
+  const role_user: UserRole = new UserRole("USER");
+  const role_admin: UserRole = new UserRole("ADMIN");
+
   // Create admin user
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', 'ADMIN']
+    ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', role_admin.getRoleId()]
   );
 
   // Create regular confirmed user
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['testuser', 'test@test.com', await hashPassword('Test123!'), 'confirmed', 'USER']
+    ['testuser', 'test@test.com', await hashPassword('Test123!'), 'confirmed', role_user.getRoleId()]
   );
 
   // Create unconfirmed user
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['unconfirmed', 'unconfirmed@test.com', await hashPassword('Test123!'), 'unconfirmed', 'USER']
+    ['unconfirmed', 'unconfirmed@test.com', await hashPassword('Test123!'), 'unconfirmed', role_user.getRoleId()]
   );
 
   // Create suspended user
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['suspended', 'suspended@test.com', await hashPassword('Test123!'), 'suspended', 'USER']
+    ['suspended', 'suspended@test.com', await hashPassword('Test123!'), 'suspended', role_user.getRoleId()]
   );
 
   // Create removed user
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['removed', 'removed@test.com', await hashPassword('Test123!'), 'removed', 'USER']
+    ['removed', 'removed@test.com', await hashPassword('Test123!'), 'removed', role_user.getRoleId()]
   );
 
   // Create test term
@@ -88,9 +93,11 @@ export async function seedDatabase(db: Database) {
  */
 export async function createMinimalDb(): Promise<Database> {
   const db = await createTestDb();
+  const role_admin: UserRole = new UserRole("ADMIN");
+
   await db.run(
     `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-    ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', 'ADMIN']
+    ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', role_admin.getRoleId()]
   );
   return db;
 }
@@ -121,4 +128,8 @@ export async function getProjectByName(db: Database, projectName: string) {
  */
 export async function getTermByName(db: Database, termName: string) {
   return await db.get('SELECT * FROM terms WHERE termName = ?', [termName]);
+}
+
+export async function getRoleById(db: Database, id:number) {
+  return await db.get('SELECT * FROM roles WHERE id = ?', [id]);
 }

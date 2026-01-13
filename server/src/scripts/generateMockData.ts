@@ -1,6 +1,8 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { roleRegistry } from '../Utils/RoleRegistry';
+import { UserRole } from '../ValueTypes/UserRole';
 
 /**
  * Generates mock data for development.
@@ -15,6 +17,11 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     filename: dbPath,
     driver: sqlite3.Database,
   });
+
+  await roleRegistry.init(db);
+
+  const role_user: UserRole = new UserRole("USER");
+
 
   try {
     console.log('Starting mock data generation...\n');
@@ -95,7 +102,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const amosStudent1Password = await hashPassword('amos-student-1-password');
     const amosStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', 'USER']
+      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', role_user.getRoleId()]
     );
     const amosStudent1Id = amosStudent1Result.lastID;
     console.log(`  ✓ AMOS Student 1 (amos-student-1@fau.de) created with ID: ${amosStudent1Id}`);
@@ -103,7 +110,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const amosStudent2Password = await hashPassword('amos-student-2-password');
     const amosStudent2Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', 'USER']
+      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', role_user.getRoleId()]
     );
     const amosStudent2Id = amosStudent2Result.lastID;
     console.log(`  ✓ AMOS Student 2 (amos-student-2@fau.de) created with ID: ${amosStudent2Id}`);
@@ -111,7 +118,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const adapStudent1Password = await hashPassword('adap-student-1-password');
     const adapStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', 'USER']
+      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', role_user.getRoleId()]
     );
     const adapStudent1Id = adapStudent1Result.lastID;
     console.log(`  ✓ ADAP Student 1 (adap-student-1@fau.de) created with ID: ${adapStudent1Id}\n`);

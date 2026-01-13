@@ -53,7 +53,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     )
   `);
 
-  roleRegistry.init(db);
+  await roleRegistry.init(db);
 
   const userCount = await oh.getUserCount(db);
   if ((!userCount || userCount === 0) && createAdmin) {
