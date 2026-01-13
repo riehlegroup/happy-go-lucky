@@ -267,7 +267,7 @@ export class UserController implements IAppController {
     const { userEmail } = req.query;
 
     try {
-      const user = await this.db.get("SELECT userRole FROM users WHERE email = ?", [userEmail]);
+      const user = await this.db.get("SELECT role_name as userRole FROM users JOIN roles on users.userRole=roles.id  WHERE email = ?", [userEmail]);
       if (user) {
         res.json(user);
       } else {

@@ -7,6 +7,8 @@ import { User } from './Models/User';
 import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
+import { UserRole } from './ValueTypes/UserRole';
+import { roleRegistry } from './Utils/RoleRegistry';
 
 export async function initializeDB(filename: string, createAdmin = true) {
   const db = await open({
@@ -15,6 +17,24 @@ export async function initializeDB(filename: string, createAdmin = true) {
   });
 
   const oh = new ObjectHandler();
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS roles (
+      id INTEGER PRIMARY KEY UNIQUE,
+      role_name TEXT NOT NULL
+    )
+  `);
+
+  await db.exec(`
+    DELETE FROM roles WHERE true
+  `);
+
+  // if roles are added default values need to be added in the RoleKey type [server/src/ValueTypes/UserRole.ts]
+  await db.exec(`
+    INSERT INTO roles (id, role_name) VALUES 
+    (1, 'USER'),
+    (2, 'ADMIN')
+  `);
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -28,9 +48,12 @@ export async function initializeDB(filename: string, createAdmin = true) {
       resetPasswordExpire INTEGER,
       confirmEmailToken TEXT,
       confirmEmailExpire INTEGER,
-      userRole TEXT DEFAULT "USER" NOT NULL
+      userRole INTEGER DEFAULT 1 NOT NULL,
+      FOREIGN KEY (userRole) REFERENCES roles(id)
     )
   `);
+
+  roleRegistry.init(db);
 
   const userCount = await oh.getUserCount(db);
   if ((!userCount || userCount === 0) && createAdmin) {
@@ -42,7 +65,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     admin.setEmail(new Email(email));
     admin.setPassword(await hashPassword(password));
     admin.setStatus('confirmed');
-    admin.setRole("ADMIN");
+    admin.setRole(new UserRole("ADMIN"));
     await writer.writeRoot(admin);
     console.log(`Default admin user created: (email: '${email}', password: '${password}')`);
   }

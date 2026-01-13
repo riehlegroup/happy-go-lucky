@@ -3,6 +3,9 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
+import { RoleKey, UserRole } from "../ValueTypes/UserRole";
+import { roleRegistry } from "../Utils/RoleRegistry";
+
 
 export class User extends Visitor implements Serializable {
   protected id: number;
@@ -10,7 +13,7 @@ export class User extends Visitor implements Serializable {
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
   protected status: string = "unconfirmed";
-  protected role: string = "USER"; // @todo: remove and set UserRole
+  protected role: UserRole = new UserRole("USER");
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
   protected resetPasswordExpire: number | null = null;
@@ -39,7 +42,8 @@ export class User extends Visitor implements Serializable {
       this.email = null;
     }
     this.status = reader.readString("status") as string;
-    this.role = reader.readString("userRole") as string;
+    const role: RoleKey = roleRegistry.getRoleKey(reader.readNumber("userRole") as number);   // TODO: new constructor for more convenience
+    this.role = new UserRole(role);
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -57,7 +61,7 @@ export class User extends Visitor implements Serializable {
       writer.writeString("email", this.email.toString());
     }
     writer.writeString("status", this.status);
-    writer.writeString("userRole", this.role);
+    writer.writeNumber("userRole", this.role.getRoleId());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
     writer.writeNumber("resetPasswordExpire", this.resetPasswordExpire);
@@ -93,7 +97,7 @@ export class User extends Visitor implements Serializable {
     return this.status;
   }
 
-  public getRole(): string {
+  public getRole(): UserRole {
     return this.role;
   }
 
@@ -134,7 +138,7 @@ export class User extends Visitor implements Serializable {
     this.status = status;
   }
 
-  public setRole(role: string){
+  public setRole(role: UserRole){
     this.role = role;
   }
 
