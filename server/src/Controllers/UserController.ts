@@ -5,6 +5,7 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { UserRole } from "../ValueTypes/UserRole";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -286,9 +287,10 @@ export class UserController implements IAppController {
       res.status(400).json({ message: "Please provide email and role" });
       return;
     }
-
     try {
-      await this.db.run("UPDATE users SET userRole = ? WHERE email = ?", [role, email]);
+      const new_role: UserRole = new UserRole(role);
+      // TODO? add state transitions and check for valid ones?
+      await this.db.run("UPDATE users SET userRole = ? WHERE email = ?", [new_role.getRoleId(), email]);
       res.status(200).json({ message: "User role updated successfully" });
     } catch (error) {
       console.error("Error during updating user role:", error);
