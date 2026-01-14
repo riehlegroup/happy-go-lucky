@@ -54,7 +54,7 @@ export class UserController implements IAppController {
     const { status } = req.query;
 
     try {
-      const user = await this.db.all("SELECT * FROM users WHERE status = ?", [status]);
+      const user = await this.db.all("SELECT u.id, u.name, u.githubUsername, u.email, u.status, r.userRole FROM users AS u JOIN roles AS r ON u.roleId = r.id WHERE u.status = ?", [status]);
       if (user) {
         res.json(user);
       } else {

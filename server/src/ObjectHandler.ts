@@ -9,6 +9,14 @@ import { Serializable } from "./Serializer/Serializable";
 
 export class ObjectHandler {
 
+    public async getRoleById(id: number, db: Database): Promise<string | null> {
+        const result = await db.get('SELECT * FROM roles WHERE id = ?', [id]);
+        if (!result?.userRole) {
+            return null;
+        }
+        return result.userRole as string;
+    }
+
     public async getUserCount(db: Database): Promise<number | undefined> {
         return (await db.get('SELECT COUNT(*) AS count FROM users')).count;
     }
