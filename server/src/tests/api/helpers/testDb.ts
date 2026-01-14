@@ -20,31 +20,31 @@ export async function seedDatabase(db: Database) {
 
   // Create admin user
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', role_admin.getRoleId()]
   );
 
   // Create regular confirmed user
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['testuser', 'test@test.com', await hashPassword('Test123!'), 'confirmed', role_user.getRoleId()]
   );
 
   // Create unconfirmed user
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['unconfirmed', 'unconfirmed@test.com', await hashPassword('Test123!'), 'unconfirmed', role_user.getRoleId()]
   );
 
   // Create suspended user
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['suspended', 'suspended@test.com', await hashPassword('Test123!'), 'suspended', role_user.getRoleId()]
   );
 
   // Create removed user
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['removed', 'removed@test.com', await hashPassword('Test123!'), 'removed', role_user.getRoleId()]
   );
 
@@ -96,7 +96,7 @@ export async function createMinimalDb(): Promise<Database> {
   const role_admin: UserRole = new UserRole("ADMIN");
 
   await db.run(
-    `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
     ['admin', 'admin@test.com', await hashPassword('Admin123!'), 'confirmed', role_admin.getRoleId()]
   );
   return db;

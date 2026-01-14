@@ -38,7 +38,7 @@ export class UserController implements IAppController {
 
   async getUsers(req: Request, res: Response): Promise<void> {
     try {
-      const user = await this.db.all("SELECT * FROM users");
+      const user = await this.db.all("SELECT u.id, u.name, u.githubUsername, u.email, u.status, r.userRole FROM users AS u JOIN roles AS r ON u.roleId = r.id");
       if (user) {
         res.json(user);
       } else {
@@ -268,7 +268,7 @@ export class UserController implements IAppController {
     const { userEmail } = req.query;
 
     try {
-      const user = await this.db.get("SELECT role_name as userRole FROM users JOIN roles on users.userRole=roles.id  WHERE email = ?", [userEmail]);
+      const user = await this.db.get("SELECT r.userRole FROM users AS u JOIN roles AS r on u.roleId=r.id WHERE email = ?", [userEmail]);
       if (user) {
         res.json(user);
       } else {
@@ -290,7 +290,7 @@ export class UserController implements IAppController {
     try {
       const new_role: UserRole = new UserRole(role);
       // TODO? add state transitions and check for valid ones?
-      await this.db.run("UPDATE users SET userRole = ? WHERE email = ?", [new_role.getRoleId(), email]);
+      await this.db.run("UPDATE users SET roleId = ? WHERE email = ?", [new_role.getRoleId(), email]);
       res.status(200).json({ message: "User role updated successfully" });
     } catch (error) {
       console.error("Error during updating user role:", error);

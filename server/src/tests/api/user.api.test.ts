@@ -337,8 +337,8 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'test@test.com');
-      const role = await getRoleById(db, user.userRole);
-      expect(role.role_name).toBe('ADMIN');
+      const role = await getRoleById(db, user.roleId);
+      expect(role.userRole).toBe('ADMIN');
     });
 
     it('should reject missing email', async () => {
@@ -368,8 +368,8 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'admin@test.com');
-      const role = await getRoleById(db, user.userRole);
-      expect(role.role_name).toBe('USER');
+      const role = await getRoleById(db, user.roleId);
+      expect(role.userRole).toBe('USER');
     });
   });
 });
