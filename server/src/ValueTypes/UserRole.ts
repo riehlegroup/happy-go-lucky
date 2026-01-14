@@ -18,8 +18,8 @@ export class UserRole {
 
   isValidRole(role: RoleKey): boolean {
     try {
-        const id = roleRegistry.getId(role);
-    } catch (error: any) {
+        roleRegistry.getId(role);
+    } catch (error: unknown) {
         if (error instanceof IllegalArgumentException) {
             console.error("Invalid role used in UserRole", error);
         } else {

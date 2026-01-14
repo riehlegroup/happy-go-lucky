@@ -14,7 +14,7 @@ class RoleRegistry {
                 this.keyToId.set(id, userRole as RoleKey);
             });
             this.initialized = true;
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error while fetching user roles", error);
         }
     }
@@ -23,11 +23,11 @@ class RoleRegistry {
         if (!this.initialized) {
             throw new Error("RoleRegistry not initialized");
         }
-        let id: any = undefined;
+        let id: number = -1;
         this.keyToId.forEach((value: RoleKey, key: number) => {
             if (role == value) id = key;
         });
-        if (!id) {
+        if (id == -1) {
             throw new IllegalArgumentException(`Unknown Role: ${role}`);
         }
         return id;
