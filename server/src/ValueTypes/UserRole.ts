@@ -1,37 +1,42 @@
-import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
-import { roleRegistry } from "../Utils/RoleRegistry";
+import { RoleRegistry } from "../Utils/RoleRegistry";
 
 // if roles are added the database default values need to be added in the db [server/src/databaseInitializer.ts]
 export type RoleKey = "USER" | "ADMIN";
 
 export class UserRole {
-  private readonly value: RoleKey;
 
-  constructor(role: RoleKey) {      // TODO: constructor with RoleKey or ID
-    IllegalArgumentException.assert(this.isValidRole(role), 'Invalid user role');
-    this.value = role;
+  private constructor(
+    private readonly id: number, 
+    private readonly role: string
+  ){}
+
+  static fromDb(id: number, role: string): UserRole{
+    return new UserRole(id, role);
   }
 
-  getRoleId(): number {
-    return roleRegistry.getId(this.value);
+  static fromId(id: number, registry: RoleRegistry): UserRole {
+    return new UserRole(id, registry.getRoleKey(id));
   }
 
-  isValidRole(role: RoleKey): boolean {
-    try {
-        roleRegistry.getId(role);
-    } catch (error: unknown) {
-        if (error instanceof IllegalArgumentException) {
-            console.error("Invalid role used in UserRole", error);
-        } else {
-            throw error;
-        }
-    }
-    return true;
+  static fromRole(role: string, registry: RoleRegistry): UserRole {
+    return new UserRole(registry.getId(role), role);
+  }
+
+  getId(): number {
+    return this.id;
+  }
+
+  getRole(): string {
+    return this.role;
   }
 
   isAdmin(): boolean {
-    if (this.value === "ADMIN") return true;
+    if (this.role === "ADMIN") return true;
     return false;
+  }
+
+  equals(other: UserRole): boolean {
+    return this.id === other.id;  
   }
 }
 

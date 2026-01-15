@@ -18,9 +18,9 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     driver: sqlite3.Database,
   });
 
-  await roleRegistry.init(db);
+  await roleRegistry.load(db);
 
-  const role_user: UserRole = new UserRole("USER");
+  const role_user: UserRole = UserRole.fromRole("USER", roleRegistry);
 
 
   try {
@@ -102,7 +102,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const amosStudent1Password = await hashPassword('amos-student-1-password');
     const amosStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', role_user.getRoleId()]
+      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', role_user.getId()]
     );
     const amosStudent1Id = amosStudent1Result.lastID;
     console.log(`  ✓ AMOS Student 1 (amos-student-1@fau.de) created with ID: ${amosStudent1Id}`);
@@ -110,7 +110,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const amosStudent2Password = await hashPassword('amos-student-2-password');
     const amosStudent2Result = await db.run(
       `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', role_user.getRoleId()]
+      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', role_user.getId()]
     );
     const amosStudent2Id = amosStudent2Result.lastID;
     console.log(`  ✓ AMOS Student 2 (amos-student-2@fau.de) created with ID: ${amosStudent2Id}`);
@@ -118,7 +118,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     const adapStudent1Password = await hashPassword('adap-student-1-password');
     const adapStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, roleId) VALUES (?, ?, ?, ?, ?)`,
-      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', role_user.getRoleId()]
+      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', role_user.getId()]
     );
     const adapStudent1Id = adapStudent1Result.lastID;
     console.log(`  ✓ ADAP Student 1 (adap-student-1@fau.de) created with ID: ${adapStudent1Id}\n`);

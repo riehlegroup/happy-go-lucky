@@ -3,7 +3,7 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
-import { RoleKey, UserRole } from "../ValueTypes/UserRole";
+import { UserRole } from "../ValueTypes/UserRole";
 import { roleRegistry } from "../Utils/RoleRegistry";
 
 
@@ -13,7 +13,7 @@ export class User extends Visitor implements Serializable {
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
   protected status: string = "unconfirmed";
-  protected role: UserRole = new UserRole("USER");
+  protected role: UserRole = UserRole.fromRole("USER", roleRegistry);
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
   protected resetPasswordExpire: number | null = null;
@@ -42,8 +42,7 @@ export class User extends Visitor implements Serializable {
       this.email = null;
     }
     this.status = reader.readString("status") as string;
-    const role: RoleKey = roleRegistry.getRoleKey(reader.readNumber("roleId") as number);
-    this.role = new UserRole(role);
+    this.role = UserRole.fromId(reader.readNumber("roleId") as number, roleRegistry);
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -61,7 +60,7 @@ export class User extends Visitor implements Serializable {
       writer.writeString("email", this.email.toString());
     }
     writer.writeString("status", this.status);
-    writer.writeNumber("roleId", this.role.getRoleId());
+    writer.writeNumber("roleId", this.role.getId());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
     writer.writeNumber("resetPasswordExpire", this.resetPasswordExpire);

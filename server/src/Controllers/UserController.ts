@@ -6,6 +6,7 @@ import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
 import { UserRole } from "../ValueTypes/UserRole";
+import { roleRegistry } from "../Utils/RoleRegistry";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -288,9 +289,8 @@ export class UserController implements IAppController {
       return;
     }
     try {
-      const new_role: UserRole = new UserRole(role);
-      // TODO? add state transitions and check for valid ones?
-      await this.db.run("UPDATE users SET roleId = ? WHERE email = ?", [new_role.getRoleId(), email]);
+      const new_role: UserRole = UserRole.fromRole(role, roleRegistry);
+      await this.db.run("UPDATE users SET roleId = ? WHERE email = ?", [new_role.getId(), email]);
       res.status(200).json({ message: "User role updated successfully" });
     } catch (error) {
       console.error("Error during updating user role:", error);

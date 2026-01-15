@@ -3,15 +3,15 @@ import { RoleKey } from "../ValueTypes/UserRole";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 
 
-class RoleRegistry {
-    private keyToId = new Map<number, RoleKey>();
+export class RoleRegistry {
+    private roleToId = new Map<number, string>();
     private initialized = false;
 
-    async init(db: Database) {
+    async load(db: Database) {
         try {
             const rows = await db.all<{ id: number, userRole: string }[]>(`SELECT id, userRole FROM roles`);
             rows.forEach(({ id, userRole }) => {
-                this.keyToId.set(id, userRole as RoleKey);
+                this.roleToId.set(id, userRole);
             });
             this.initialized = true;
         } catch (error: unknown) {
@@ -19,12 +19,12 @@ class RoleRegistry {
         }
     }
 
-    getId(role: RoleKey): number {
+    getId(role: string): number {
         if (!this.initialized) {
             throw new Error("RoleRegistry not initialized");
         }
         let id: number = -1;
-        this.keyToId.forEach((value: RoleKey, key: number) => {
+        this.roleToId.forEach((value: string, key: number) => {
             if (role == value) id = key;
         });
         if (id == -1) {
@@ -40,7 +40,7 @@ class RoleRegistry {
         if (!id) {
             throw new IllegalArgumentException(`Invalid role id: ${id}`);
         }
-        const role = this.keyToId.get(id);
+        const role = this.roleToId.get(id);
         if(!role) {
             throw new IllegalArgumentException(`Unknown id: ${id}`);
         }

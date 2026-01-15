@@ -53,7 +53,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     )
   `);
 
-  await roleRegistry.init(db);
+  await roleRegistry.load(db);
 
   const userCount = await oh.getUserCount(db);
   if ((!userCount || userCount === 0) && createAdmin) {
@@ -65,7 +65,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     admin.setEmail(new Email(email));
     admin.setPassword(await hashPassword(password));
     admin.setStatus('confirmed');
-    admin.setRole(new UserRole("ADMIN"));
+    admin.setRole(UserRole.fromRole("ADMIN", roleRegistry));
     await writer.writeRoot(admin);
     console.log(`Default admin user created: (email: '${email}', password: '${password}')`);
   }
