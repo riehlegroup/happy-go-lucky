@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { initializeDB } from '../databaseInitializer';
 
 /**
  * Generates mock data for development.
@@ -241,11 +242,13 @@ const args = process.argv.slice(2);
 const deleteOnly = args.includes('--delete-only');
 const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
 
-generateMockData(dbPath, deleteOnly)
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Script failed:', error);
-    process.exit(1);
-  });
+async function generateEntries() {
+  await initializeDB(dbPath);
+  await generateMockData(dbPath, deleteOnly);
+  process.exit(0);
+}
+
+generateEntries().catch(error => {
+  console.error('Script failed:', error);
+  process.exit(1);
+});
