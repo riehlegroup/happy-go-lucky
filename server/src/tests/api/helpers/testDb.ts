@@ -131,6 +131,6 @@ export async function getTermByName(db: Database, termName: string) {
   return await db.get('SELECT * FROM terms WHERE termName = ?', [termName]);
 }
 
-export async function getRoleById(db: Database, id:number) {
+export async function getRoleById(db: Database, id: number) {
   return await db.get('SELECT * FROM roles WHERE id = ?', [id]);
 }

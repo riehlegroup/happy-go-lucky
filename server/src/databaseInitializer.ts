@@ -26,7 +26,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
   `);
 
   await db.exec(`
-    DELETE FROM roles WHERE true
+    DELETE FROM roles
   `);
 
   // if roles are added default values need to be added in the RoleKey type [server/src/ValueTypes/UserRole.ts]

@@ -359,10 +359,10 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('Please provide email and role');
     });
 
-    it('should reject non-existing role', async () => {
+    it('should reject non-existent role', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ email: 'test@test.com' , role: "WRONGROLE"})
+        .send({ email: 'test@test.com', role: 'WRONGROLE'})
         .expect(400);
 
       expect(response.body.message).toBe('Invalid role provided');

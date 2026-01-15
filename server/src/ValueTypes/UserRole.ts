@@ -1,13 +1,16 @@
 import { RoleRegistry } from "../Utils/RoleRegistry";
 
 // if roles are added the database default values need to be added in the db [server/src/databaseInitializer.ts]
-export type RoleKey = "USER" | "ADMIN";
+export enum RoleKey {
+  USER = "USER",
+  ADMIN = "ADMIN"
+}
 
 export class UserRole {
 
   private constructor(
     private readonly id: number, 
-    private readonly role: string
+    private readonly role: RoleKey
   ){}
 
   static fromId(id: number, registry: RoleRegistry): UserRole {
@@ -15,7 +18,7 @@ export class UserRole {
   }
 
   static fromRole(role: string, registry: RoleRegistry): UserRole {
-    return new UserRole(registry.getId(role), role);
+    return new UserRole(registry.getId(role), role as RoleKey);
   }
 
   getId(): number {
