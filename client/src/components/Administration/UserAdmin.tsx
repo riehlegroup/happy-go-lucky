@@ -26,7 +26,6 @@ interface User {
     name: string;
     githubUsername: string | null;
     status: string;
-    password: string;
     userRole: string;
 }
 

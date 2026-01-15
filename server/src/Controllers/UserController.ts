@@ -7,6 +7,7 @@ import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
 import { UserRole } from "../ValueTypes/UserRole";
 import { roleRegistry } from "../Utils/RoleRegistry";
+import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -293,8 +294,13 @@ export class UserController implements IAppController {
       await this.db.run("UPDATE users SET roleId = ? WHERE email = ?", [new_role.getId(), email]);
       res.status(200).json({ message: "User role updated successfully" });
     } catch (error) {
-      console.error("Error during updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role", error });
+        if (error instanceof IllegalArgumentException) {
+          console.error("Error while parsing role: ", error);
+          res.status(400).json({message: "Invalid role provided", error});
+        } else {
+          console.error("Error during updating user role:", error);
+          res.status(500).json({ message: "Failed to update user role", error });
+        }
     }
   }
 
