@@ -10,10 +10,6 @@ export class UserRole {
     private readonly role: string
   ){}
 
-  static fromDb(id: number, role: string): UserRole{
-    return new UserRole(id, role);
-  }
-
   static fromId(id: number, registry: RoleRegistry): UserRole {
     return new UserRole(id, registry.getRoleKey(id));
   }
@@ -31,8 +27,7 @@ export class UserRole {
   }
 
   isAdmin(): boolean {
-    if (this.role === "ADMIN") return true;
-    return false;
+    return this.role === "ADMIN";
   }
 
   equals(other: UserRole): boolean {
