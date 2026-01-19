@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import authApi from "@/services/api/auth";
 import "./AuthScreens.css";
+import { en as messages } from "@/messages";
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search); // search: '?query=string'
@@ -21,18 +22,18 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage("Invalid or missing reset token");
+      setMessage(messages.auth.resetPassword.status.invalidToken);
       return;
     }
 
     try {
       await authApi.resetPassword(token, newPassword);
-      setMessage("Password has been reset successfully!");
+      setMessage(messages.auth.resetPassword.status.success);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(messages.errors.unexpected);
       }
     }
   };
@@ -40,7 +41,7 @@ const ResetPassword = () => {
   return (
     <div className="container">
       <div className="header">
-        <div className="text">Reset Your Password</div>
+        <div className="text">{messages.auth.resetPassword.title}</div>
         <br />
         <div className="underline"></div>
       </div>
@@ -50,7 +51,7 @@ const ResetPassword = () => {
             <input
               className="inputBox"
               type="password"
-              placeholder="Enter new password"
+              placeholder={messages.auth.resetPassword.placeholder}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -58,7 +59,7 @@ const ResetPassword = () => {
         </div>
         <div className="submit-container">
           <button type="submit" className="submit-ResetPassword">
-            Reset Password
+            {messages.auth.resetPassword.button}
           </button>
         </div>
       </form>

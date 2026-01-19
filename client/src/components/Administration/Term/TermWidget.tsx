@@ -7,6 +7,7 @@ import { TermAction } from "./components/TermAction";
 import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { en as messages } from "@/messages";
 
 interface TermWidgetProps {
   label?: string;
@@ -25,10 +26,25 @@ const TermWidget: React.FC<TermWidgetProps> = ({
   onFetch,
   onDeleteTerm,
 }: TermWidgetProps) => {
-  const { message, DEFAULT, createTerm, addCourse, deleteTerm: deleteTermFromHook } = useTerm();
+  const {
+    message,
+    DEFAULT,
+    createTerm,
+    addCourse,
+    deleteTerm: deleteTermFromHook,
+  } = useTerm();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false };
+  const defaultData =
+    type === "term"
+      ? DEFAULT
+      : {
+          id: 0,
+          termId: term?.id || 0,
+          courseName: "",
+          projects: [],
+          studentsCanCreateProject: false,
+        };
 
   const {
     dialogState,
@@ -115,9 +131,10 @@ const TermWidget: React.FC<TermWidgetProps> = ({
     <>
       <TermDialog
         isOpen={dialogState.isOpen}
-        title={`${action === "edit" ? "Edit" : "Create"} ${
-          type === "course" ? "Course" : "Term"
-        }`}
+        title={messages.admin.courseAdmin.dialogs.termOrCourseTitle(
+          action === "edit" ? "edit" : "add",
+          type === "course" ? "course" : "term",
+        )}
         trigger={
           <TermAction
             label={label}
@@ -133,7 +150,14 @@ const TermWidget: React.FC<TermWidgetProps> = ({
       >
         <TermForm
           type={type}
-          label={type === "term" ? ["Term Name", "Display Name"] : ["Course Name"]}
+          label={
+            type === "term"
+              ? [
+                  messages.admin.courseAdmin.forms.termNameLabel,
+                  messages.admin.courseAdmin.forms.displayNameLabel,
+                ]
+              : [messages.admin.courseAdmin.forms.courseNameLabel]
+          }
           data={dialogState.data || undefined}
           message={message || undefined}
           onChange={updateDialogData}
@@ -145,11 +169,13 @@ const TermWidget: React.FC<TermWidgetProps> = ({
         <ConfirmationDialog
           open={showDeleteConfirmation}
           onOpenChange={setShowDeleteConfirmation}
-          title="Delete Term"
-          description={`Are you sure you want to delete term "${term.termName}"? This action cannot be undone.`}
+          title={messages.admin.courseAdmin.confirmations.deleteTermTitle}
+          description={messages.admin.courseAdmin.confirmations.deleteTermDescription(
+            term.termName,
+          )}
           onConfirm={handleConfirmDelete}
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmText={messages.common.delete}
+          cancelText={messages.common.cancel}
         />
       )}
     </>

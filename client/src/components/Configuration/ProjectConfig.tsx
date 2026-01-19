@@ -23,6 +23,7 @@ import {
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
+import { en as messages } from "@/messages";
 
 const ProjectConfig: React.FC = () => {
   const navigate = useNavigate();
@@ -32,22 +33,27 @@ const ProjectConfig: React.FC = () => {
   const [enrolledProjects, setEnrolledProjects] = useState<string[]>([]);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [selectedAvailableProject, setSelectedAvailableProject] = useState<string | null>(null);
+  const [selectedAvailableProject, setSelectedAvailableProject] = useState<
+    string | null
+  >(null);
   const [message, setMessage] = useState("");
-  const [courses, setCourses] = useState<{ id: number; courseName: string }[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<{ id: number; courseName: string } | null>(null);
+  const [courses, setCourses] = useState<{ id: number; courseName: string }[]>(
+    [],
+  );
+  const [selectedCourse, setSelectedCourse] = useState<{
+    id: number;
+    courseName: string;
+  } | null>(null);
   const [user, setUser] = useState<{
     name: string;
     email: string;
   } | null>(null);
   const [createdProject, setCreatedProject] = useState<string>("");
   const [memberRole, setMemberRole] = useState("");
-  const [projectRoles, setProjectRoles] = useState<{ [key: string]: string | null }>({});
-  const [error, setError] = useState('');
-
-
-
-
+  const [projectRoles, setProjectRoles] = useState<{
+    [key: string]: string | null;
+  }>({});
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const authStorage = AuthStorage.getInstance();
@@ -83,7 +89,7 @@ const ProjectConfig: React.FC = () => {
   }, [navigate]);
 
   const handleCourseChange = (courseId: string) => {
-    const course = courses.find(c => c.id.toString() === courseId);
+    const course = courses.find((c) => c.id.toString() === courseId);
     if (course) {
       setSelectedCourse(course);
       setSelectedProject(null);
@@ -101,24 +107,36 @@ const ProjectConfig: React.FC = () => {
           availableProjects: Array<{ projectName: string }>;
         }>("/course/courseProjects", { courseId, userEmail });
 
-        setEnrolledProjects(data.enrolledProjects.map((project) => project.projectName));
-        setAvailableProjects(data.availableProjects.map((project) => project.projectName));
+        setEnrolledProjects(
+          data.enrolledProjects.map((project) => project.projectName),
+        );
+        setAvailableProjects(
+          data.availableProjects.map((project) => project.projectName),
+        );
 
         // Fetch all roles in parallel
-        const rolePromises = data.enrolledProjects.map(project =>
-          ApiClient.getInstance().get<{ role: string }>(
-            "/courseProject/user/role",
-            { projectName: project.projectName, email: userEmail }
-          ).then(roleData => ({ projectName: project.projectName, role: roleData.role }))
-            .catch(error => {
-              console.error(`Failed to fetch role for ${project.projectName}:`, error);
-              return { projectName: project.projectName, role: null };
+        const rolePromises = data.enrolledProjects.map((project) =>
+          ApiClient.getInstance()
+            .get<{ role: string }>("/courseProject/user/role", {
+              projectName: project.projectName,
+              email: userEmail,
             })
+            .then((roleData) => ({
+              projectName: project.projectName,
+              role: roleData.role,
+            }))
+            .catch((error) => {
+              console.error(
+                `Failed to fetch role for ${project.projectName}:`,
+                error,
+              );
+              return { projectName: project.projectName, role: null };
+            }),
         );
 
         const roleResults = await Promise.all(rolePromises);
         const roles = Object.fromEntries(
-          roleResults.map(r => [r.projectName, r.role])
+          roleResults.map((r) => [r.projectName, r.role]),
         );
         setProjectRoles(roles);
         console.log("Fetched project roles:", roles);
@@ -127,7 +145,6 @@ const ProjectConfig: React.FC = () => {
       }
     }
   };
-
 
   const handleProjectChange = (projectName: string) => {
     setSelectedProject(projectName);
@@ -149,7 +166,7 @@ const ProjectConfig: React.FC = () => {
     try {
       const data = await ApiClient.getInstance().get<{ url: string }>(
         "/user/project/url",
-        { userEmail: userEmail, projectName: projectName }
+        { userEmail: userEmail, projectName: projectName },
       );
 
       if (data && data.url) {
@@ -169,35 +186,42 @@ const ProjectConfig: React.FC = () => {
       try {
         const data = await ApiClient.getInstance().post<{ message: string }>(
           "/user/project/url",
-          { userEmail, URL: newURL, projectName: selectedProject }
+          { userEmail, URL: newURL, projectName: selectedProject },
         );
-        setMessage(data.message || "URL changed successfully");
+        setMessage(
+          data.message || messages.projectConfig.url.changeSuccessFallback,
+        );
         setURL(newURL);
         setNewURL("");
       } catch (error: unknown) {
         if (error instanceof Error) {
           setMessage(error.message);
         } else {
-          setMessage("An unexpected error occurred");
+          setMessage(messages.errors.unexpected);
         }
       }
     } else {
-      setMessage("User email or selected project is missing");
+      setMessage(messages.projectConfig.status.userEmailOrProjectMissing);
     }
   };
   const handleJoin = async (projectName: string, role: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(messages.projectConfig.status.userNotAvailableWarning);
       return;
     }
 
     try {
       const data = await ApiClient.getInstance().post<{ message: string }>(
         "/user/project",
-        { projectName, memberName: user.name, memberRole: role, memberEmail: user.email }
+        {
+          projectName,
+          memberName: user.name,
+          memberRole: role,
+          memberEmail: user.email,
+        },
       );
 
-      setMessage(data.message || "Successfully joined the project!");
+      setMessage(data.message || messages.projectConfig.status.joinedFallback);
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -211,16 +235,16 @@ const ProjectConfig: React.FC = () => {
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(messages.projectConfig.status.userNotAvailableWarning);
       return;
     }
 
     try {
       const data = await ApiClient.getInstance().delete<{ message: string }>(
-        `/user/project?projectName=${projectName}&memberEmail=${user.email}`
+        `/user/project?projectName=${projectName}&memberEmail=${user.email}`,
       );
 
-      setMessage(data.message || "Successfully left the project!");
+      setMessage(data.message || messages.projectConfig.status.leftFallback);
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -234,17 +258,17 @@ const ProjectConfig: React.FC = () => {
 
   const handleCreate = async (projectName: string) => {
     if (!selectedCourse?.id) {
-      setMessage("No course selected");
+      setMessage(messages.projectConfig.status.noCourseSelected);
       return;
     }
 
     try {
       const data = await ApiClient.getInstance().post<{ message: string }>(
         "/courseProject",
-        { courseId: selectedCourse.id, projectName }
+        { courseId: selectedCourse.id, projectName },
       );
 
-      setMessage(data.message || "Project created successfully");
+      setMessage(data.message || messages.projectConfig.status.createdFallback);
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -252,7 +276,7 @@ const ProjectConfig: React.FC = () => {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(messages.errors.unexpected);
       }
     }
   };
@@ -260,9 +284,9 @@ const ProjectConfig: React.FC = () => {
   const validateProjectName = (name: string) => {
     const isValid = /^[a-zA-Z0-9_]+$/.test(name);
     if (!isValid) {
-      setError('Project name can only contain letters, numbers, and underscores.');
+      setError(messages.projectConfig.createDialog.projectNameInvalid);
     } else {
-      setError('');
+      setError("");
     }
   };
 
@@ -273,14 +297,20 @@ const ProjectConfig: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Project Configuration" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={messages.projectConfig.pageTitle}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Select Course">
+        <SectionCard title={messages.projectConfig.selectCourseTitle}>
           <div className="space-y-4">
             <Select onValueChange={handleCourseChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue
+                  placeholder={messages.projectConfig.selectCoursePlaceholder}
+                />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
@@ -296,7 +326,7 @@ const ProjectConfig: React.FC = () => {
         {selectedCourse && (
           <>
             {/* Enrolled Projects Section */}
-            <SectionCard title="Enrolled Projects">
+            <SectionCard title={messages.projectConfig.enrolledProjectsTitle}>
               <div className="space-y-2">
                 {enrolledProjects.length > 0 ? (
                   enrolledProjects.map((project) => (
@@ -305,41 +335,61 @@ const ProjectConfig: React.FC = () => {
                         <div>
                           <p className="font-medium">{project}</p>
                           {projectRoles[project] === "owner" && (
-                            <p className="text-xs text-slate-500">Owner</p>
+                            <p className="text-xs text-slate-500">
+                              {messages.projectConfig.ownerLabel}
+                            </p>
                           )}
                         </div>
                         <div className="flex gap-2">
                           {projectRoles[project] === "owner" ? (
-                            <Dialog onOpenChange={(open) => {
-                              if (open) {
-                                handleProjectChange(project);
-                              } else {
-                                setMessage("");
-                                setNewURL("");
-                              }
-                            }}>
+                            <Dialog
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  handleProjectChange(project);
+                                } else {
+                                  setMessage("");
+                                  setNewURL("");
+                                }
+                              }}
+                            >
                               <DialogTrigger asChild>
-                                <Button variant="primary" className="px-3 py-1 text-sm">
-                                  Edit
+                                <Button
+                                  variant="primary"
+                                  className="px-3 py-1 text-sm"
+                                >
+                                  {messages.projectConfig.edit}
                                 </Button>
                               </DialogTrigger>
                               <DialogContent>
                                 <DialogHeader>
-                                  <DialogTitle>Edit Project URL</DialogTitle>
+                                  <DialogTitle>
+                                    {messages.projectConfig.url.dialogTitle}
+                                  </DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div className="break-words text-sm">
-                                    <p className="font-semibold text-slate-700">Current URL:</p>
+                                    <p className="font-semibold text-slate-700">
+                                      {messages.projectConfig.url.currentLabel}
+                                    </p>
                                     {url ? (
-                                      <p className="break-all text-slate-600">{url}</p>
+                                      <p className="break-all text-slate-600">
+                                        {url}
+                                      </p>
                                     ) : (
-                                      <p className="italic text-slate-400">No URL currently set</p>
+                                      <p className="italic text-slate-400">
+                                        {messages.projectConfig.url.noneSet}
+                                      </p>
                                     )}
                                   </div>
                                   <Input
                                     type="text"
-                                    label="New URL"
-                                    placeholder="Enter new URL"
+                                    label={
+                                      messages.projectConfig.url.newUrlLabel
+                                    }
+                                    placeholder={
+                                      messages.projectConfig.url
+                                        .newUrlPlaceholder
+                                    }
                                     value={newURL}
                                     onChange={(e) => setNewURL(e.target.value)}
                                   />
@@ -350,7 +400,9 @@ const ProjectConfig: React.FC = () => {
                                   )}
                                 </div>
                                 <DialogFooter>
-                                  <Button onClick={handleChangeURL}>Save</Button>
+                                  <Button onClick={handleChangeURL}>
+                                    {messages.projectConfig.save}
+                                  </Button>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
@@ -359,9 +411,11 @@ const ProjectConfig: React.FC = () => {
                               variant="primary"
                               className="px-3 py-1 text-sm"
                               disabled={true}
-                              title="You must be an owner to edit this course"
+                              title={
+                                messages.projectConfig.tooltips.ownerOnlyEdit
+                              }
                             >
-                              Edit
+                              {messages.projectConfig.edit}
                             </Button>
                           )}
                           <Button
@@ -369,24 +423,30 @@ const ProjectConfig: React.FC = () => {
                             className="px-3 py-1 text-sm"
                             onClick={() => handleLeave(project)}
                           >
-                            Leave
+                            {messages.projectConfig.leave}
                           </Button>
                         </div>
                       </div>
                     </Card>
                   ))
                 ) : (
-                  <p className="text-slate-500">No enrolled projects</p>
+                  <p className="text-slate-500">
+                    {messages.projectConfig.empty.noEnrolledProjects}
+                  </p>
                 )}
               </div>
             </SectionCard>
 
             {/* Available Projects Section */}
-            <SectionCard title="Available Projects">
+            <SectionCard title={messages.projectConfig.availableProjectsTitle}>
               <div className="space-y-4">
                 <Select onValueChange={setSelectedAvailableProject}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Project to Join" />
+                    <SelectValue
+                      placeholder={
+                        messages.projectConfig.selectProjectToJoinPlaceholder
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProjects.map((project) => (
@@ -400,17 +460,23 @@ const ProjectConfig: React.FC = () => {
                 {selectedAvailableProject && (
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="primary">Join</Button>
+                      <Button variant="primary">
+                        {messages.projectConfig.join}
+                      </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Join Project</DialogTitle>
+                        <DialogTitle>
+                          {messages.projectConfig.joinDialog.title}
+                        </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <Input
                           type="text"
-                          label="Role"
-                          placeholder="Enter your role"
+                          label={messages.projectConfig.joinDialog.roleLabel}
+                          placeholder={
+                            messages.projectConfig.joinDialog.rolePlaceholder
+                          }
                           value={memberRole}
                           onChange={(e) => setMemberRole(e.target.value)}
                         />
@@ -422,9 +488,11 @@ const ProjectConfig: React.FC = () => {
                       </div>
                       <DialogFooter>
                         <Button
-                          onClick={() => handleJoin(selectedAvailableProject, memberRole)}
+                          onClick={() =>
+                            handleJoin(selectedAvailableProject, memberRole)
+                          }
                         >
-                          Join
+                          {messages.projectConfig.join}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -434,20 +502,27 @@ const ProjectConfig: React.FC = () => {
             </SectionCard>
 
             {/* Create Project Section */}
-            <SectionCard title="Create New Project">
+            <SectionCard title={messages.projectConfig.createNewProjectTitle}>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Create Project</Button>
+                  <Button>{messages.projectConfig.createProject}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create Project</DialogTitle>
+                    <DialogTitle>
+                      {messages.projectConfig.createDialog.title}
+                    </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <Input
                       type="text"
-                      label="Project Name"
-                      placeholder="Enter project name"
+                      label={
+                        messages.projectConfig.createDialog.projectNameLabel
+                      }
+                      placeholder={
+                        messages.projectConfig.createDialog
+                          .projectNamePlaceholder
+                      }
                       value={createdProject}
                       error={error}
                       onChange={(e) => {
@@ -466,7 +541,7 @@ const ProjectConfig: React.FC = () => {
                       onClick={() => handleCreateAndJoin(createdProject)}
                       disabled={!!error}
                     >
-                      Create
+                      {messages.projectConfig.create}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

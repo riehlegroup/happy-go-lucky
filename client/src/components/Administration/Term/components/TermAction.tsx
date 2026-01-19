@@ -2,6 +2,7 @@ import React from "react";
 import Add from "@/assets/Add.png";
 import Edit from "@/assets/Edit.png";
 import { cn } from "@/lib/utils";
+import { en as messages } from "@/messages";
 
 interface TermActionProps {
   label?: string;
@@ -13,15 +14,30 @@ interface TermActionProps {
 }
 
 export const TermAction = React.forwardRef<HTMLButtonElement, TermActionProps>(
-  ({ label, type = "term", action, onClick, className, dataCy, ...rest }, ref) => {
+  (
+    { label, type = "term", action, onClick, className, dataCy, ...rest },
+    ref,
+  ) => {
     const getIcon = () => {
       switch (action) {
         case "edit":
-          return <img className="size-6" src={Edit} alt="Edit" />;
+          return (
+            <img
+              className="size-6"
+              src={Edit}
+              alt={messages.admin.common.edit}
+            />
+          );
         case "delete":
           return;
         case "add":
-          return <img className="size-6 " src={Add} alt="Add" />;
+          return (
+            <img
+              className="size-6 "
+              src={Add}
+              alt={messages.admin.common.add}
+            />
+          );
         default:
           return null;
       }
@@ -35,8 +51,10 @@ export const TermAction = React.forwardRef<HTMLButtonElement, TermActionProps>(
         onClick={onClick}
         className={cn(
           "flex items-center rounded px-3 py-1 text-white transition-colors",
-          isDelete ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700",
-          className
+          isDelete
+            ? "bg-red-600 hover:bg-red-700"
+            : "bg-blue-600 hover:bg-blue-700",
+          className,
         )}
         data-cy={dataCy || `${action}-${type}-trigger`}
         {...rest}
@@ -44,7 +62,7 @@ export const TermAction = React.forwardRef<HTMLButtonElement, TermActionProps>(
         {label ? <span className="text-xs uppercase">{label}</span> : getIcon()}
       </button>
     );
-  }
+  },
 );
 
 TermAction.displayName = "TermAction";

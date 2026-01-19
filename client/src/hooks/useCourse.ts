@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Course, Project } from "@/components/Administration/Course/types";
 import courseApi from "@/components/Administration/Course/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
+import { en as messages } from "@/messages";
 
 const DEFAULT: Course = {
   id: 0,
@@ -23,14 +24,14 @@ export const useCourse = () => {
   const showMessage = (
     text: string,
     type: "success" | "error" | "info",
-    hide = true
+    hide = true,
   ) => {
     setMessage({ text, type });
     if (hide) {
       setTimeout(() => {
         setMessage(null);
       }, 3000); // delay
-    };
+    }
   };
 
   const getCourses = async (): Promise<Course[]> => {
@@ -65,14 +66,11 @@ export const useCourse = () => {
 
     try {
       await courseApi.createCourse(body);
-      showMessage(
-        `Course: "${course.courseName}" created successfully`,
-        "success"
-      );
+      showMessage(messages.course.create.success(course.courseName), "success");
     } catch (error) {
       showMessage(
-        `Fail to create Course: "${course.courseName}", Error: ${error}"`,
-        "error"
+        messages.course.create.failure(course.courseName, error),
+        "error",
       );
     }
   };
@@ -91,12 +89,12 @@ export const useCourse = () => {
 
     try {
       await courseApi.updateCourse(body);
-      showMessage(
-        `Course: ${course.courseName} editing successfully`,
-        "success"
-      );
+      showMessage(messages.course.update.success(course.courseName), "success");
     } catch (error) {
-      showMessage(`Course: ${course.courseName} Error: ${error}`, "error");
+      showMessage(
+        messages.course.update.failure(course.courseName, error),
+        "error",
+      );
     }
   };
 
@@ -107,16 +105,14 @@ export const useCourse = () => {
 
     try {
       await courseApi.deleteCourse(course.id);
-      showMessage(
-        `Course "${course.courseName}" deleted successfully`,
-        "success"
-      );
+      showMessage(messages.course.delete.success(course.courseName), "success");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error("Delete course error:", errorMessage);
 
       // Try to parse JSON error message, fall back to simple message
-      let displayMessage = `Failed to delete course "${course.courseName}"`;
+      let displayMessage = messages.course.delete.failure(course.courseName);
       try {
         const parsed = JSON.parse(errorMessage);
         if (parsed.message) displayMessage = parsed.message;
@@ -145,8 +141,8 @@ export const useCourse = () => {
         prevCourses.map((c) =>
           c.id === course.id
             ? { ...c, projects: [...c.projects, ...projects] }
-            : c
-        )
+            : c,
+        ),
       );
 
       return projects;
@@ -167,13 +163,17 @@ export const useCourse = () => {
     try {
       await courseApi.addProject(body);
       showMessage(
-        `Project: "${project.projectName}" created successfully`,
-        "success"
+        messages.course.addProject.success(project.projectName),
+        "success",
       );
     } catch (error) {
       showMessage(
-        `Fail to create Project: "${project.projectName}" for courseId: "${project.courseId}, Error: ${error}"`,
-        "error"
+        messages.course.addProject.failure(
+          project.projectName,
+          project.courseId,
+          error,
+        ),
+        "error",
       );
     }
   };
@@ -190,13 +190,13 @@ export const useCourse = () => {
     try {
       await courseApi.updateProject(project.id, body);
       showMessage(
-        `Project: "${project.projectName}" updated successfully`,
-        "success"
+        messages.course.updateProject.success(project.projectName),
+        "success",
       );
     } catch (error) {
       showMessage(
-        `Failed to update Project: "${project.projectName}". Error: ${error}`,
-        "error"
+        messages.course.updateProject.failure(project.projectName, error),
+        "error",
       );
     }
   };
@@ -208,13 +208,13 @@ export const useCourse = () => {
     try {
       await courseApi.deleteProject(project.id);
       showMessage(
-        `Project: "${project.projectName}" deleted successfully`,
-        "success"
+        messages.course.deleteProject.success(project.projectName),
+        "success",
       );
     } catch (error) {
       showMessage(
-        `Failed to delete Project: "${project.projectName}". Error: ${error}`,
-        "error"
+        messages.course.deleteProject.failure(project.projectName, error),
+        "error",
       );
     }
   };

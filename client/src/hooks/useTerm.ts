@@ -3,6 +3,7 @@ import { Term } from "@/components/Administration/Term/types";
 import { Course } from "@/components/Administration/Course/types";
 import termApi from "@/components/Administration/Term/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
+import { en as messages } from "@/messages";
 
 const DEFAULT: Term = {
   id: 0,
@@ -22,7 +23,7 @@ export const useTerm = () => {
   const showMessage = (
     text: string,
     type: "success" | "error" | "info",
-    hide = true
+    hide = true,
   ) => {
     setMessage({ text, type });
     if (hide) {
@@ -62,15 +63,9 @@ export const useTerm = () => {
 
     try {
       await termApi.createTerm(body);
-      showMessage(
-        `Term: "${term.termName}" created successfully`,
-        "success"
-      );
+      showMessage(messages.term.create.success(term.termName), "success");
     } catch (error) {
-      showMessage(
-        `Failed to create Term: "${term.termName}", Error: ${error}"`,
-        "error"
-      );
+      showMessage(messages.term.create.failure(term.termName, error), "error");
     }
   };
 
@@ -80,16 +75,14 @@ export const useTerm = () => {
 
     try {
       await termApi.deleteTerm(term.id);
-      showMessage(
-        `Term "${term.termName}" deleted successfully`,
-        "success"
-      );
+      showMessage(messages.term.delete.success(term.termName), "success");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error("Delete term error:", errorMessage);
 
       // Try to parse JSON error message, fall back to simple message
-      let displayMessage = `Failed to delete term "${term.termName}"`;
+      let displayMessage = messages.term.delete.failure(term.termName);
       try {
         const parsed = JSON.parse(errorMessage);
         if (parsed.message) displayMessage = parsed.message;
@@ -117,10 +110,8 @@ export const useTerm = () => {
       // Update state with courses for this term
       setTerms((prevTerms) =>
         prevTerms.map((t) =>
-          t.id === term.id
-            ? { ...t, courses: [...t.courses, ...courses] }
-            : t
-        )
+          t.id === term.id ? { ...t, courses: [...t.courses, ...courses] } : t,
+        ),
       );
 
       return courses;
@@ -140,13 +131,17 @@ export const useTerm = () => {
     try {
       await termApi.addCourse(body);
       showMessage(
-        `Course: "${course.courseName}" created successfully`,
-        "success"
+        messages.course.addCourseToTerm.success(course.courseName),
+        "success",
       );
     } catch (error) {
       showMessage(
-        `Failed to create Course: "${course.courseName}" for termId: "${course.termId}, Error: ${error}"`,
-        "error"
+        messages.course.addCourseToTerm.failure(
+          course.courseName,
+          course.termId,
+          error,
+        ),
+        "error",
       );
     }
   };

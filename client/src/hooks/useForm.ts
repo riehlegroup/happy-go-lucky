@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { en as messages } from "@/messages";
 
 type ValidationResult = string | boolean;
 
@@ -18,7 +19,7 @@ type FormErrors<T> = {
 const rules = {
   required: (fieldName: string): ValidationRule => ({
     validate: (value: string | boolean | number) =>
-      !value ? `${fieldName} is required` : "",
+      !value ? messages.validation.required(fieldName) : "",
   }),
 
   pattern: (pattern: RegExp, message: string): ValidationRule => ({
@@ -30,7 +31,9 @@ const rules = {
 
   boolean: (fieldName: string): ValidationRule => ({
     validate: (value) =>
-      typeof value !== "boolean" ? `${fieldName} must be a boolean` : "",
+      typeof value !== "boolean"
+        ? messages.validation.mustBeBoolean(fieldName)
+        : "",
   }),
 };
 
@@ -38,14 +41,14 @@ export const createCourseValidation = () => ({
   termId: [
     {
       validate: (value: string | boolean | number) =>
-        !value || value === 0 ? "Term is required" : "",
+        !value || value === 0 ? messages.validation.term.required : "",
     },
   ],
   courseName: [
     rules.required("Course Name"),
     rules.pattern(
       /^[a-zA-Z0-9\s-]+$/,
-      "Course name can only contain letters, numbers, spaces, and hyphens"
+      messages.validation.course.courseNamePattern,
     ),
   ],
   studentsCanCreateProject: [rules.boolean("studentsCanCreateProject")],
@@ -56,7 +59,7 @@ export const createProjectValidation = () => ({
     rules.required("projectName"),
     rules.pattern(
       /^[a-zA-Z0-9\s-]+$/,
-      "Only letters, numbers, spaces and hyphens allowed"
+      messages.validation.project.projectNamePattern,
     ),
   ],
 });
@@ -66,14 +69,14 @@ export const createTermValidation = () => ({
     rules.required("Term Name"),
     rules.pattern(
       /^(ws|winter|ss|summer)\s*(?:(\d{2}|\d{4})(?:\/(\d{2}))?)$/,
-      "Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025"
+      messages.validation.termName.pattern,
     ),
   ],
   displayName: [
     rules.required("Display Name"),
     rules.pattern(
       /^[a-zA-Z0-9\s-\/]+$/,
-      "Display name can only contain letters, numbers, spaces, hyphens, and slashes"
+      messages.validation.displayName.pattern,
     ),
   ],
 });
@@ -83,14 +86,14 @@ export const createCourseToTermValidation = () => ({
     rules.required("Course Name"),
     rules.pattern(
       /^[a-zA-Z0-9\s-]+$/,
-      "Course name can only contain letters, numbers, spaces, and hyphens"
+      messages.validation.course.courseNamePattern,
     ),
   ],
 });
 
 export const useForm = <T extends object>(
   initialValues: T,
-  validationSchema: ValidationSchema<T>
+  validationSchema: ValidationSchema<T>,
 ) => {
   const [data, setData] = useState<T>(initialValues);
   const [errors, setErrors] = useState<FormErrors<T>>({} as FormErrors<T>);
@@ -109,7 +112,7 @@ export const useForm = <T extends object>(
 
       return "";
     },
-    [validationSchema]
+    [validationSchema],
   );
 
   const handleChanges = useCallback(
@@ -120,7 +123,7 @@ export const useForm = <T extends object>(
         [field]: validateField(field, value),
       }));
     },
-    [validateField]
+    [validateField],
   );
 
   // Run initial validation on mount
@@ -131,8 +134,8 @@ export const useForm = <T extends object>(
         Object.entries(initialValues).map(([field, value]) => [
           field,
           validateField(field as keyof T, value),
-        ])
-      ) as FormErrors<T>
+        ]),
+      ) as FormErrors<T>,
     );
     setInit(true);
   }, [init, initialValues, validateField]);

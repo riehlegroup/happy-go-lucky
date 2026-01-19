@@ -23,6 +23,7 @@ import AuthStorage from "@/services/storage/auth";
 import coursesApi from "@/services/api/courses";
 import projectsApi from "@/services/api/projects";
 import ApiClient from "@/services/api/client";
+import { en as messages } from "@/messages";
 
 const CourseParticipation: React.FC = () => {
   type Project = {
@@ -34,7 +35,6 @@ const CourseParticipation: React.FC = () => {
   const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
 
-
   const [user, setUser] = useState<{
     name: string;
     email: string;
@@ -44,10 +44,12 @@ const CourseParticipation: React.FC = () => {
   const [userProjects, setUserProjects] = useState<string[]>([]);
 
   const [enrolledProjects, setEnrolledProjects] = useState<Project[]>([]);
-  const [selectedEnrolledCourse, setSelectedEnrolledCourse] = useState<string>("");
+  const [selectedEnrolledCourse, setSelectedEnrolledCourse] =
+    useState<string>("");
 
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
-  const [selectedAvailableCourse, setSelectedAvailableCourse] = useState<string>("");
+  const [selectedAvailableCourse, setSelectedAvailableCourse] =
+    useState<string>("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -81,7 +83,7 @@ const CourseParticipation: React.FC = () => {
 
     fetchCourses();
 
-    const fetchUserProjects = async() => {
+    const fetchUserProjects = async () => {
       try {
         const authStorage = AuthStorage.getInstance();
         const userEmail = authStorage.getEmail();
@@ -104,14 +106,18 @@ const CourseParticipation: React.FC = () => {
     const fetchEnrolledProjects = async () => {
       if (selectedEnrolledCourse) {
         try {
-          const data = await projectsApi.getProjectsByCourseName(selectedEnrolledCourse);
+          const data = await projectsApi.getProjectsByCourseName(
+            selectedEnrolledCourse,
+          );
           const mappedProjects = data.map((item) => ({
             id: item.id,
             projectName: item.projectName,
             courseName: selectedEnrolledCourse,
           }));
 
-          const enrolledProjects = mappedProjects.filter((item: Project) => userProjects.includes(item.projectName));
+          const enrolledProjects = mappedProjects.filter((item: Project) =>
+            userProjects.includes(item.projectName),
+          );
 
           setEnrolledProjects(enrolledProjects);
         } catch (error: unknown) {
@@ -128,21 +134,25 @@ const CourseParticipation: React.FC = () => {
   }, [selectedEnrolledCourse, userProjects]);
 
   const filteredEnrolledProjects = enrolledProjects.filter(
-    (project) => project.courseName === selectedEnrolledCourse
+    (project) => project.courseName === selectedEnrolledCourse,
   );
 
   useEffect(() => {
     const fetchAvailableProjects = async () => {
       if (selectedAvailableCourse) {
         try {
-          const data = await projectsApi.getProjectsByCourseName(selectedAvailableCourse);
+          const data = await projectsApi.getProjectsByCourseName(
+            selectedAvailableCourse,
+          );
           const mappedProjects = data.map((item) => ({
             id: item.id,
             projectName: item.projectName,
             courseName: selectedAvailableCourse,
           }));
 
-          const availableProjectsWithoutEnrolled = mappedProjects.filter((item: Project) => !userProjects.includes(item.projectName));
+          const availableProjectsWithoutEnrolled = mappedProjects.filter(
+            (item: Project) => !userProjects.includes(item.projectName),
+          );
 
           setAvailableProjects(availableProjectsWithoutEnrolled);
         } catch (error: unknown) {
@@ -159,27 +169,29 @@ const CourseParticipation: React.FC = () => {
   }, [selectedAvailableCourse, userProjects]);
 
   const filteredAvailableProjects = availableProjects.filter(
-    (project: Project) => project.courseName === selectedAvailableCourse
+    (project: Project) => project.courseName === selectedAvailableCourse,
   );
 
   const handleJoin = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(messages.courseParticipation.status.userNotAvailableWarning);
       return;
     }
 
     try {
-      const data = await ApiClient.getInstance().post<{ success: boolean; message: string }>(
-        "/user/project",
-        {
-          projectName,
-          memberName: user.name,
-          memberRole: role,
-          memberEmail: user.email,
-        }
-      );
+      const data = await ApiClient.getInstance().post<{
+        success: boolean;
+        message: string;
+      }>("/user/project", {
+        projectName,
+        memberName: user.name,
+        memberRole: role,
+        memberEmail: user.email,
+      });
 
-      setMessage(data.message || "Successfully joined the project!");
+      setMessage(
+        data.message || messages.courseParticipation.status.joinedFallback,
+      );
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -193,16 +205,19 @@ const CourseParticipation: React.FC = () => {
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(messages.courseParticipation.status.userNotAvailableWarning);
       return;
     }
 
     try {
-      const data = await ApiClient.getInstance().delete<{ success: boolean; message: string }>(
-        `/user/project?projectName=${projectName}&memberEmail=${user.email}`
-      );
+      const data = await ApiClient.getInstance().delete<{
+        success: boolean;
+        message: string;
+      }>(`/user/project?projectName=${projectName}&memberEmail=${user.email}`);
 
-      setMessage(data.message || "Successfully left the project!");
+      setMessage(
+        data.message || messages.courseParticipation.status.leftFallback,
+      );
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -216,11 +231,15 @@ const CourseParticipation: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Course Participation" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={messages.courseParticipation.pageTitle}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         {/* Enrolled Courses Section */}
-        <SectionCard title="Projects you are enrolled in">
+        <SectionCard title={messages.courseParticipation.enrolledTitle}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -228,7 +247,11 @@ const CourseParticipation: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue
+                  placeholder={
+                    messages.courseParticipation.selectCoursePlaceholder
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((group, index) => (
@@ -247,17 +270,24 @@ const CourseParticipation: React.FC = () => {
                       <p className="font-medium">{project.projectName}</p>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="destructive" className="w-fit text-sm">
-                            Leave
+                          <Button
+                            variant="destructive"
+                            className="w-fit text-sm"
+                          >
+                            {messages.courseParticipation.leave}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Leave Project</DialogTitle>
+                            <DialogTitle>
+                              {messages.courseParticipation.leaveDialogTitle}
+                            </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <p className="text-sm">
-                              Are you sure you want to leave {project.projectName}?
+                              {messages.courseParticipation.leaveDialogText(
+                                project.projectName,
+                              )}
                             </p>
                             {message && (
                               <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
@@ -272,12 +302,12 @@ const CourseParticipation: React.FC = () => {
                                 setMessage("");
                               }}
                             >
-                              Cancel
+                              {messages.courseParticipation.cancel}
                             </Button>
                             <Button
                               onClick={() => handleLeave(project.projectName)}
                             >
-                              Confirm
+                              {messages.courseParticipation.confirm}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -287,13 +317,15 @@ const CourseParticipation: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-500">No enrolled projects</p>
+              <p className="text-slate-500">
+                {messages.courseParticipation.empty.noEnrolledProjects}
+              </p>
             )}
           </div>
         </SectionCard>
 
         {/* Available Courses Section */}
-        <SectionCard title="Available Projects">
+        <SectionCard title={messages.courseParticipation.availableTitle}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -301,7 +333,11 @@ const CourseParticipation: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue
+                  placeholder={
+                    messages.courseParticipation.selectCoursePlaceholder
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((group, index) => (
@@ -320,19 +356,26 @@ const CourseParticipation: React.FC = () => {
                       <p className="font-medium">{project.projectName}</p>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="primary" className="px-3 py-1 text-sm">
-                            Join
+                          <Button
+                            variant="primary"
+                            className="px-3 py-1 text-sm"
+                          >
+                            {messages.courseParticipation.join}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Join Project</DialogTitle>
+                            <DialogTitle>
+                              {messages.courseParticipation.joinDialogTitle}
+                            </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <Input
                               type="text"
-                              label="Role"
-                              placeholder="Enter your role"
+                              label={messages.courseParticipation.roleLabel}
+                              placeholder={
+                                messages.courseParticipation.rolePlaceholder
+                              }
                               value={role}
                               onChange={(e) => setRole(e.target.value)}
                             />
@@ -350,12 +393,12 @@ const CourseParticipation: React.FC = () => {
                                 setMessage("");
                               }}
                             >
-                              Cancel
+                              {messages.courseParticipation.cancel}
                             </Button>
                             <Button
                               onClick={() => handleJoin(project.projectName)}
                             >
-                              Join
+                              {messages.courseParticipation.join}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -365,7 +408,9 @@ const CourseParticipation: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-500">No available projects</p>
+              <p className="text-slate-500">
+                {messages.courseParticipation.empty.noAvailableProjects}
+              </p>
             )}
           </div>
         </SectionCard>

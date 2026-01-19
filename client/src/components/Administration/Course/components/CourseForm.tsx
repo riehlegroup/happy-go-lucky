@@ -8,6 +8,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./CourseMessage";
 import { cn } from "@/lib/utils";
+import { en as messages } from "@/messages";
 
 interface FormFieldProps {
   label: string;
@@ -30,7 +31,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       // }`}
       className={cn(
         "h-10 w-full bg-gray-50 text-black",
-        error && "border-red-500 ring-1 ring-red-500"
+        error && "border-red-500 ring-1 ring-red-500",
       )}
       type="text"
       value={value}
@@ -58,7 +59,10 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
       onChange={(e) => onChange(e.target.checked)}
       className="size-4 rounded border-gray-300 bg-gray-100 text-blue-600"
     />
-    <label className="ms-2 cursor-pointer text-sm font-medium text-gray-900" onClick={() => onChange(!checked)}>
+    <label
+      className="ms-2 cursor-pointer text-sm font-medium text-gray-900"
+      onClick={() => onChange(!checked)}
+    >
       {label}
     </label>
   </div>
@@ -130,7 +134,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   message,
   onChange,
   onSubmit,
-  submitText = "submit",
+  submitText = messages.admin.forms.submit,
   children,
   termOptions = [],
 }: CourseFormProps) => {
@@ -154,11 +158,11 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   // Narrow the handleChanges using type assertions
   const courseHandleChanges = handleChanges as (
     key: keyof Course,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => void;
   const projectHandleChanges = handleChanges as (
     key: keyof Project,
-    value: string
+    value: string,
   ) => void;
 
   const handleSubmit = async () => {
@@ -175,7 +179,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
         "bg-green-500": isValid && message?.type === "success",
         // Error
         "bg-red-500": isValid && message?.type === "error",
-      }
+      },
     );
   };
 
@@ -188,12 +192,17 @@ export const CourseForm: React.FC<CourseFormProps> = ({
             <select
               className={cn(
                 "h-10 w-full bg-gray-50 text-black border border-gray-300 rounded px-2",
-                (errors as Record<keyof Course, string>).termId && "border-red-500 ring-1 ring-red-500"
+                (errors as Record<keyof Course, string>).termId &&
+                  "border-red-500 ring-1 ring-red-500",
               )}
               value={(formData as Course).termId || 0}
-              onChange={(e) => courseHandleChanges("termId", parseInt(e.target.value))}
+              onChange={(e) =>
+                courseHandleChanges("termId", parseInt(e.target.value))
+              }
             >
-              <option value={0}>Select a term...</option>
+              <option value={0}>
+                {messages.admin.courseAdmin.forms.selectTermPlaceholder}
+              </option>
               {termOptions.map((term) => (
                 <option key={term.id} value={term.id}>
                   {term.label}
@@ -201,7 +210,9 @@ export const CourseForm: React.FC<CourseFormProps> = ({
               ))}
             </select>
             {(errors as Record<keyof Course, string>).termId && (
-              <div className="text-sm text-red-500">{(errors as Record<keyof Course, string>).termId}</div>
+              <div className="text-sm text-red-500">
+                {(errors as Record<keyof Course, string>).termId}
+              </div>
             )}
           </div>
           <FormField
@@ -220,7 +231,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
         </>
       ) : (
         <FormField
-          label="Project Name"
+          label={messages.admin.courseAdmin.forms.projectNameLabel}
           value={(formData as Project).projectName || ""}
           error={(errors as Record<keyof Project, string>).projectName}
           onChange={(value) => projectHandleChanges("projectName", value)}

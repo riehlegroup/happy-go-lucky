@@ -4,6 +4,7 @@ import TopNavBar from "../common/TopNavBar";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
 import SectionCard from "@/components/common/SectionCard";
+import { en as messages } from "@/messages";
 import {
   LineChart,
   Line,
@@ -18,7 +19,9 @@ import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 
 type ArrayElement<T> = T extends (infer U)[] ? U : never;
-type Commit = ArrayElement<Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"]>;
+type Commit = ArrayElement<
+  Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"]
+>;
 type Sprint = {
   id: number;
   projectGroupName: string;
@@ -73,10 +76,10 @@ const CodeActivity: React.FC = () => {
       if (!projectName) return;
 
       try {
-        const data = await ApiClient.getInstance().get<{ courseId: number; courseName: string }>(
-          "/courseProject/course",
-          { projectName: projectName }
-        );
+        const data = await ApiClient.getInstance().get<{
+          courseId: number;
+          courseName: string;
+        }>("/courseProject/course", { projectName: projectName });
         if (data && data.courseId) {
           setSelectedCourseId(data.courseId);
         }
@@ -96,7 +99,11 @@ const CodeActivity: React.FC = () => {
       const user = authStorage.getUser();
       const githubUsername = user?.githubUsername;
 
-      console.log("CodeActivity - Loading user data:", { userName, userEmail, githubUsername });
+      console.log("CodeActivity - Loading user data:", {
+        userName,
+        userEmail,
+        githubUsername,
+      });
 
       if (userName && userEmail && githubUsername) {
         setUser({
@@ -105,7 +112,11 @@ const CodeActivity: React.FC = () => {
           githubUsername: githubUsername,
         });
       } else {
-        console.warn("User data not found in storage", { userName, userEmail, githubUsername });
+        console.warn("User data not found in storage", {
+          userName,
+          userEmail,
+          githubUsername,
+        });
       }
     };
 
@@ -126,13 +137,13 @@ const CodeActivity: React.FC = () => {
     if (!projectName || !user?.email) return;
 
     try {
-      const data = await ApiClient.getInstance().get<{ url: string; message?: string }>(
-        "/user/project/url",
-        {
-          userEmail: user.email,
-          projectName: projectName
-        }
-      );
+      const data = await ApiClient.getInstance().get<{
+        url: string;
+        message?: string;
+      }>("/user/project/url", {
+        userEmail: user.email,
+        projectName: projectName,
+      });
 
       if (data.url) {
         console.log("Fetched repository URL:", data.url);
@@ -185,29 +196,31 @@ const CodeActivity: React.FC = () => {
         console.log("Submission dates:", scheduleData.data.submissionDates);
 
         // Map submission dates to sprints
-        const fetchedSprints: Sprint[] = scheduleData.data.submissionDates.map((submissionDate, index) => ({
-          id: index,
-          projectGroupName: "",
-          sprintName: `Sprint ${index + 1}`,
-          endDate: new Date(submissionDate).getTime() / 1000, // Convert to seconds
-          startDate: new Date(), // Will be calculated below
-          name: `Sprint ${index + 1}`
-        }));
+        const fetchedSprints: Sprint[] = scheduleData.data.submissionDates.map(
+          (submissionDate, index) => ({
+            id: index,
+            projectGroupName: "",
+            sprintName: `Sprint ${index + 1}`,
+            endDate: new Date(submissionDate).getTime() / 1000, // Convert to seconds
+            startDate: new Date(), // Will be calculated below
+            name: `Sprint ${index + 1}`,
+          }),
+        );
 
         // Calculate start dates
-        const updatedSprints = fetchedSprints.map(
-          (sprint, index) => {
-            if (index === 0) {
-              // First sprint: start date is course start or one week before end date
-              const startDate = new Date(scheduleData.data.startDate);
-              return { ...sprint, startDate };
-            } else {
-              // Other sprints: start date is the previous sprint's end date
-              const startDate = new Date(fetchedSprints[index - 1].endDate * 1000);
-              return { ...sprint, startDate };
-            }
+        const updatedSprints = fetchedSprints.map((sprint, index) => {
+          if (index === 0) {
+            // First sprint: start date is course start or one week before end date
+            const startDate = new Date(scheduleData.data.startDate);
+            return { ...sprint, startDate };
+          } else {
+            // Other sprints: start date is the previous sprint's end date
+            const startDate = new Date(
+              fetchedSprints[index - 1].endDate * 1000,
+            );
+            return { ...sprint, startDate };
           }
-        );
+        });
 
         setSprints(updatedSprints);
       } catch (error) {
@@ -217,12 +230,11 @@ const CodeActivity: React.FC = () => {
 
     fetchAllSprints();
   }, [selectedCourseId]);
-  
 
   const getCommits = async (page: number) => {
     if (!repoDetails || !sprints.length) {
       console.log(
-        "Repo details or sprints data is missing, skipping commit fetch."
+        "Repo details or sprints data is missing, skipping commit fetch.",
       );
       return;
     }
@@ -240,7 +252,7 @@ const CodeActivity: React.FC = () => {
           per_page: 100,
           page: page,
           author: user?.githubUsername,
-        }
+        },
       );
 
       console.log("Fetched commits:", response.data);
@@ -320,9 +332,13 @@ const CodeActivity: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Code Activity" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={messages.projects.codeActivity.pageTitle}
+        showBackButton={true}
+        showUserInfo={true}
+      />
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Commits on GitHub">
+        <SectionCard title={messages.projects.codeActivity.commitsSectionTitle}>
           <div className="space-y-4">
             {commits.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -336,11 +352,19 @@ const CodeActivity: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : loading ? (
-              <p className="text-slate-600">Loading...</p>
+              <p className="text-slate-600">
+                {messages.projects.codeActivity.loading}
+              </p>
             ) : (
-              <p className="text-slate-500">No commits found.</p>
+              <p className="text-slate-500">
+                {messages.projects.codeActivity.noneFound}
+              </p>
             )}
-            {loading && <p className="text-sm text-slate-500">Loading more commits...</p>}
+            {loading && (
+              <p className="text-sm text-slate-500">
+                {messages.projects.codeActivity.loadingMore}
+              </p>
+            )}
           </div>
         </SectionCard>
       </div>

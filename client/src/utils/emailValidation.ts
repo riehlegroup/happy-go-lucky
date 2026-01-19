@@ -5,6 +5,8 @@
  * in server/src/ValueTypes/Email.ts to ensure consistency.
  */
 
+import { en as messages } from "@/messages";
+
 /**
  * Validates email format using regex pattern.
  * Valid email format: local@domain.tld
@@ -26,6 +28,6 @@ export function isValidEmail(email: string): boolean {
  */
 export function validateEmailOrThrow(email: string): void {
   if (!isValidEmail(email)) {
-    throw new Error('Invalid email address');
+    throw new Error(messages.email.invalidNoPeriod);
   }
 }
