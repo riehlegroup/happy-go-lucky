@@ -9,6 +9,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./TermMessage";
 import { cn } from "@/lib/utils";
+import { en as messages } from "@/messages";
 
 interface FormFieldProps {
   label: string;
@@ -28,7 +29,7 @@ export const FormField: React.FC<FormFieldProps> = ({
     <input
       className={cn(
         "h-10 w-full bg-gray-50 text-black",
-        error && "border-red-500 ring-1 ring-red-500"
+        error && "border-red-500 ring-1 ring-red-500",
       )}
       type="text"
       value={value}
@@ -56,7 +57,7 @@ export const TermForm: React.FC<TermFormProps> = ({
   message,
   onChange,
   onSubmit,
-  submitText = "submit",
+  submitText = messages.admin.forms.submit,
   children,
 }: TermFormProps) => {
   const isTerm = type === "term";
@@ -79,11 +80,11 @@ export const TermForm: React.FC<TermFormProps> = ({
   // Narrow the handleChanges using type assertions
   const termHandleChanges = handleChanges as (
     key: keyof Term,
-    value: string
+    value: string,
   ) => void;
   const courseHandleChanges = handleChanges as (
     key: keyof Course,
-    value: string
+    value: string,
   ) => void;
 
   const handleSubmit = async () => {
@@ -100,7 +101,7 @@ export const TermForm: React.FC<TermFormProps> = ({
         "bg-green-500": isValid && message?.type === "success",
         // Error
         "bg-red-500": isValid && message?.type === "error",
-      }
+      },
     );
   };
 
@@ -123,7 +124,7 @@ export const TermForm: React.FC<TermFormProps> = ({
         </>
       ) : (
         <FormField
-          label="Course Name"
+          label={label[0]}
           value={(formData as Course).courseName || ""}
           error={(errors as Record<keyof Course, string>).courseName}
           onChange={(value) => courseHandleChanges("courseName", value)}

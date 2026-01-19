@@ -3,6 +3,7 @@ import { Course } from "../types";
 import Button from "@/components/common/Button";
 import { DateInput } from "./CourseForm";
 import courseApi from "../api";
+import { en as messages } from "@/messages";
 
 interface CourseScheduleProps {
   course: Course;
@@ -26,7 +27,10 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [submission, setSubmission] = useState<Date[]>([]);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   const loadSchedule = async () => {
     try {
@@ -34,7 +38,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
       if (schedule) {
         setStartDate(new Date(schedule.startDate));
         setEndDate(new Date(schedule.endDate));
-        setSubmission(schedule.submissionDates.map(d => new Date(d)));
+        setSubmission(schedule.submissionDates.map((d) => new Date(d)));
       }
     } catch (error) {
       console.error("Error loading schedule:", error);
@@ -61,7 +65,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
     const end = new Date(endDate);
     end.setHours(0, 0, 0, 0);
 
-    return submission.filter(date => {
+    return submission.filter((date) => {
       const d = new Date(date);
       d.setHours(0, 0, 0, 0);
       return d >= start && d <= end;
@@ -71,7 +75,10 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
   const handleRegenerateWeekly = () => {
     const weeklySubmissions = generateWeeklySubmission();
     setSubmission(weeklySubmissions);
-    setMessage({ text: "Weekly submissions regenerated", type: "success" });
+    setMessage({
+      text: messages.admin.courseAdmin.schedule.weeklyRegenerated,
+      type: "success",
+    });
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -86,13 +93,19 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
       await courseApi.saveSchedule(course.id, {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        submissionDates: validSubmissions.map(d => d.toISOString()),
+        submissionDates: validSubmissions.map((d) => d.toISOString()),
       });
 
-      setMessage({ text: "Schedule saved successfully!", type: "success" });
+      setMessage({
+        text: messages.admin.courseAdmin.schedule.savedSuccess,
+        type: "success",
+      });
     } catch (error) {
       console.error("Error saving schedule:", error);
-      setMessage({ text: "Failed to save schedule. Please try again.", type: "error" });
+      setMessage({
+        text: messages.admin.courseAdmin.schedule.savedFailure,
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -138,8 +151,8 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
     // Check if date is within range
     if (d < start || d > end) {
       setMessage({
-        text: "Submission date must be between course start and end dates",
-        type: "error"
+        text: messages.admin.courseAdmin.schedule.submissionDateOutOfRange,
+        type: "error",
       });
       setTimeout(() => setMessage(null), 3000);
       return;
@@ -148,7 +161,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
     const exists = submission.some(
       (slot) =>
         slot.toISOString().substring(0, 10) ===
-        date.toISOString().substring(0, 10)
+        date.toISOString().substring(0, 10),
     );
     if (!exists) {
       const newSubmission = [...submission, date];
@@ -162,8 +175,8 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
       submission.filter(
         (slot) =>
           slot.toISOString().substring(0, 10) !==
-          date.toISOString().substring(0, 10)
-      )
+          date.toISOString().substring(0, 10),
+      ),
     );
   };
 
@@ -176,26 +189,33 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
   };
 
   // Sort submission dates ascending
-  const sortedSubmissions = [...submission].sort((a, b) => a.getTime() - b.getTime());
+  const sortedSubmissions = [...submission].sort(
+    (a, b) => a.getTime() - b.getTime(),
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex size-full items-center justify-center bg-gray-900/50">
       <div className="mt-4 flex max-h-[90vh] w-auto max-w-2xl flex-col items-center overflow-y-auto rounded bg-white p-6 text-gray-500 shadow">
-        <h2 className="text-2xl font-bold text-black">Course Scheduler</h2>
+        <h2 className="text-2xl font-bold text-black">
+          {messages.admin.courseAdmin.schedule.title}
+        </h2>
         <h3>
-          ID: {course.id}, Name: {course.courseName}
+          {messages.admin.courseAdmin.schedule.courseInfo(
+            course.id,
+            course.courseName,
+          )}
         </h3>
 
         <div className="flex w-full flex-col items-center">
           <DateInput
-            label="Course start:"
+            label={messages.admin.courseAdmin.schedule.courseStartLabel}
             value={startDate.toISOString().substring(0, 10)}
             onChange={setStartDate}
             className="my-2"
           />
 
           <DateInput
-            label="Course end:"
+            label={messages.admin.courseAdmin.schedule.courseEndLabel}
             value={endDate.toISOString().substring(0, 10)}
             onChange={setEndDate}
             className="my-2"
@@ -203,38 +223,39 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
         </div>
 
         <div className="mb-4 w-full">
-          <h3 className="px-2 font-bold text-black">Submission:</h3>
+          <h3 className="px-2 font-bold text-black">
+            {messages.admin.courseAdmin.schedule.submissionTitle}
+          </h3>
           <div className="my-2 flex justify-center">
-            <Button
-              onClick={handleRegenerateWeekly}
-            >
-              Regenerate Weekly Submissions
+            <Button onClick={handleRegenerateWeekly}>
+              {messages.admin.courseAdmin.schedule.regenerateWeekly}
             </Button>
           </div>
           <div className="my-2 flex items-end justify-center gap-2">
             <DateInput
-              label="Add Date:"
+              label={messages.admin.courseAdmin.schedule.addDateLabel}
               className="justify-center"
               value={selectedDate.toISOString().substring(0, 10)}
               onChange={setSelectedDate}
             />
-            <Button
-              onClick={() => addSubmission(selectedDate)}
-            >
-              Add
+            <Button onClick={() => addSubmission(selectedDate)}>
+              {messages.admin.courseAdmin.schedule.add}
             </Button>
           </div>
           <div className="w-full px-2">
             <ul>
               {sortedSubmissions.map((slot, index) => (
-                <li key={`submission-${index}`} className="flex items-center justify-between gap-2 border-b p-2 last:border-b-0">
+                <li
+                  key={`submission-${index}`}
+                  className="flex items-center justify-between gap-2 border-b p-2 last:border-b-0"
+                >
                   <span>{formatDateWithLeadingZeros(slot)}</span>
                   <Button
                     className="text-sm"
                     variant="destructive"
                     onClick={() => removeSubmission(slot)}
                   >
-                    Remove
+                    {messages.admin.courseAdmin.schedule.remove}
                   </Button>
                 </li>
               ))}
@@ -255,18 +276,13 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
         )}
 
         <div className="flex justify-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={saving}
-          >
-            Close
+          <Button variant="secondary" onClick={onClose} disabled={saving}>
+            {messages.common.close}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save"}
+          <Button onClick={handleSave} disabled={saving}>
+            {saving
+              ? messages.admin.courseAdmin.schedule.saving
+              : messages.common.save}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { en as messages } from "@/messages";
 import {
   Dialog,
   DialogContent,
@@ -25,8 +26,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   title,
   description,
   onConfirm,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = messages.common.confirm,
+  cancelText = messages.common.cancel,
 }) => {
   const handleConfirm = () => {
     onConfirm();
@@ -41,16 +42,10 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button
-            variant="secondary"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {cancelText}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleConfirm}
-          >
+          <Button variant="destructive" onClick={handleConfirm}>
             {confirmText}
           </Button>
         </DialogFooter>

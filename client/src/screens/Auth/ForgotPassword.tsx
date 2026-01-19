@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./AuthScreens.css";
 import EmailIcon from "./../../assets/EmailIcon.png";
 import authApi from "@/services/api/auth";
+import { en as messages } from "@/messages";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -12,12 +13,12 @@ const ForgotPassword = () => {
 
     try {
       await authApi.forgotPassword(email);
-      setMessage("Password reset link sent! Please check your email.");
+      setMessage(messages.auth.forgotPassword.status.linkSent);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(messages.errors.unexpected);
       }
     }
   };
@@ -26,13 +27,13 @@ const ForgotPassword = () => {
     <>
       <div className="container">
         <div className="header">
-          <div className="text">Forgot Your Password</div>
+          <div className="text">{messages.auth.forgotPassword.title}</div>
           <br />
           <div className="underline"></div>
         </div>
         <div className="text ForgotPasswordText">
-          Enter your email address and
-          <br /> we will send you a link to reset your password
+          {messages.auth.forgotPassword.description.split("\n")[0]}
+          <br /> {messages.auth.forgotPassword.description.split("\n")[1]}
         </div>
         <form onSubmit={handleSubmit}>
           <div className="inputs">
@@ -41,7 +42,7 @@ const ForgotPassword = () => {
               <input
                 className="inputBox"
                 type="email"
-                placeholder="Please enter your email address"
+                placeholder={messages.auth.forgotPassword.placeholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -49,7 +50,7 @@ const ForgotPassword = () => {
           </div>
           <div className="submit-container">
             <button type="submit" className="submit">
-              Send
+              {messages.auth.forgotPassword.button}
             </button>
           </div>
         </form>

@@ -14,6 +14,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
 import projectsApi from "@/services/api/projects";
+import { en as messages } from "@/messages";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -99,15 +100,24 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
+      <TopNavBar
+        title={messages.dashboard.pageTitle}
+        showBackButton={false}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         {/* Projects Section */}
-        <SectionCard title="Projects">
+        <SectionCard title={messages.dashboard.projectsTitle}>
           <div className="space-y-4">
-            <Select value={selectedProject || ""} onValueChange={handleProjectChange}>
+            <Select
+              value={selectedProject || ""}
+              onValueChange={handleProjectChange}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Project" />
+                <SelectValue
+                  placeholder={messages.dashboard.selectProjectPlaceholder}
+                />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
@@ -124,53 +134,53 @@ const Dashboard: React.FC = () => {
                 disabled={!selectedProject}
                 className="w-48"
               >
-                Standups
+                {messages.dashboard.actions.standups}
               </Button>
               <Button
                 onClick={goHappiness}
                 disabled={!selectedProject}
                 className="w-48"
               >
-                Happiness
+                {messages.dashboard.actions.happiness}
               </Button>
               <Button
                 onClick={goCodeActivity}
                 disabled={!selectedProject}
                 className="w-48"
               >
-                Code Activity
+                {messages.dashboard.actions.codeActivity}
               </Button>
             </div>
           </div>
         </SectionCard>
 
         {/* Configuration Section */}
-        <SectionCard title="Configuration">
+        <SectionCard title={messages.dashboard.configurationTitle}>
           <div className="flex flex-wrap gap-4">
             <Button onClick={goUserPanel} className="w-48">
-              User profile
+              {messages.dashboard.configurationActions.userProfile}
             </Button>
             <Button onClick={goSettings} className="w-48">
-              Settings
+              {messages.dashboard.configurationActions.settings}
             </Button>
             <Button onClick={goCourseParticipation} className="w-48">
-              Course Participation
+              {messages.dashboard.configurationActions.courseParticipation}
             </Button>
             <Button onClick={goProjectConfig} className="w-48">
-              Project Config
+              {messages.dashboard.configurationActions.projectConfig}
             </Button>
           </div>
         </SectionCard>
 
         {/* System Administration Section */}
         {userRole === "ADMIN" && (
-          <SectionCard title="System Administration">
+          <SectionCard title={messages.dashboard.systemAdministrationTitle}>
             <div className="flex flex-wrap gap-4">
               <Button onClick={goUserAdmin} className="w-48">
-                User Admin
+                {messages.dashboard.systemAdministrationActions.userAdmin}
               </Button>
               <Button onClick={goCourseAdmin} className="w-48">
-                Course Admin
+                {messages.dashboard.systemAdministrationActions.courseAdmin}
               </Button>
             </div>
           </SectionCard>

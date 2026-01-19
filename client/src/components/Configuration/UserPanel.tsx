@@ -5,9 +5,9 @@ import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
+import { en as messages } from "@/messages";
 
 const UserPanel: React.FC = () => {
-
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [githubUsername, setGithubUsername] = useState("");
@@ -35,7 +35,9 @@ const UserPanel: React.FC = () => {
       try {
         const githubUser = await usersApi.getGithubUsername(userEmail);
         setGithubUsername(githubUser);
-        setUser((prev) => prev ? { ...prev, UserGithubUsername: githubUser } : null);
+        setUser((prev) =>
+          prev ? { ...prev, UserGithubUsername: githubUser } : null,
+        );
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -44,16 +46,13 @@ const UserPanel: React.FC = () => {
     }
   };
 
-  
   useEffect(() => {
     fetchUserData();
   }, []);
 
-
- 
   const handleEmailChange = async () => {
     if (!user) {
-      setEmailMessage("User data not available. Please log in again.");
+      setEmailMessage(messages.userPanel.email.userNotAvailableWarning);
       return;
     }
 
@@ -63,7 +62,7 @@ const UserPanel: React.FC = () => {
         newEmail: newEmail,
       });
 
-      setEmailMessage(data.message || "Email changed successfully!");
+      setEmailMessage(data.message || messages.userPanel.email.successFallback);
       if (data.message.includes("successfully")) {
         const updatedUser = { ...user, email: newEmail };
         setUser(updatedUser);
@@ -79,7 +78,7 @@ const UserPanel: React.FC = () => {
 
   const handlePasswordChange = async () => {
     if (!user) {
-      setPasswordMessage("User data not available. Please log in again.");
+      setPasswordMessage(messages.userPanel.password.userNotAvailableWarning);
       return;
     }
 
@@ -89,7 +88,9 @@ const UserPanel: React.FC = () => {
         password: newPassword,
       });
 
-      setPasswordMessage(data.message || "Password changed successfully!");
+      setPasswordMessage(
+        data.message || messages.userPanel.password.successFallback,
+      );
       if (data.message.includes("successfully")) {
         setNewPassword("");
       }
@@ -102,12 +103,12 @@ const UserPanel: React.FC = () => {
 
   const handleAddGithubUsername = async () => {
     if (!user?.email) {
-      setGithubMessage("User email not available. Please log in again.");
+      setGithubMessage(messages.userPanel.github.userEmailMissingWarning);
       return;
     }
 
     if (!githubUsername || githubUsername.trim() === "") {
-      setGithubMessage("GitHub username cannot be empty");
+      setGithubMessage(messages.userPanel.github.emptyError);
       return;
     }
 
@@ -117,9 +118,14 @@ const UserPanel: React.FC = () => {
         newGithubUsername: githubUsername.trim(),
       });
 
-      setGithubMessage(data.message || "GitHub username updated successfully!");
+      setGithubMessage(
+        data.message || messages.userPanel.github.successFallback,
+      );
       if (data.message.includes("successfully")) {
-        const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
+        const updatedUser = {
+          ...user,
+          UserGithubUsername: githubUsername,
+        } as typeof user;
         setUser(updatedUser);
       }
     } catch (error: unknown) {
@@ -143,14 +149,18 @@ const UserPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="User Profile" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={messages.userPanel.pageTitle}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Update Profile">
+        <SectionCard title={messages.userPanel.sectionTitle}>
           <div className="space-y-6">
             <Input
               type="email"
-              label="Email Address"
+              label={messages.userPanel.email.label}
               placeholder={user?.email || ""}
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
@@ -163,8 +173,8 @@ const UserPanel: React.FC = () => {
 
             <Input
               type="password"
-              label="New Password"
-              placeholder="Enter new password"
+              label={messages.userPanel.password.label}
+              placeholder={messages.userPanel.password.placeholder}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -176,8 +186,8 @@ const UserPanel: React.FC = () => {
 
             <Input
               type="text"
-              label="GitHub Username"
-              placeholder="Enter your GitHub username"
+              label={messages.userPanel.github.label}
+              placeholder={messages.userPanel.github.placeholder}
               value={githubUsername}
               onChange={(e) => setGithubUsername(e.target.value)}
             />
@@ -188,7 +198,9 @@ const UserPanel: React.FC = () => {
             )}
 
             <div className="flex gap-4 pt-4">
-              <Button onClick={handleSubmitAll}>Submit Changes</Button>
+              <Button onClick={handleSubmitAll}>
+                {messages.userPanel.submitChanges}
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -200,7 +212,7 @@ const UserPanel: React.FC = () => {
                   setGithubMessage("");
                 }}
               >
-                Reset
+                {messages.userPanel.reset}
               </Button>
             </div>
           </div>

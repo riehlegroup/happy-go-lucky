@@ -14,9 +14,9 @@ import SectionCard from "@/components/common/SectionCard";
 import Card from "@/components/common/Card";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
+import { en as messages } from "@/messages";
 
 const Settings: React.FC = () => {
-
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
@@ -46,7 +46,9 @@ const Settings: React.FC = () => {
         try {
           const githubUser = await usersApi.getGithubUsername(userEmail);
           setGithubUsername(githubUser);
-          setUser((prev) => prev ? { ...prev, UserGithubUsername: githubUser } : null);
+          setUser((prev) =>
+            prev ? { ...prev, UserGithubUsername: githubUser } : null,
+          );
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -60,7 +62,7 @@ const Settings: React.FC = () => {
 
   const handleEmailChange = async () => {
     if (!user) {
-      setEmailMessage("User data not available. Please log in again.");
+      setEmailMessage(messages.settings.user.notAvailableWarning);
       return;
     }
 
@@ -70,7 +72,7 @@ const Settings: React.FC = () => {
         newEmail: newEmail,
       });
 
-      setEmailMessage(data.message || "Email changed successfully!");
+      setEmailMessage(data.message || messages.settings.email.successFallback);
       if (data.message.includes("successfully")) {
         const updatedUser = { ...user, email: newEmail };
         setUser(updatedUser);
@@ -86,7 +88,7 @@ const Settings: React.FC = () => {
 
   const handlePasswordChange = async () => {
     if (!user) {
-      setPasswordMessage("User data not available. Please log in again.");
+      setPasswordMessage(messages.settings.user.notAvailableWarning);
       return;
     }
 
@@ -96,7 +98,9 @@ const Settings: React.FC = () => {
         password: newPassword,
       });
 
-      setPasswordMessage(data.message || "Password changed successfully!");
+      setPasswordMessage(
+        data.message || messages.settings.password.successFallback,
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -107,12 +111,12 @@ const Settings: React.FC = () => {
 
   const handleAddGithubUsername = async () => {
     if (!githubUsername) {
-      setGithubMessage("GitHub username cannot be empty");
+      setGithubMessage(messages.settings.github.emptyError);
       return;
     }
 
     if (!user?.email) {
-      setGithubMessage("User email not available");
+      setGithubMessage(messages.settings.github.emailMissingError);
       return;
     }
 
@@ -122,9 +126,14 @@ const Settings: React.FC = () => {
         newGithubUsername: githubUsername,
       });
 
-      setGithubMessage(data.message || "GitHub username added successfully!");
+      setGithubMessage(
+        data.message || messages.settings.github.successFallback,
+      );
       if (data.message.includes("successfully")) {
-        const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
+        const updatedUser = {
+          ...user,
+          UserGithubUsername: githubUsername,
+        } as typeof user;
         setUser(updatedUser);
       }
     } catch (error: unknown) {
@@ -137,33 +146,43 @@ const Settings: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Settings" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={messages.settings.pageTitle}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Account Settings">
+        <SectionCard title={messages.settings.sectionTitle}>
           <div className="space-y-4">
             {/* Email Setting */}
             <Card>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-600">Email Address</p>
-                  <p className="font-medium">{user?.email || "Not available"}</p>
+                  <p className="text-sm text-slate-600">
+                    {messages.settings.email.label}
+                  </p>
+                  <p className="font-medium">
+                    {user?.email || messages.settings.email.notAvailableValue}
+                  </p>
                 </div>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="primary" className="w-fit text-sm">
-                      Edit
+                      {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change Email Address</DialogTitle>
+                      <DialogTitle>
+                        {messages.settings.email.dialogTitle}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <Input
                         type="email"
-                        label="New Email"
-                        placeholder="Enter your new email"
+                        label={messages.settings.email.inputLabel}
+                        placeholder={messages.settings.email.inputPlaceholder}
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                       />
@@ -174,7 +193,9 @@ const Settings: React.FC = () => {
                       )}
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleEmailChange}>Change Email</Button>
+                      <Button onClick={handleEmailChange}>
+                        {messages.settings.email.action}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -185,24 +206,30 @@ const Settings: React.FC = () => {
             <Card>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-600">Password</p>
+                  <p className="text-sm text-slate-600">
+                    {messages.settings.password.label}
+                  </p>
                   <p className="font-medium">••••••••</p>
                 </div>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="primary" className="w-fit text-sm">
-                      Edit
+                      {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogTitle>
+                        {messages.settings.password.dialogTitle}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <Input
                         type="password"
-                        label="New Password"
-                        placeholder="Enter your new password"
+                        label={messages.settings.password.inputLabel}
+                        placeholder={
+                          messages.settings.password.inputPlaceholder
+                        }
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                       />
@@ -213,7 +240,9 @@ const Settings: React.FC = () => {
                       )}
                     </div>
                     <DialogFooter>
-                      <Button onClick={handlePasswordChange}>Change Password</Button>
+                      <Button onClick={handlePasswordChange}>
+                        {messages.settings.password.action}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -224,24 +253,31 @@ const Settings: React.FC = () => {
             <Card>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-600">GitHub Username</p>
-                  <p className="font-medium">{user?.UserGithubUsername || "Not set"}</p>
+                  <p className="text-sm text-slate-600">
+                    {messages.settings.github.label}
+                  </p>
+                  <p className="font-medium">
+                    {user?.UserGithubUsername ||
+                      messages.settings.github.notSetValue}
+                  </p>
                 </div>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="primary" className="w-fit text-sm">
-                      Edit
+                      {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Edit GitHub Username</DialogTitle>
+                      <DialogTitle>
+                        {messages.settings.github.dialogTitle}
+                      </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <Input
                         type="text"
-                        label="GitHub Username"
-                        placeholder="Enter your GitHub username"
+                        label={messages.settings.github.inputLabel}
+                        placeholder={messages.settings.github.inputPlaceholder}
                         value={githubUsername}
                         onChange={(e) => setGithubUsername(e.target.value)}
                       />
@@ -252,7 +288,9 @@ const Settings: React.FC = () => {
                       )}
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleAddGithubUsername}>Confirm</Button>
+                      <Button onClick={handleAddGithubUsername}>
+                        {messages.settings.github.confirm}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
