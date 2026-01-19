@@ -46,7 +46,7 @@ Internet → Caddy (port 80/443)
 
 | Container | Purpose | Exposed Ports | Volumes |
 |-----------|---------|---------------|---------|
-| `server` | Backend API | None (internal only) | `mini-meco_mini-meco-db` (database) |
+| `server` | Backend API | None (internal only) | `happy-go-lucky-db` (database) |
 | `client` | Builds frontend | None (exits after build) | `client-dist` (build output) |
 | `caddy` | Web server & reverse proxy | 80, 443 | `client-dist`, `caddy-data`, `caddy-config`, `Caddyfile` |
 
@@ -142,7 +142,7 @@ This will:
 - Build the frontend and store static files in a volume
 - Start Caddy to serve frontend and proxy API requests
 - Create four Docker volumes:
-  - `mini-meco_mini-meco-db`: SQLite database
+  - `happy-go-lucky-db`: SQLite database
   - `client-dist`: Frontend static files
   - `caddy-data`: Caddy certificates and data
   - `caddy-config`: Caddy configuration
@@ -301,7 +301,7 @@ echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 
 2. **Copy backup to volume:**
    ```bash
-   docker run --rm -v mini-meco_mini-meco-db:/app/server/data -v $(pwd):/backup alpine \
+   docker run --rm -v happy-go-lucky-db:/app/server/data -v $(pwd):/backup alpine \
      cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/happyGoLucky.db
    ```
 
@@ -329,10 +329,10 @@ sqlite3 happyGoLucky.db
 
 ```bash
 # Show volume details
-docker volume inspect mini-meco_mini-meco-db
+docker volume inspect happy-go-lucky-db
 
 # Show volume location on host
-docker volume inspect mini-meco_mini-meco-db | grep Mountpoint
+docker volume inspect happy-go-lucky-db | grep Mountpoint
 ```
 
 ---
@@ -512,7 +512,7 @@ docker compose exec server sh -c "cd /app/server && ls -la"
 docker volume ls | grep mini-meco
 
 # Inspect volumes
-docker volume inspect mini-meco_mini-meco-db
+docker volume inspect happy-go-lucky-db
 docker volume inspect caddy-data
 docker volume inspect client-dist
 
@@ -632,10 +632,10 @@ curl -I http://localhost/api/user
 **Database not persisting:**
 ```bash
 # Verify volume exists
-docker volume ls | grep mini-meco_mini-meco-db
+docker volume ls | grep happy-go-lucky-db
 
 # Inspect volume
-docker volume inspect mini-meco_mini-meco-db
+docker volume inspect happy-go-lucky-db
 
 # Check database file
 docker compose exec server ls -la /app/server/data/
