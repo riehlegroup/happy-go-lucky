@@ -9,7 +9,7 @@ export interface Writer {
      * and all referenced objects.
      * @param rootObject Object to be written.
      */
-    writeRoot(rootObject: Serializable): void;
+    writeRoot(rootObject: Serializable): Promise<void>;
 
     /**
      * Writes an object to backend. First writes the reference and then queues the Object for writing, if it was not handled previously.

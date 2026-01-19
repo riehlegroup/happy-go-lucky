@@ -87,11 +87,12 @@ export class AuthController implements IAppController {
       u.setName(name);
       u.setEmail(new Email(email));
       u.setPassword(hashedPassword);
-      writer.writeRoot(u);
+      await writer.writeRoot(u);
       res.status(201).json({ message: "User registered successfully" });
 
       // Generate confirm email TOKEN
-      if (!oh.getUserByMail(email, this.db)) {
+      const registeredUser = await oh.getUserByMail(email, this.db);
+      if (!registeredUser) {
         console.error("Email not found after registration");
         return;
       }
@@ -103,7 +104,7 @@ export class AuthController implements IAppController {
 
       u.setConfirmEmailToken(token);
       u.setConfirmEmailExpire(expire);
-      writer.writeRoot(u);
+      await writer.writeRoot(u);
 
       await this.sendConfirmEmail(validatedEmail, token);
 
@@ -214,7 +215,7 @@ export class AuthController implements IAppController {
 
       user.setResetPasswordToken(token);
       user.setResetPasswordExpire(expire);
-      writer.writeRoot(user);
+      await writer.writeRoot(user);
 
       await this.sendPasswordResetEmail(email, token);
 
@@ -274,7 +275,7 @@ export class AuthController implements IAppController {
       u.setPassword(hashedPassword);
       u.setResetPasswordExpire(null);
       u.setResetPasswordToken(null);
-      writer.writeRoot(u);
+      await writer.writeRoot(u);
 
       res.status(200).json({ message: "Password has been reset" });
     } catch (error) {
@@ -323,7 +324,7 @@ export class AuthController implements IAppController {
       u.setStatus("confirmed");
       u.setConfirmEmailToken(null);
       u.setConfirmEmailExpire(null);
-      writer.writeRoot(u);
+      await writer.writeRoot(u);
 
       res.status(200).json({ message: "Email has been confirmed" });
     } catch (error) {
@@ -366,7 +367,7 @@ export class AuthController implements IAppController {
 
       user.setConfirmEmailToken(token);
       user.setConfirmEmailExpire(expire);
-      writer.writeRoot(user);
+      await writer.writeRoot(user);
       await this.sendConfirmEmail(email, token);
 
       res.status(200).json({ message: "Confirmation email sent" });
