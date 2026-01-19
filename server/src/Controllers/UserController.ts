@@ -5,6 +5,9 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { UserRole } from "../ValueTypes/UserRole";
+import { roleRegistry } from "../Utils/RoleRegistry";
+import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -37,7 +40,7 @@ export class UserController implements IAppController {
 
   async getUsers(req: Request, res: Response): Promise<void> {
     try {
-      const user = await this.db.all("SELECT * FROM users");
+      const user = await this.db.all("SELECT u.id, u.name, u.githubUsername, u.email, u.status, r.userRole FROM users AS u JOIN roles AS r ON u.roleId = r.id");
       if (user) {
         res.json(user);
       } else {
@@ -53,7 +56,7 @@ export class UserController implements IAppController {
     const { status } = req.query;
 
     try {
-      const user = await this.db.all("SELECT * FROM users WHERE status = ?", [status]);
+      const user = await this.db.all("SELECT u.id, u.name, u.githubUsername, u.email, u.status, r.userRole FROM users AS u JOIN roles AS r ON u.roleId = r.id WHERE u.status = ?", [status]);
       if (user) {
         res.json(user);
       } else {
@@ -267,7 +270,7 @@ export class UserController implements IAppController {
     const { userEmail } = req.query;
 
     try {
-      const user = await this.db.get("SELECT userRole FROM users WHERE email = ?", [userEmail]);
+      const user = await this.db.get("SELECT r.userRole FROM users AS u JOIN roles AS r on u.roleId=r.id WHERE email = ?", [userEmail]);
       if (user) {
         res.json(user);
       } else {
@@ -286,13 +289,18 @@ export class UserController implements IAppController {
       res.status(400).json({ message: "Please provide email and role" });
       return;
     }
-
     try {
-      await this.db.run("UPDATE users SET userRole = ? WHERE email = ?", [role, email]);
+      const new_role: UserRole = UserRole.fromRole(role, roleRegistry);
+      await this.db.run("UPDATE users SET roleId = ? WHERE email = ?", [new_role.getId(), email]);
       res.status(200).json({ message: "User role updated successfully" });
     } catch (error) {
-      console.error("Error during updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role", error });
+        if (error instanceof IllegalArgumentException) {
+          console.error("Error while parsing role: ", error);
+          res.status(400).json({message: "Invalid role provided", error});
+        } else {
+          console.error("Error during updating user role:", error);
+          res.status(500).json({ message: "Failed to update user role", error });
+        }
     }
   }
 

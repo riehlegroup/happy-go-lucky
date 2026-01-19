@@ -132,7 +132,6 @@ const usersApi = {
     name: string;
     githubUsername: string | null;
     status: string;
-    password: string;
     userRole: string;
   }>> => {
     try {
@@ -142,7 +141,6 @@ const usersApi = {
         name: string;
         githubUsername: string | null;
         status: string;
-        password: string;
         userRole: string;
       }>>("/getUsers");
       return response;
