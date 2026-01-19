@@ -6,6 +6,7 @@ import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
 import { UserStatus, UserStatusEnum } from "../ValueTypes/UserStatus";
+import { messages } from "../messages";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -42,11 +43,13 @@ export class UserController implements IAppController {
       if (user) {
         res.json(user);
       } else {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ message: messages.user.userNotFound });
       }
     } catch (error) {
       console.error("Error during retrieving user status:", error);
-      res.status(500).json({ message: "Failed to retrieve user status", error });
+      res
+        .status(500)
+        .json({ message: messages.user.failedToRetrieveUserStatus, error });
     }
   }
 
@@ -58,11 +61,13 @@ export class UserController implements IAppController {
       if (user) {
         res.json(user);
       } else {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ message: messages.user.userNotFound });
       }
     } catch (error) {
       console.error("Error during retrieving user status:", error);
-      res.status(500).json({ message: "Failed to retrieve user status", error });
+      res
+        .status(500)
+        .json({ message: messages.user.failedToRetrieveUserStatus, error });
     }
   }
 
@@ -70,7 +75,7 @@ export class UserController implements IAppController {
     const { userEmail, status } = req.body;
 
     if (typeof userEmail !== "string" || typeof status !== "string" || !userEmail || !status) {
-      res.status(400).json({ message: "Please provide email and status" });
+      res.status(400).json({ message: messages.user.pleaseProvideEmailAndStatus });
       return;
     }
 
@@ -86,7 +91,7 @@ export class UserController implements IAppController {
       );
 
       if (!row) {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ message: messages.user.userNotFound });
         return;
       }
 
@@ -94,7 +99,7 @@ export class UserController implements IAppController {
       const desiredStatus = status as UserStatusEnum;
 
       if (currentStatus.getStatus() === desiredStatus) {
-        res.status(200).json({ message: "User status updated successfully" });
+        res.status(200).json({ message: messages.user.userStatusUpdatedSuccessfully });
         return;
       }
 
@@ -131,7 +136,7 @@ export class UserController implements IAppController {
         await this.sendRemovedEmail(userEmail);
       }
 
-      res.status(200).json({ message: "User status updated successfully" });
+      res.status(200).json({ message: messages.user.userStatusUpdatedSuccessfully });
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("Invalid transition from")) {
         res.status(409).json({ message: error.message });
@@ -139,7 +144,7 @@ export class UserController implements IAppController {
       }
 
       console.error("Error during updating user status:", error);
-      res.status(500).json({ message: "Failed to update user status", error });
+      res.status(500).json({ message: messages.user.failedToUpdateUserStatus, error });
     }
   }
 
@@ -147,7 +152,7 @@ export class UserController implements IAppController {
     const { status } = req.body;
 
     if (!status) {
-      res.status(400).json({ message: "Status is required" });
+      res.status(400).json({ message: messages.user.statusIsRequired });
       return;
     }
 
@@ -158,34 +163,34 @@ export class UserController implements IAppController {
       );
 
       if (result.changes === 0) {
-        res.status(404).json({ message: "No confirmed users found to update" });
+        res.status(404).json({ message: messages.user.noConfirmedUsersFoundToUpdate });
         return;
       }
 
-      res.status(200).json({ message: `All confirmed users have been updated to ${status}` });
+      res.status(200).json({ message: messages.user.allConfirmedUsersUpdatedTo(status) });
     } catch (error) {
       console.error("Error updating confirmed users:", error);
-      res.status(500).json({ message: "Failed to update confirmed users" });
+      res.status(500).json({ message: messages.user.failedToUpdateConfirmedUsers });
     }
   }
 
   async changeEmail(req: Request, res: Response): Promise<void> {
     const { newEmail, oldEmail } = req.body;
     if (!newEmail) {
-      res.status(400).json({ message: "Please fill in new email!" });
+      res.status(400).json({ message: messages.user.pleaseFillInNewEmail });
       return;
     } else if (!newEmail.includes("@")) {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: messages.user.invalidEmailAddress });
       return;
     }
 
     try {
       const userId = await DatabaseHelpers.getUserIdFromEmail(this.db, oldEmail);
       await this.db.run(`UPDATE users SET email = ? WHERE id = ?`, [newEmail, userId]);
-      res.status(200).json({ message: "Email updated successfully" });
+      res.status(200).json({ message: messages.user.emailUpdatedSuccessfully });
     } catch (error) {
       console.error("Error updating email:", error);
-      res.status(500).json({ message: "Failed to update email", error });
+      res.status(500).json({ message: messages.user.failedToUpdateEmail, error });
     }
   }
 
@@ -193,10 +198,10 @@ export class UserController implements IAppController {
     const { userEmail, password } = req.body;
 
     if (!password) {
-      res.status(400).json({ message: "Please fill in new password!" });
+      res.status(400).json({ message: messages.user.pleaseFillInNewPassword });
       return;
     } else if (password.length < 8) {
-      res.status(400).json({ message: "Password must be at least 8 characters long" });
+      res.status(400).json({ message: messages.user.passwordMin8 });
       return;
     }
 
@@ -205,10 +210,10 @@ export class UserController implements IAppController {
     try {
       const userId = await DatabaseHelpers.getUserIdFromEmail(this.db, userEmail);
       await this.db.run(`UPDATE users SET password = ? WHERE id = ?`, [hashedPassword, userId]);
-      res.status(200).json({ message: "Password updated successfully" });
+      res.status(200).json({ message: messages.user.passwordUpdatedSuccessfully });
     } catch (error) {
       console.error("Error updating password:", error);
-      res.status(500).json({ message: "Failed to update password", error });
+      res.status(500).json({ message: messages.user.failedToUpdatePassword, error });
     }
   }
 
@@ -216,10 +221,10 @@ export class UserController implements IAppController {
     const { userEmail, URL, projectName } = req.body;
 
     if (!URL) {
-      res.status(400).json({ message: "Please fill in URL!" });
+      res.status(400).json({ message: messages.user.pleaseFillInURL });
       return;
     } else if (!URL.includes("git")) {
-      res.status(400).json({ message: "Invalid URL" });
+      res.status(400).json({ message: messages.user.invalidURL });
       return;
     }
 
@@ -231,10 +236,10 @@ export class UserController implements IAppController {
         `UPDATE user_projects SET url = ? WHERE userId = ? AND projectId = ?`,
         [URL, userId, projectId]
       );
-      res.status(200).json({ message: "URL added successfully" });
+      res.status(200).json({ message: messages.user.urlAddedSuccessfully });
     } catch (error) {
       console.error("Error adding URL:", error);
-      res.status(500).json({ message: "Failed to add URL", error });
+      res.status(500).json({ message: messages.user.failedToAddURL, error });
     }
   }
 
@@ -242,7 +247,7 @@ export class UserController implements IAppController {
     const { userEmail, projectName } = req.query;
 
     if (!userEmail || !projectName) {
-      res.status(400).json({ message: "User Email and Project Name are mandatory!" });
+      res.status(400).json({ message: messages.user.userEmailAndProjectNameMandatory });
       return;
     }
 
@@ -257,7 +262,7 @@ export class UserController implements IAppController {
       res.status(200).json({ url });
     } catch (error) {
       console.error("Error fetching URL:", error);
-      res.status(500).json({ message: "Failed to fetch URL", error });
+      res.status(500).json({ message: messages.user.failedToFetchURL, error });
     }
   }
 
@@ -265,12 +270,12 @@ export class UserController implements IAppController {
     const { userEmail, newGithubUsername } = req.body;
 
     if (!userEmail) {
-      res.status(400).json({ message: "User email is required!" });
+      res.status(400).json({ message: messages.user.userEmailIsRequiredBang });
       return;
     }
 
     if (!newGithubUsername) {
-      res.status(400).json({ message: "Please fill in GitHub username!" });
+      res.status(400).json({ message: messages.user.pleaseFillInGithubUsername });
       return;
     }
 
@@ -280,7 +285,7 @@ export class UserController implements IAppController {
         userId = await DatabaseHelpers.getUserIdFromEmail(this.db, userEmail);
       } catch (error) {
         if (error instanceof Error && error.message.includes("User not found")) {
-          res.status(404).json({ message: "User not found" });
+          res.status(404).json({ message: messages.user.userNotFound });
           return;
         }
         throw error;
@@ -290,10 +295,10 @@ export class UserController implements IAppController {
         newGithubUsername,
         userId,
       ]);
-      res.status(200).json({ message: "GitHub username added successfully" });
+      res.status(200).json({ message: messages.user.githubUsernameAddedSuccessfully });
     } catch (error) {
       console.error("Error adding GitHub username:", error);
-      res.status(500).json({ message: "Failed to add GitHub username", error });
+      res.status(500).json({ message: messages.user.failedToAddGithubUsername, error });
     }
   }
 
@@ -301,7 +306,7 @@ export class UserController implements IAppController {
     const { userEmail } = req.query;
 
     if (!userEmail) {
-      res.status(400).json({ message: "User Email is mandatory!" });
+      res.status(400).json({ message: messages.user.userEmailMandatoryBang });
       return;
     }
 
@@ -314,7 +319,7 @@ export class UserController implements IAppController {
       res.status(200).json({ githubUsername });
     } catch (error) {
       console.error("Error fetching GitHub username:", error);
-      res.status(500).json({ message: "Failed to fetch GitHub username", error });
+      res.status(500).json({ message: messages.user.failedToFetchGithubUsername, error });
     }
   }
 
@@ -326,11 +331,11 @@ export class UserController implements IAppController {
       if (user) {
         res.json(user);
       } else {
-        res.status(404).json({ message: "User not found" });
+        res.status(404).json({ message: messages.user.userNotFound });
       }
     } catch (error) {
       console.error("Error during retrieving user role:", error);
-      res.status(500).json({ message: "Failed to retrieve user role", error });
+      res.status(500).json({ message: messages.user.failedToRetrieveUserRole, error });
     }
   }
 
@@ -338,32 +343,32 @@ export class UserController implements IAppController {
     const { email, role } = req.body;
 
     if (!email || !role) {
-      res.status(400).json({ message: "Please provide email and role" });
+      res.status(400).json({ message: messages.user.pleaseProvideEmailAndRole });
       return;
     }
 
     try {
       await this.db.run("UPDATE users SET userRole = ? WHERE email = ?", [role, email]);
-      res.status(200).json({ message: "User role updated successfully" });
+      res.status(200).json({ message: messages.user.userRoleUpdatedSuccessfully });
     } catch (error) {
       console.error("Error during updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role", error });
+      res.status(500).json({ message: messages.user.failedToUpdateUserRole, error });
     }
   }
 
   private async sendSuspendedEmail(email: string): Promise<void> {
     await this.emailService.sendEmail(
       email,
-      "Account Suspended",
-      "Your account has been suspended. Please contact the administrator for more information."
+      messages.user.accountSuspendedSubject,
+      messages.user.accountSuspendedBody
     );
   }
 
   private async sendRemovedEmail(email: string): Promise<void> {
     await this.emailService.sendEmail(
       email,
-      "Account Removed",
-      "Your account has been removed. Please contact the administrator for more information."
+      messages.user.accountRemovedSubject,
+      messages.user.accountRemovedBody
     );
   }
 }
