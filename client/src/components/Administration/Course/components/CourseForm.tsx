@@ -8,6 +8,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./CourseMessage";
 import { cn } from "@/lib/utils";
+import { en as messages } from "@/messages";
 
 interface FormFieldProps {
   label: string;
@@ -130,7 +131,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   message,
   onChange,
   onSubmit,
-  submitText = "submit",
+  submitText = messages.admin.forms.submit,
   children,
   termOptions = [],
 }: CourseFormProps) => {
@@ -193,7 +194,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
               value={(formData as Course).termId || 0}
               onChange={(e) => courseHandleChanges("termId", parseInt(e.target.value))}
             >
-              <option value={0}>Select a term...</option>
+              <option value={0}>{messages.admin.courseAdmin.forms.selectTermPlaceholder}</option>
               {termOptions.map((term) => (
                 <option key={term.id} value={term.id}>
                   {term.label}
@@ -220,7 +221,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
         </>
       ) : (
         <FormField
-          label="Project Name"
+          label={messages.admin.courseAdmin.forms.projectNameLabel}
           value={(formData as Project).projectName || ""}
           error={(errors as Record<keyof Project, string>).projectName}
           onChange={(value) => projectHandleChanges("projectName", value)}

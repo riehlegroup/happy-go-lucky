@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import { isValidEmail } from "@/utils/emailValidation";
 import Input from "./Input";
+import { en as messages } from "@/messages";
 
 interface EmailWidgetProps {
     onEmailChange: (email: string) => void;
@@ -21,12 +22,12 @@ const EmailWidget: React.FC<EmailWidgetProps> = ({ onEmailChange, action }) => {
         if (isValidEmail(currentEmailValue)) {
             setError("");
             if (action === "Registration") {
-                setSuccessMessage("E-Mail address is valid for registration!");
+                setSuccessMessage(messages.email.registrationValid);
             } else if (action === "Login") {
-                setSuccessMessage("E-Mail address valid for login!");
+                setSuccessMessage(messages.email.loginValid);
             }
         } else {
-            setError("Invalid email address.");
+            setError(messages.email.invalidWithPeriod);
         }
     };
 
@@ -34,7 +35,7 @@ const EmailWidget: React.FC<EmailWidgetProps> = ({ onEmailChange, action }) => {
         <div className="space-y-2">
             <Input
                 type="email"
-                placeholder="Please enter your email address"
+                placeholder={messages.email.placeholder}
                 value={email}
                 onChange={validateEmailInput}
             />

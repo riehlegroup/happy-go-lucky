@@ -7,6 +7,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { messages } from "../messages";
 
 /**
  * Controller for handling course-related HTTP requests.
@@ -62,7 +63,7 @@ export class CourseController implements IAppController {
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
           success: false,
-          message: "Course name is required and must be a string",
+          message: messages.course.courseNameRequiredString,
         });
         return;
       }
@@ -70,7 +71,7 @@ export class CourseController implements IAppController {
       if (termId === undefined || termId === null) {
         res.status(400).json({
           success: false,
-          message: "Term ID is required",
+          message: messages.course.termIdRequired,
         });
         return;
       }
@@ -79,7 +80,7 @@ export class CourseController implements IAppController {
       if (isNaN(id)) {
         res.status(400).json({
           success: false,
-          message: "Term ID must be a valid number",
+          message: messages.course.termIdValidNumber,
         });
         return;
       }
@@ -88,7 +89,7 @@ export class CourseController implements IAppController {
 
       res.status(201).json({
         success: true,
-        message: "Course created successfully",
+        message: messages.course.courseCreatedSuccessfully,
         data: course,
       });
     } catch (error) {
@@ -104,14 +105,14 @@ export class CourseController implements IAppController {
       if (isNaN(courseId)) {
         res
           .status(400)
-          .json({ success: false, message: "Course ID must be an integer" });
+          .json({ success: false, message: messages.course.courseIdMustBeInteger });
         return;
       }
 
       const course = await this.cm.readCourse(courseId);
 
       if (!course) {
-        res.status(404).json({ success: false, message: "Course not found" });
+        res.status(404).json({ success: false, message: messages.course.courseNotFound });
         return;
       }
 
@@ -129,7 +130,7 @@ export class CourseController implements IAppController {
     try {
       res.status(501).json({
         success: false,
-        message: "Course delete not implemented yet",
+        message: messages.course.courseDeleteNotImplementedYet,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -143,7 +144,7 @@ export class CourseController implements IAppController {
       if (isNaN(courseId)) {
         res.status(400).json({
           success: false,
-          message: "Course ID must be a valid number"
+          message: messages.course.courseIdValidNumber
         });
         return;
       }
@@ -153,14 +154,14 @@ export class CourseController implements IAppController {
       if (!deleted) {
         res.status(404).json({
           success: false,
-          message: "Course not found"
+          message: messages.course.courseNotFound
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        message: "Course deleted successfully",
+        message: messages.course.courseDeletedSuccessfully,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -172,7 +173,7 @@ export class CourseController implements IAppController {
     try {
       res.status(501).json({
         success: false,
-        message: "User courses not implemented yet",
+        message: messages.course.userCoursesNotImplementedYet,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -188,7 +189,7 @@ export class CourseController implements IAppController {
       if (courseId === undefined || courseId === null) {
         res.status(400).json({
           success: false,
-          message: "Course ID is required",
+          message: messages.course.courseIdIsRequired,
         });
         return;
       }
@@ -198,7 +199,7 @@ export class CourseController implements IAppController {
       if (isNaN(id)) {
         res.status(400).json({
           success: false,
-          message: "Invalid course ID format",
+          message: messages.course.invalidCourseIdFormat,
         });
         return;
       }
@@ -208,7 +209,7 @@ export class CourseController implements IAppController {
       // console.log("[CONTROLLER] addProject: ", proj.getName());
       res.status(201).json({
         success: true,
-        message: "Project added successfully",
+        message: messages.course.projectAddedSuccessfully,
         data: {
           id: proj.getId(),
           projectName: proj.getName(),
@@ -225,25 +226,25 @@ export class CourseController implements IAppController {
       const { courseId, userEmail } = req.query;
 
       if (!courseId || typeof courseId !== 'string') {
-        res.status(400).json({ success: false, message: "Course ID is required" });
+        res.status(400).json({ success: false, message: messages.course.courseIdIsRequired });
         return;
       }
 
       const id = parseInt(courseId);
       if (isNaN(id)) {
-        res.status(400).json({ success: false, message: "Invalid course ID" });
+        res.status(400).json({ success: false, message: messages.course.invalidCourseId });
         return;
       }
 
       const course = await this.cm.readCourse(id);
       if (!course) {
-        res.status(404).json({ success: false, message: "Course not found" });
+        res.status(404).json({ success: false, message: messages.course.courseNotFound });
         return;
       }
 
       const projects = await this.cm.getProjectsForCourse(course);
       if (!projects) {
-        res.status(404).json({ success: false, message: "Course projects not found" });
+        res.status(404).json({ success: false, message: messages.course.courseProjectsNotFound });
         return;
       }
 
@@ -299,7 +300,7 @@ export class CourseController implements IAppController {
       if (isNaN(projectId)) {
         res.status(400).json({
           success: false,
-          message: "Project ID must be a valid number"
+          message: messages.course.projectIdValidNumber
         });
         return;
       }
@@ -307,7 +308,7 @@ export class CourseController implements IAppController {
       if (!projectName || typeof projectName !== "string") {
         res.status(400).json({
           success: false,
-          message: "Project name is required and must be a string"
+          message: messages.course.projectNameRequiredString
         });
         return;
       }
@@ -317,14 +318,14 @@ export class CourseController implements IAppController {
       if (!updatedProject) {
         res.status(404).json({
           success: false,
-          message: "Project not found"
+          message: messages.course.projectNotFound
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        message: "Project updated successfully",
+        message: messages.course.projectUpdatedSuccessfully,
         data: {
           id: updatedProject.getId(),
           projectName: updatedProject.getName(),
@@ -343,7 +344,7 @@ export class CourseController implements IAppController {
       if (isNaN(projectId)) {
         res.status(400).json({
           success: false,
-          message: "Project ID must be a valid number"
+          message: messages.course.projectIdValidNumber
         });
         return;
       }
@@ -353,14 +354,14 @@ export class CourseController implements IAppController {
       if (!deleted) {
         res.status(404).json({
           success: false,
-          message: "Project not found"
+          message: messages.course.projectNotFound
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        message: "Project deleted successfully",
+        message: messages.course.projectDeletedSuccessfully,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -375,7 +376,7 @@ export class CourseController implements IAppController {
       if (isNaN(courseId)) {
         res.status(400).json({
           success: false,
-          message: "Course ID must be a valid number"
+          message: messages.course.courseIdValidNumber
         });
         return;
       }
@@ -383,7 +384,7 @@ export class CourseController implements IAppController {
       if (!startDate || !endDate) {
         res.status(400).json({
           success: false,
-          message: "Start date and end date are required"
+          message: messages.course.startDateEndDateRequired
         });
         return;
       }
@@ -397,7 +398,7 @@ export class CourseController implements IAppController {
 
       res.status(200).json({
         success: true,
-        message: "Schedule saved successfully",
+        message: messages.course.scheduleSavedSuccessfully,
         data: {
           id: schedule.getId(),
           startDate: schedule.getStartDate(),
@@ -417,7 +418,7 @@ export class CourseController implements IAppController {
       if (isNaN(courseId)) {
         res.status(400).json({
           success: false,
-          message: "Course ID must be a valid number"
+          message: messages.course.courseIdValidNumber
         });
         return;
       }
@@ -427,7 +428,7 @@ export class CourseController implements IAppController {
       if (!schedule) {
         res.status(404).json({
           success: false,
-          message: "Schedule not found for this course"
+          message: messages.course.scheduleNotFoundForThisCourse
         });
         return;
       }
@@ -470,7 +471,7 @@ export class CourseController implements IAppController {
     } else if (error.name === "MethodFailedException") {
       res.status(500).json({
         success: false,
-        message: "An error occurred while processing your request",
+        message: messages.general.requestProcessingError,
       });
       return;
     } else {
@@ -479,14 +480,14 @@ export class CourseController implements IAppController {
       if (msg.includes('Unknown Course Name!') || msg.includes('User not found')) {
         res.status(404).json({
           success: false,
-          message: "Resource not found",
+          message: messages.general.resourceNotFound,
         });
         return;
       }
 
       res.status(500).json({
         success: false,
-        message: "Internal server error",
+        message: messages.general.internalServerError,
       });
     }
   }

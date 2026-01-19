@@ -9,6 +9,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./TermMessage";
 import { cn } from "@/lib/utils";
+import { en as messages } from "@/messages";
 
 interface FormFieldProps {
   label: string;
@@ -56,7 +57,7 @@ export const TermForm: React.FC<TermFormProps> = ({
   message,
   onChange,
   onSubmit,
-  submitText = "submit",
+  submitText = messages.admin.forms.submit,
   children,
 }: TermFormProps) => {
   const isTerm = type === "term";
@@ -123,7 +124,7 @@ export const TermForm: React.FC<TermFormProps> = ({
         </>
       ) : (
         <FormField
-          label="Course Name"
+          label={label[0]}
           value={(formData as Course).courseName || ""}
           error={(errors as Record<keyof Course, string>).courseName}
           onChange={(value) => courseHandleChanges("courseName", value)}

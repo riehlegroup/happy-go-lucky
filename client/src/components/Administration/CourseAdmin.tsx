@@ -9,6 +9,7 @@ import { useTerm } from "@/hooks/useTerm";
 import { Course, Project } from "./Course/types";
 import CourseMessage from "./Course/components/CourseMessage";
 import TermMessage from "./Term/components/TermMessage";
+import { en as messages } from "@/messages";
 
 /**
  * Course Admin panel for managing courses and their projects.
@@ -69,10 +70,10 @@ const CourseAdmin: React.FC = () => {
       term.termName,
       term.displayName,
       <div key={term.id} className="flex flex-wrap gap-2">
-        <TermWidget type="course" label="add course" action="add" term={term} onFetch={fetchCourse} />
+        <TermWidget type="course" label={messages.admin.courseAdmin.actions.addCourse} action="add" term={term} onFetch={fetchCourse} />
         <TermWidget
           type="term"
-          label="delete"
+          label={messages.admin.courseAdmin.actions.delete}
           action="delete"
           term={term}
           onFetch={fetchTerms}
@@ -90,16 +91,16 @@ const CourseAdmin: React.FC = () => {
         term?.termName || course.termId,
         course.courseName,
         <div key={course.id} className="flex flex-wrap gap-2">
-          <CourseWidget type="project" label="add project" action="add" course={course} onFetch={fetchCourse} />
+          <CourseWidget type="project" label={messages.admin.courseAdmin.actions.addProject} action="add" course={course} onFetch={fetchCourse} />
           <CourseWidget
             type="schedule"
-            label="schedule"
+            label={messages.admin.courseAdmin.actions.schedule}
             action="schedule"
             course={course}
           />
           <CourseWidget
             type="course"
-            label="delete"
+            label={messages.admin.courseAdmin.actions.delete}
             action="delete"
             course={course}
             onFetch={fetchCourse}
@@ -120,7 +121,7 @@ const CourseAdmin: React.FC = () => {
         <div key={prj.id} className="flex flex-wrap gap-2">
           <CourseWidget
             type="project"
-            label="edit"
+            label={messages.admin.courseAdmin.actions.edit}
             action="edit"
             course={parentCourse}
             project={prj}
@@ -128,7 +129,7 @@ const CourseAdmin: React.FC = () => {
           />
           <CourseWidget
             type="project"
-            label="delete"
+            label={messages.admin.courseAdmin.actions.delete}
             action="delete"
             course={parentCourse}
             project={prj}
@@ -146,7 +147,7 @@ const CourseAdmin: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Manage Courses" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title={messages.admin.courseAdmin.pageTitle} showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Display message if present */}
@@ -163,7 +164,7 @@ const CourseAdmin: React.FC = () => {
               <button
                 onClick={clearMessage}
                 className="shrink-0 rounded-md p-1 hover:bg-gray-200"
-                aria-label="Dismiss message"
+                aria-label={messages.admin.courseAdmin.aria.dismissMessage}
               >
                 <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -187,7 +188,7 @@ const CourseAdmin: React.FC = () => {
               <button
                 onClick={clearTermMessage}
                 className="shrink-0 rounded-md p-1 hover:bg-gray-200"
-                aria-label="Dismiss message"
+                aria-label={messages.admin.courseAdmin.aria.dismissMessage}
               >
                 <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -198,9 +199,9 @@ const CourseAdmin: React.FC = () => {
         )}
 
         {/* Terms Section */}
-        <SectionCard title={`Terms (${terms.length})`}>
+        <SectionCard title={messages.admin.courseAdmin.sections.termsTitle(terms.length)}>
           <Table
-            headings={["id", "termName", "displayName", "action"]}
+            headings={[messages.admin.courseAdmin.tables.termsHeadings.id, messages.admin.courseAdmin.tables.termsHeadings.termName, messages.admin.courseAdmin.tables.termsHeadings.displayName, messages.admin.courseAdmin.tables.termsHeadings.action]}
             loading={isLoading}
             loadData={() => {
               fetchTerms();
@@ -208,14 +209,14 @@ const CourseAdmin: React.FC = () => {
             data={tableTerms}
             rowsPerPage={9}
           >
-            <TermWidget label="create" action="add" onFetch={fetchTerms} />
+            <TermWidget label={messages.admin.courseAdmin.actions.create} action="add" onFetch={fetchTerms} />
           </Table>
         </SectionCard>
 
         {/* Course Section */}
-        <SectionCard title={`Courses (${courses.length})`}>
+        <SectionCard title={messages.admin.courseAdmin.sections.coursesTitle(courses.length)}>
           <Table
-            headings={["id", "term", "name", "action"]}
+            headings={[messages.admin.courseAdmin.tables.coursesHeadings.id, messages.admin.courseAdmin.tables.coursesHeadings.term, messages.admin.courseAdmin.tables.coursesHeadings.name, messages.admin.courseAdmin.tables.coursesHeadings.action]}
             loading={isLoading}
             loadData={() => {
               fetchCourse();
@@ -223,15 +224,15 @@ const CourseAdmin: React.FC = () => {
             data={tableCourse}
             rowsPerPage={9}
           >
-            <CourseWidget label="create" action="add" onFetch={fetchCourse} />
+            <CourseWidget label={messages.admin.courseAdmin.actions.create} action="add" onFetch={fetchCourse} />
           </Table>
         </SectionCard>
 
         {/* Project Section */}
-        <SectionCard title={`Projects (${projects.length})`}>
+        <SectionCard title={messages.admin.courseAdmin.sections.projectsTitle(projects.length)}>
           {projects && projects.length > 0 ? (
             <Table
-              headings={["id", "projectName", "courseId", "actions"]}
+              headings={[messages.admin.courseAdmin.tables.projectsHeadings.id, messages.admin.courseAdmin.tables.projectsHeadings.projectName, messages.admin.courseAdmin.tables.projectsHeadings.courseId, messages.admin.courseAdmin.tables.projectsHeadings.actions]}
               loading={isLoading}
               loadData={() => {
                 fetchCourseProjects(courses);
@@ -240,7 +241,7 @@ const CourseAdmin: React.FC = () => {
               rowsPerPage={9}
             />
           ) : (
-            <p className="text-slate-500">No projects found</p>
+            <p className="text-slate-500">{messages.admin.courseAdmin.empty.noProjectsFound}</p>
           )}
         </SectionCard>
       </div>
