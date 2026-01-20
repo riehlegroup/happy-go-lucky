@@ -39,6 +39,7 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
+    // Status is required by the schema, so we treat it as non-null here.
     this.status = UserStatus.fromString(reader.readString("status") as string);
     this.role = reader.readString("userRole") as string;
     this.password = reader.readString("password");
