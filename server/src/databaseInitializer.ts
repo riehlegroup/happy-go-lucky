@@ -44,7 +44,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     admin.setPassword(await hashPassword(password));
     admin.setStatus(UserStatusEnum.confirmed);
     admin.setRole("ADMIN");
-    writer.writeRoot(admin);
+    await writer.writeRoot(admin);
     console.log(`Default admin user created: (email: '${email}', password: '${password}')`);
   }
 

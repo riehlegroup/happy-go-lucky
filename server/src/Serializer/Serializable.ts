@@ -10,7 +10,7 @@ export interface Serializable {
      * Reads attributes with the specified Reader.
      * @param reader Reader Object to read from. E.g. a DatabaseReader.
      */
-    readFrom(reader: Reader): void;
+    readFrom(reader: Reader): void | Promise<void>;
 
     /**
      * Writes attributes with the specified Writer

@@ -35,14 +35,14 @@ export class ProjectManager implements IManager {
             FROM user_projects
             WHERE userId = ?
         `, user.getId());
-        let projParts = new Array<ProjectParticipation>;
-        userProjects.forEach(async (row) => {
+        const projParts = new Array<ProjectParticipation>;
+        for (const row of userProjects) {
             const proj = await this.oh.getCourseProject(row.projectId, this.db);
             if (proj == null ) {
-                return;
+                continue;
             }
             projParts.push(new ProjectParticipation(proj, row.role, row.url));
-        });
+        }
         return projParts;
     }
 
@@ -52,14 +52,14 @@ export class ProjectManager implements IManager {
             FROM user_projects
             WHERE projectId = ?
         `, project.getId());
-        let projMems = new Array<ProjectMember>;
-        userProjects.forEach(async (row) => {
+        const projMems = new Array<ProjectMember>;
+        for (const row of userProjects) {
             const user = await this.oh.getUser(row.userId, this.db);
             if (user == null ) {
-                return;
+                continue;
             }
             projMems.push(new ProjectMember(user, row.role, row.url));
-        });
+        }
         return projMems;
     }
 

@@ -138,7 +138,7 @@ export class CourseController implements IAppController {
 
   async deleteCourse(req: Request, res: Response): Promise<void> {
     try {
-      const courseId = parseInt(req.params.id);
+      const courseId = parseInt(String(req.params.id));
 
       if (isNaN(courseId)) {
         res.status(400).json({
@@ -293,7 +293,7 @@ export class CourseController implements IAppController {
 
   async updateProject(req: Request, res: Response): Promise<void> {
     try {
-      const projectId = parseInt(req.params.id);
+      const projectId = parseInt(String(req.params.id));
       const { projectName, courseId } = req.body;
 
       if (isNaN(projectId)) {
@@ -338,7 +338,7 @@ export class CourseController implements IAppController {
 
   async deleteProject(req: Request, res: Response): Promise<void> {
     try {
-      const projectId = parseInt(req.params.id);
+      const projectId = parseInt(String(req.params.id));
 
       if (isNaN(projectId)) {
         res.status(400).json({
@@ -369,7 +369,7 @@ export class CourseController implements IAppController {
 
   async saveSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const courseId = parseInt(req.params.id);
+      const courseId = parseInt(String(req.params.id));
       const { startDate, endDate, submissionDates } = req.body;
 
       if (isNaN(courseId)) {
@@ -412,7 +412,7 @@ export class CourseController implements IAppController {
 
   async getSchedule(req: Request, res: Response): Promise<void> {
     try {
-      const courseId = parseInt(req.params.id);
+      const courseId = parseInt(String(req.params.id));
 
       if (isNaN(courseId)) {
         res.status(400).json({
