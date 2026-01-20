@@ -39,7 +39,7 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = UserStatus.fromString(reader.readString("status"));
+    this.status = UserStatus.fromString(reader.readString("status") as string);
     this.role = reader.readString("userRole") as string;
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");

@@ -29,11 +29,7 @@ export class UserStatus {
     }
 
     // Convert persisted status strings into the value type.
-    static fromString(status: string | null): UserStatus {
-        if (status === null) {
-            // Defensive fallback: missing status maps to the default (DB default is "unconfirmed").
-            return new UserStatus(UserStatusEnum.unconfirmed);
-        }
+    static fromString(status: string): UserStatus {
         if (!UserStatus.isValidStatus(status)) {
             throw new Error(`Invalid initial status: ${status}`);
         }
