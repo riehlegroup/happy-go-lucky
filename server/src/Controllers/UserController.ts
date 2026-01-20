@@ -80,8 +80,11 @@ export class UserController implements IAppController {
       res.status(400).json({ message: "Invalid status" });
       return;
     }
+    // Safe cast after validation so we can use the enum consistently.
+    const targetStatus = status as UserStatusEnum;
 
     try {
+      // Use domain serialization to enforce UserStatus transitions and invariants.
       const oh = new ObjectHandler();
       const user = await oh.getUserByMail(userEmail, this.db);
       if (!user) {
@@ -90,18 +93,20 @@ export class UserController implements IAppController {
       }
 
       try {
-        user.setStatus(status as UserStatusEnum);
+        user.setStatus(targetStatus);
       } catch (error) {
-        res.status(400).json({ message: (error as Error).message });
+        // Avoid unsafe casts; handle non-Error throws gracefully.
+        const message = error instanceof Error ? error.message : "Unknown error";
+        res.status(400).json({ message });
         return;
       }
 
       const writer = new DatabaseWriter(this.db);
       await writer.writeRoot(user);
 
-      if (status === UserStatusEnum.suspended) {
+      if (targetStatus === UserStatusEnum.suspended) {
         this.sendSuspendedEmail(userEmail);
-      } else if (status === UserStatusEnum.removed) {
+      } else if (targetStatus === UserStatusEnum.removed) {
         this.sendRemovedEmail(userEmail);
       }
 

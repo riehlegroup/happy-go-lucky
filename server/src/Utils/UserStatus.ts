@@ -8,7 +8,7 @@ export enum UserStatusEnum {
 export class UserStatus {
     private readonly status: UserStatusEnum;
 
-    // Define valid transitions between states
+    // Transition table; "removed" is terminal and confirmed -> removed matches current rules.
     private static validTransitions: Record<UserStatusEnum, UserStatusEnum[]> = {
         [UserStatusEnum.confirmed]: [UserStatusEnum.suspended, UserStatusEnum.removed],
         [UserStatusEnum.unconfirmed]: [UserStatusEnum.confirmed, UserStatusEnum.suspended, UserStatusEnum.removed],
@@ -23,12 +23,15 @@ export class UserStatus {
         this.status = initialStatus;
     }
 
+    // Validate raw inputs (e.g., API/DB) before casting to the enum.
     static isValidStatus(status: string): status is UserStatusEnum {
         return Object.values(UserStatusEnum).includes(status as UserStatusEnum);
     }
 
+    // Convert persisted status strings into the value type.
     static fromString(status: string | null): UserStatus {
         if (status === null) {
+            // Defensive fallback: missing status maps to the default (DB default is "unconfirmed").
             return new UserStatus(UserStatusEnum.unconfirmed);
         }
         if (!UserStatus.isValidStatus(status)) {
@@ -43,6 +46,7 @@ export class UserStatus {
 
     canTransitionTo(newStatus: UserStatusEnum): boolean {
         if (newStatus === this.status) {
+            // Same-status updates are treated as idempotent.
             return true;
         }
         const allowedTransitions = UserStatus.validTransitions[this.status];
