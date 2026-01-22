@@ -64,7 +64,9 @@ const CourseAdmin: React.FC = () => {
   }, [getCourses, fetchCourseProjects]);
 
   const tableTerms = useMemo(() => {
-    return terms.map((term) => [
+    return [... terms]
+    .sort((a, b) => compareTerms(a.termName, b.termName))
+    .map((term) => [
       term.id,
       term.termName,
       term.displayName,
@@ -81,6 +83,29 @@ const CourseAdmin: React.FC = () => {
       </div>,
     ]);
   }, [terms, fetchCourse, fetchTerms, deleteTerm]);
+
+  function parseTerm(termName: string){
+    const match = termName.match(/^(SS|WS)(\d+)$/);
+    if (!match) return null;
+    return {
+      semester: match[1],       // "SS" or "WS"
+      year: Number(match[2])
+    };
+  }
+
+  function compareTerms(a: string, b: string) {
+    const ta = parseTerm(a);
+    const tb = parseTerm(b);
+
+    if (!ta || !tb) return 0;
+
+    if (ta.year !== tb.year) {
+      return ta.year - tb.year;
+    }
+
+    if (ta.semester == "SS") return -1;
+    else return 1;
+  }
 
   const tableCourse = useMemo(() => {
     return courses.map((course) => {
