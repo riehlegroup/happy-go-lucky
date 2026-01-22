@@ -65,7 +65,7 @@ const CourseAdmin: React.FC = () => {
 
   const tableTerms = useMemo(() => {
     return [... terms]
-    .sort((a, b) => compareTerms(a.termName, b.termName))
+    .sort((a, b) => compareTerms(a.termName, b.termName, true))
     .map((term) => [
       term.id,
       term.termName,
@@ -84,6 +84,10 @@ const CourseAdmin: React.FC = () => {
     ]);
   }, [terms, fetchCourse, fetchTerms, deleteTerm]);
 
+  /**
+   * Parses the term names into semester (string) and year (number) components. E.g. termName = "WS24" returns {semester: "SS", year: 24}
+   * @param termName Term to be parsed
+   */
   function parseTerm(termName: string){
     const match = termName.match(/^(SS|WS)(\d+)$/);
     if (!match) return null;
@@ -93,18 +97,48 @@ const CourseAdmin: React.FC = () => {
     };
   }
 
-  function compareTerms(a: string, b: string) {
+  /**
+   * Compares terms with respect to chronological ordering.
+   * The year component is compared first and the semester component second.
+   * For use inside sorting functions.
+   * If oldToNew == true, results in a sorted term list comparable to this: SS24, WS24, SS25, WS25, ...
+   * @param a Term a to be compared against b
+   * @param b Term b to be compared against a
+   * @param oldToNew (optional) Specifies whether terms should be sorted from old to new or vice versa
+   */
+  function compareTerms(a: string, b: string, oldToNew: boolean = true) {
     const ta = parseTerm(a);
     const tb = parseTerm(b);
 
     if (!ta || !tb) return 0;
 
     if (ta.year !== tb.year) {
-      return ta.year - tb.year;
+      if (oldToNew) {
+        return ta.year - tb.year;
+      }
+      else {
+        return tb.year - ta.year;
+      }
     }
 
-    if (ta.semester == "SS") return -1;
-    else return 1;
+    if (ta.semester == "SS") {
+      if (oldToNew) {
+        return -1;
+      }
+      else {
+        return 1;
+      }
+    }
+    if (ta.semester == "WS") {
+      if (oldToNew) {
+        return 1;
+      }
+      else {
+        return -1;
+      }
+    }
+      
+    else return 0;
   }
 
   const tableCourse = useMemo(() => {
