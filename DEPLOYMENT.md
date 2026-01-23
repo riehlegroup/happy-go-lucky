@@ -142,7 +142,7 @@ This will:
 - Build the frontend and store static files in a volume
 - Start Caddy to serve frontend and proxy API requests
 - Create four Docker volumes:
-  - `happy-go-lucky-db`: SQLite database
+  - `mini-meco-db`: SQLite database
   - `client-dist`: Frontend static files
   - `caddy-data`: Caddy certificates and data
   - `caddy-config`: Caddy configuration
