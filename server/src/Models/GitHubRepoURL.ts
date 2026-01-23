@@ -12,21 +12,26 @@ export class GitHubRepoURL {
      * @returns The value type object
      */
     constructor(input: string) {
-        const url = URL.parse(input);
-        if (!url)
+        let url: URL;
+        try {
+            url = new URL(input);
+        } catch {
             throw new IllegalArgumentException("Invalid URL");
+        }
         this.url = url;
+
+        if (!this.isValidProtocol())
+            throw new IllegalArgumentException("Unsupported protocol");
 
         if (!this.isGithubUrl())
             throw new IllegalArgumentException("Not a GitHub URL");
 
-        if (!this.isValidProtocol())
-            throw new IllegalArgumentException("Unsupported protocol");
-        
         if (!this.isRepo())
             throw new IllegalArgumentException("The URL has no repository structure");
-        }
-    
+    }
+
+
+
     /**
      * @returns The whole URL as a string
     */
@@ -58,6 +63,7 @@ export class GitHubRepoURL {
      * @returns True if the check succeeds, else false
      */
     private isRepo() {
-        return (this.url.pathname.match(/\/./g) || []).length === 2;
+        const parts = this.url.pathname.split("/").filter(Boolean);
+        return parts.length === 2;
     }
 }

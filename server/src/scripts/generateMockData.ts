@@ -8,7 +8,7 @@ import { hashPassword } from '../Utils/hash';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
+async function generateMockData(dbPath: string = './server/happyGoLucky.db', deleteOnly: boolean = false) {
   console.log(`Connecting to database at: ${dbPath}`);
 
   const db = await open({
@@ -239,7 +239,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
 
 const args = process.argv.slice(2);
 const deleteOnly = args.includes('--delete-only');
-const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
+const dbPath = args.find(arg => !arg.startsWith('--')) || './server/happyGoLucky.db';
 
 generateMockData(dbPath, deleteOnly)
   .then(() => {

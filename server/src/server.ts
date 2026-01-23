@@ -5,7 +5,7 @@ import { createApp } from './createApp';
 dotenv.config();
 
 const port = Number(process.env.PORT) || 3000;
-const dbPath = process.env.DB_PATH || './myDatabase.db';
+const dbPath = process.env.DB_PATH || './happyGoLucky.db';
 
 initializeDB(dbPath).then((db) => {
   console.log("Database initialized, starting server...");
