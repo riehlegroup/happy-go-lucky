@@ -85,7 +85,7 @@ const CourseAdmin: React.FC = () => {
   }, [terms, fetchCourse, fetchTerms, deleteTerm]);
 
   /**
-   * Parses the term names into semester (string) and year (number) components. E.g. termName = "WS24" returns {semester: "SS", year: 24}
+   * Parses the term names into semester (string) and year (number) components. E.g. termName = "WS24" returns {semester: "WS", year: 24}
    * @param termName Term to be parsed
    */
   function parseTerm(termName: string){
@@ -121,7 +121,7 @@ const CourseAdmin: React.FC = () => {
       }
     }
 
-    if (ta.semester == "SS") {
+    if (ta.semester === "SS") {
       if (oldToNew) {
         return -1;
       }
@@ -129,7 +129,7 @@ const CourseAdmin: React.FC = () => {
         return 1;
       }
     }
-    if (ta.semester == "WS") {
+    if (ta.semester === "WS") {
       if (oldToNew) {
         return 1;
       }
