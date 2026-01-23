@@ -105,40 +105,40 @@ const CourseAdmin: React.FC = () => {
    * @param a Term a to be compared against b
    * @param b Term b to be compared against a
    * @param oldToNew (optional) Specifies whether terms should be sorted from old to new or vice versa
+   * @returns -1 if term a comes before b,
+   *          1 if term a comes after b, and
+   *          0 if both terms are equal.
    */
-  function compareTerms(a: string, b: string, oldToNew: boolean = true) {
+  function compareTerms(a: string, b: string, oldToNew: boolean = true): number {
     const ta = parseTerm(a);
     const tb = parseTerm(b);
 
-    if (!ta || !tb) return 0;
+    if (!ta || !tb) return 0;       // Perform no sorting if error during parsing
 
     if (ta.year !== tb.year) {
-      if (oldToNew) {
-        return ta.year - tb.year;
-      }
-      else {
-        return tb.year - ta.year;
+      // For oldToNew, earlier years come before newer ones
+      // For newToOld, newer years come before earlier ones
+      if (ta.year < tb.year) {
+        return oldToNew ? -1 : 1;
+      } else {
+        return oldToNew ? 1 : -1;
       }
     }
 
-    if (ta.semester === "SS") {
-      if (oldToNew) {
-        return -1;
-      }
-      else {
-        return 1;
-      }
+    // Years are equal, compare semesters
+    if (ta.semester !== tb.semester) {
+        // Parsed semesters are either SS or WS, so if for example ta.semester === "SS", then implicitly tb.semester === "WS" 
+        if (oldToNew) {
+          // For oldToNew, SS comes before WS in the same year
+          return ta.semester === "SS" ? -1 : 1;
+        } else {
+          // For newToOld, SS comes after WS in the same year
+          return ta.semester === "SS" ? 1 : -1;
+        }    
     }
-    if (ta.semester === "WS") {
-      if (oldToNew) {
-        return 1;
-      }
-      else {
-        return -1;
-      }
-    }
-      
-    else return 0;
+
+    // Same year, same semester => equal
+    return 0;
   }
 
   const tableCourse = useMemo(() => {
