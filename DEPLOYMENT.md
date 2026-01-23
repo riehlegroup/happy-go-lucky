@@ -301,7 +301,7 @@ echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 
 2. **Copy backup to volume:**
    ```bash
-   docker run --rm -v happy-go-lucky-db:/app/server/data -v $(pwd):/backup alpine \
+   docker run --rm -v mini-meco-db:/app/server/data -v $(pwd):/backup alpine \
      cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/happyGoLucky.db
    ```
 
