@@ -46,7 +46,7 @@ Internet → Caddy (port 80/443)
 
 | Container | Purpose | Exposed Ports | Volumes |
 |-----------|---------|---------------|---------|
-| `server` | Backend API | None (internal only) | `happy-go-lucky-db` (database) |
+| `server` | Backend API | None (internal only) | `mini-meco-db` (database) |
 | `client` | Builds frontend | None (exits after build) | `client-dist` (build output) |
 | `caddy` | Web server & reverse proxy | 80, 443 | `client-dist`, `caddy-data`, `caddy-config`, `Caddyfile` |
 
