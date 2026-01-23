@@ -512,7 +512,7 @@ docker compose exec server sh -c "cd /app/server && ls -la"
 docker volume ls | grep mini-meco
 
 # Inspect volumes
-docker volume inspect happy-go-lucky-db
+docker volume inspect mini-meco-db
 docker volume inspect caddy-data
 docker volume inspect client-dist
 
