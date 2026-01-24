@@ -354,6 +354,10 @@ export const en = {
         schedule: "schedule",
         edit: "edit",
       },
+      sorting: {
+        oldToNew: "Sorting: Old ➔ New",
+        newToOld: "Sorting: New ➔ Old",
+      },
       sections: {
         termsTitle: (count: number) => `Terms (${count})`,
         coursesTitle: (count: number) => `Courses (${count})`,
