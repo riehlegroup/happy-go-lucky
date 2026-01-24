@@ -36,14 +36,30 @@ type ParsedTerm = {
 
 /**
    * Parses the term names into semester (string) and year (number) components. E.g. termName = "WS24" returns {semester: "WS", year: 24}
+   * Supported formats:
+   * - SS24, WS24
+   * - WS24/25
+   * - Winter 2024, Summer 2025
    * @param termName Term to be parsed
+   * @returns Parsed term consisting of semester and year components, or null if parsing fails.
    */
   function parseTerm(termName: string): ParsedTerm | null {
-    const match = termName.match(/^(SS|WS)(\d+)$/);
+    if (!termName) return null;
+
+    const cleaned = termName.trim().toLowerCase();
+    const regex = /^(ws|winter|ss|summer)\s*(?:(\d{2}|\d{4})(?:\/(\d{2}))?)$/;
+    const match = cleaned.match(regex);
+
     if (!match) return null;
+
+    let [_, sem, yearStr] = match;
+
+    let semester: "SS" | "WS" = (sem.includes("summer") || sem.includes("ss")) ? "SS" : "WS"
+    let year: number = parseInt(yearStr.length === 2 ? "20" + yearStr : yearStr, 10)    // assume 21st century
+
     return {
-      semester: match[1] as "SS" | "WS",
-      year: Number(match[2])
+      semester: semester,
+      year: year
     };
   }
 
