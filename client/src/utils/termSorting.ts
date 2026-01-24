@@ -67,11 +67,10 @@ return {
  * Compares terms with respect to chronological ordering.
  * The year component is compared first and the semester component second.
  * For use inside sorting functions.
- * If oldToNew == true, results in a sorted term list comparable to this: SS24, WS24, SS25, WS25, ...
  * @param a Term a to be compared against b
  * @param b Term b to be compared against a
  * @param oldToNew (optional) Specifies whether terms should be sorted from old to new or vice versa.
- * Default is sorting from newest to oldest terms.
+ * Default is sorting from newest to oldest terms (i.e. oldToNew = false).
  * @returns -1 if term a comes before b,
  *          1 if term a comes after b, and
  *          0 if both terms are equal.
@@ -120,3 +119,5 @@ const oldToNew = direction == TermSortDirection.OLD_TO_NEW;
 return [...terms].sort((a, b) => compareTerms(a.termName, b.termName, oldToNew));
 }
 
+// Export internals for testing
+export const _internals = { parseTerm, compareTerms };
