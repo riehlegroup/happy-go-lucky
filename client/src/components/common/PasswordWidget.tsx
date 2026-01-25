@@ -1,5 +1,5 @@
 import React from "react";
-import Input from "./Input";
+import PasswordInput from "./PasswordInput";
 
 const containsLowerAndUpperCase = (value: string): boolean =>
   /(?=.*[a-z])(?=.*[A-Z])/.test(value);
@@ -8,23 +8,13 @@ const containsSpecialCharacter = (value: string): boolean =>
   /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
 const calculatePasswordStrength = (value: string): number => {
-  if (value.length < 8) {
-    return 1;
-  }
+  if (value.length < 8) return 1;
 
   let strength = 1;
-  if (containsLowerAndUpperCase(value)) {
-    strength++;
-  }
-  if (containsNumber(value)) {
-    strength++;
-  }
-  if (containsSpecialCharacter(value)) {
-    strength++;
-  }
-  if (value.length >= 12) {
-    strength++;
-  }
+  if (containsLowerAndUpperCase(value)) strength++;
+  if (containsNumber(value)) strength++;
+  if (containsSpecialCharacter(value)) strength++;
+  if (value.length >= 12) strength++;
   return strength;
 };
 
@@ -61,12 +51,12 @@ const PasswordWidget: React.FC<PasswordWidgetProps> = ({
 
   return (
     <div className="space-y-2">
-      <Input
-        type="password"
+      <PasswordInput
         placeholder="Please enter your password"
         value={password}
         onChange={(e) => onPasswordChange(e.target.value)}
       />
+
       {action === "Registration" && password !== "" && (
         <div className="flex items-center gap-2 text-sm">
           <span className="text-slate-700">Password Strength:</span>
