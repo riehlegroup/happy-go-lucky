@@ -8,6 +8,7 @@ import { AuthController } from './Controllers/AuthController';
 import { UserController } from './Controllers/UserController';
 import { ProjectController } from './Controllers/ProjectController';
 import { LegacyController } from './Controllers/LegacyController';
+import { ActivityController } from './Controllers/ActivityController';
 import { IEmailService } from './Services/IEmailService';
 import { ConsoleEmailService } from './Services/ConsoleEmailService';
 import { SmtpEmailService } from './Services/SmtpEmailService';
@@ -63,6 +64,7 @@ export function createApp(db: Database): Application {
   const userController = new UserController(db, emailService);
   const projectController = new ProjectController(db, emailService);
   const legacyController = new LegacyController(db);
+  const activityController = new ActivityController(db);
 
   // Register all routes
   courseController.init(app);
@@ -71,6 +73,7 @@ export function createApp(db: Database): Application {
   userController.init(app);
   projectController.init(app);
   legacyController.init(app);
+  activityController.init(app);
 
   return app;
 }
