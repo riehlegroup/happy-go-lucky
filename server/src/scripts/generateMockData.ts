@@ -122,7 +122,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
       `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
       [amosStudent1Id, amosProjectId, 'Owner']
     );
-    console.log(`  ✓ Elias Zimmermann → AMOS – Smart Campus App (Owner)`)
+    console.log(`  ✓ Elias Zimmermann → AMOS – Smart Campus App (Owner)`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
@@ -215,7 +215,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log('='.repeat(60));
     console.log('\nSummary:');
     console.log(`  Terms: 1`);
-    console.log(`  Term: Winter Semester 2026 (WS26)`);
+    console.log(`  Term: Winter Semester 2025/2026 (WS25/26)`);
     console.log(`  Courses: 2 (AMOS Course Mock, ADAP Course Mock)`);
     console.log(`  Projects: 2 (AMOS – Smart Campus App, ADAP – Personal Learning Tracker)`);
     console.log(`  Students: 3 (2 AMOS, 1 ADAP)`);
