@@ -10,6 +10,7 @@ import {
 import TopNavBar from "@/components/common/TopNavBar";
 import Button from "@/components/common/Button";
 import SectionCard from "@/components/common/SectionCard";
+import ActivityTimeline from "@/components/Projects/ActivityTimeline";
 import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
@@ -32,10 +33,12 @@ const Dashboard: React.FC = () => {
 
     const fetchProjects = async () => {
       const userEmail = authStorage.getEmail();
+      console.log("Fetching projects for:", userEmail);
       if (userEmail) {
         try {
           const data = await projectsApi.getUserProjects(userEmail);
           const projectNames = data.map((project) => project.projectName);
+          console.log("Projects fetched:", projectNames);
           setProjects(projectNames);
 
           // Restore selected project from localStorage
@@ -101,80 +104,96 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        {/* Projects Section */}
-        <SectionCard title="Projects">
-          <div className="space-y-4">
-            <Select value={selectedProject || ""} onValueChange={handleProjectChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project} value={project}>
-                    {project}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="mx-auto max-w-7xl p-4 pt-16">
+        <div className="flex gap-4">
+          {/* Left Column - Main Content */}
+          <div className="flex-1 space-y-4">
+            {/* Projects Section */}
+            <SectionCard title="Projects">
+              <div className="space-y-4">
+                <Select value={selectedProject || ""} onValueChange={handleProjectChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project} value={project}>
+                        {project}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <div className="flex flex-wrap gap-4">
-              <Button
-                onClick={goToStandups}
-                disabled={!selectedProject}
-                className="w-48"
-              >
-                Standups
-              </Button>
-              <Button
-                onClick={goHappiness}
-                disabled={!selectedProject}
-                className="w-48"
-              >
-                Happiness
-              </Button>
-              <Button
-                onClick={goCodeActivity}
-                disabled={!selectedProject}
-                className="w-48"
-              >
-                Code Activity
-              </Button>
-            </div>
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    onClick={goToStandups}
+                    disabled={!selectedProject}
+                    className="w-48"
+                  >
+                    Standups
+                  </Button>
+                  <Button
+                    onClick={goHappiness}
+                    disabled={!selectedProject}
+                    className="w-48"
+                  >
+                    Happiness
+                  </Button>
+                  <Button
+                    onClick={goCodeActivity}
+                    disabled={!selectedProject}
+                    className="w-48"
+                  >
+                    Code Activity
+                  </Button>
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* Configuration Section */}
+            <SectionCard title="Configuration">
+              <div className="flex flex-wrap gap-4">
+                <Button onClick={goUserPanel} className="w-48">
+                  User profile
+                </Button>
+                <Button onClick={goSettings} className="w-48">
+                  Settings
+                </Button>
+                <Button onClick={goCourseParticipation} className="w-48">
+                  Course Participation
+                </Button>
+                <Button onClick={goProjectConfig} className="w-48">
+                  Project Config
+                </Button>
+              </div>
+            </SectionCard>
+
+            {/* System Administration Section */}
+            {userRole === "ADMIN" && (
+              <SectionCard title="System Administration">
+                <div className="flex flex-wrap gap-4">
+                  <Button onClick={goUserAdmin} className="w-48">
+                    User Admin
+                  </Button>
+                  <Button onClick={goCourseAdmin} className="w-48">
+                    Course Admin
+                  </Button>
+                </div>
+              </SectionCard>
+            )}
           </div>
-        </SectionCard>
 
-        {/* Configuration Section */}
-        <SectionCard title="Configuration">
-          <div className="flex flex-wrap gap-4">
-            <Button onClick={goUserPanel} className="w-48">
-              User profile
-            </Button>
-            <Button onClick={goSettings} className="w-48">
-              Settings
-            </Button>
-            <Button onClick={goCourseParticipation} className="w-48">
-              Course Participation
-            </Button>
-            <Button onClick={goProjectConfig} className="w-48">
-              Project Config
-            </Button>
-          </div>
-        </SectionCard>
-
-        {/* System Administration Section */}
-        {userRole === "ADMIN" && (
-          <SectionCard title="System Administration">
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={goUserAdmin} className="w-48">
-                User Admin
-              </Button>
-              <Button onClick={goCourseAdmin} className="w-48">
-                Course Admin
-              </Button>
+          {/* Right Column - Activity Timeline Sidebar */}
+          {selectedProject && (
+            <div className="w-80 sticky top-20 h-fit">
+              <SectionCard title="Recent Activity">
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                  <ActivityTimeline projectName={selectedProject} />
+                </div>
+              </SectionCard>
             </div>
-          </SectionCard>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

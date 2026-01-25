@@ -20,6 +20,9 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log('Starting mock data generation...\n');
 
     console.log('Cleaning up any existing mock data...');
+    await db.run(`DELETE FROM project_activities WHERE projectId IN (
+      SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
+    )`);
     await db.run(`DELETE FROM happiness WHERE projectId IN (
       SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
     )`);
@@ -209,6 +212,48 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log(`  ✓ Created ${amosStudent2Ratings} happiness ratings for AMOS Student 2`);
     console.log(`  ✓ Created ${adapStudent1Ratings} happiness ratings for ADAP Student 1\n`);
 
+    console.log('Creating recent project activities (4 per user)...');
+
+    // Activity types
+    const activityTypes = ['user_joined', 'standup_submitted', 'happiness_submitted', 'happiness_submitted'];
+    const activityData = [null, null, '{"happiness": 4}', '{"happiness": 5}'];
+    const hoursAgo = [120, 48, 24, 6]; // 5 days, 2 days, 1 day, 6 hours ago
+
+    let totalActivities = 0;
+
+    // Create 4 activities for AMOS Student 1
+    for (let i = 0; i < 4; i++) {
+      await db.run(
+        `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
+         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i]} hours'))`,
+        [amosProjectId, amosStudent1Id, activityTypes[i], activityData[i]]
+      );
+      totalActivities++;
+    }
+    console.log(`  ✓ Created 4 activities for AMOS Student 1`);
+
+    // Create 4 activities for AMOS Student 2
+    for (let i = 0; i < 4; i++) {
+      await db.run(
+        `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
+         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i] + 12} hours'))`,
+        [amosProjectId, amosStudent2Id, activityTypes[i], activityData[i]]
+      );
+      totalActivities++;
+    }
+    console.log(`  ✓ Created 4 activities for AMOS Student 2`);
+
+    // Create 4 activities for ADAP Student 1
+    for (let i = 0; i < 4; i++) {
+      await db.run(
+        `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
+         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i] + 6} hours'))`,
+        [adapProjectId, adapStudent1Id, activityTypes[i], activityData[i]]
+      );
+      totalActivities++;
+    }
+    console.log(`  ✓ Created 4 activities for ADAP Student 1\n`);
+
     console.log('='.repeat(60));
     console.log('Mock data generation completed successfully!');
     console.log('='.repeat(60));
@@ -221,6 +266,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log(`  Schedules: 2 (15 weeks each, started 3 weeks ago)`);
     console.log(`  Submission dates: 30 (15 per course)`);
     console.log(`  Happiness ratings: ${amosStudent1Ratings + amosStudent2Ratings + adapStudent1Ratings}`);
+    console.log(`  Project activities: ${totalActivities} (4 per user)`);
     console.log('\nStudent Accounts:');
     console.log('  Email: amos-student-1@fau.de | Password: amos-student-1-password | Project: AMOS (Owner)');
     console.log('  Email: amos-student-2@fau.de | Password: amos-student-2-password | Project: AMOS (Developer)');
