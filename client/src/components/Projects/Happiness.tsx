@@ -275,7 +275,7 @@ const Happiness: React.FC = (): React.ReactNode => {
   return (
     <div className="min-h-screen">
       <TopNavBar title="Happiness" showBackButton={true} showUserInfo={true} />
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         <Tabs defaultValue="User" className="w-full">
           <TabsList className="inline-flex h-auto gap-1 bg-slate-100 p-2">
             <TabsTrigger value="User" className="data-[state=active]:bg-white data-[state=active]:shadow">

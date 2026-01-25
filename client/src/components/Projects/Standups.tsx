@@ -70,7 +70,7 @@ const Standups: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Standup Emails" showBackButton={true} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         <SectionCard title="Submit Standup">
           <form onSubmit={handleSendStandups} className="space-y-6">
             <Textarea
