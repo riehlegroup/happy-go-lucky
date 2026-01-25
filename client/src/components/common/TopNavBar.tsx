@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import AuthStorage from "@/services/storage/auth";
+import { ModeToggle } from "./mode-toggle";
 
 interface TopNavBarProps {
   title: string;
@@ -47,18 +48,20 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         <h1 className="text-xl font-bold text-primary-foreground">{title}</h1>
       </div>
 
-      {/* Right section: Username and Logout button */}
-      {showUserInfo && username && (
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-primary-foreground">User: {username}</span>
-          <button
-            onClick={handleLogout}
-            className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-4">
+        <ModeToggle />
+        {showUserInfo && username && (
+          <>
+            <span className="text-sm font-medium text-primary-foreground">User: {username}</span>
+            <button
+              onClick={handleLogout}
+              className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
+            >
+              Logout
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

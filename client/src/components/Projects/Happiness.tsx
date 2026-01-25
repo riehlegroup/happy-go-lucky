@@ -50,7 +50,7 @@ const Happiness: React.FC = (): React.ReactNode => {
     const authStorage = AuthStorage.getInstance();
     const storedUserName = authStorage.getUserName();
     if (storedUserName) {
-      setUser((prev) => prev && ({ ...prev , name: storedUserName }));
+      setUser((prev) => prev && ({ ...prev, name: storedUserName }));
     }
   }, [location.state]);
 
@@ -228,7 +228,7 @@ const Happiness: React.FC = (): React.ReactNode => {
   }
 
   // Transform data for chart
-  const formattedData: { [sprintLabel: string]: { sprintLabel: string; [userEmail: string]: number | string | undefined } } = {};
+  const formattedData: { [sprintLabel: string]: { sprintLabel: string;[userEmail: string]: number | string | undefined } } = {};
   const now = new Date();
 
   // Find the next submission date after now (current sprint)
@@ -277,86 +277,85 @@ const Happiness: React.FC = (): React.ReactNode => {
       <TopNavBar title="Happiness" showBackButton={true} showUserInfo={true} />
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         <Tabs defaultValue="User" className="w-full">
-          <TabsList className="inline-flex h-auto gap-1 bg-slate-100 p-2">
-            <TabsTrigger value="User" className="data-[state=active]:bg-white data-[state=active]:shadow">
+          <TabsList className="inline-flex h-auto gap-1 bg-muted p-2">
+            <TabsTrigger value="User" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground data-[state=active]:shadow">
               User
             </TabsTrigger>
-            <TabsTrigger value="Display" className="data-[state=active]:bg-white data-[state=active]:shadow">
+            <TabsTrigger value="Display" className="data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground data-[state=active]:shadow">
               Display
             </TabsTrigger>
           </TabsList>
-        <TabsContent value="User">
-          <SectionCard title="Submit Happiness Rating">
-            {!nextSubmission ? (
-              <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700">
-                No active submission window available. Please contact an administrator to set up a course schedule.
-              </div>
-            ) : (
-              <>
-                <div className="space-y-6">
-                  <div className="text-sm text-slate-600">
-                    Please Enter Before{" "}
-                    <span className="font-semibold">
-                      {moment(nextSubmission.submissionDate).format("YYYY-MM-DD HH:mm:ss")}
-                    </span>
-                  </div>
-                  <div className="space-y-6">
-                    <div className="text-lg font-semibold text-slate-900">
-                      How happy are you doing this project?
-                    </div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {[-3, -2, -1, 0, 1, 2, 3].map((rating) => {
-                        const isSelected = userCurrentHappiness === rating;
-                        return (
-                          <button
-                            key={rating}
-                            onClick={() => handleHappinessSubmit(rating)}
-                            className={`flex flex-col items-center gap-1 rounded-lg p-3 text-sm font-semibold transition-all ${
-                              isSelected
-                                ? "border-4 border-blue-600 bg-blue-50"
-                                : "border-2 border-slate-300 bg-white hover:border-primary hover:bg-slate-50"
-                            } active:bg-primary active:text-white`}
-                            type="button"
-                          >
-                            {rating}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {showSuccess && (
-                      <div className="rounded-md bg-green-50 p-3 text-center text-sm font-medium text-green-700">
-                        Happiness updated successfully
-                      </div>
-                    )}
-                  </div>
+          <TabsContent value="User">
+            <SectionCard title="Submit Happiness Rating">
+              {!nextSubmission ? (
+                <div className="rounded-md bg-destructive/10 p-4 text-center text-sm text-destructive">
+                  No active submission window available. Please contact an administrator to set up a course schedule.
                 </div>
-              </>
-            )}
-          </SectionCard>
-        </TabsContent>
-        <TabsContent value="Display">
-          <SectionCard title={`Happiness - ${projectName}`}>
-            <ResponsiveContainer height={400} width="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 70, left: 10, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="1 1" />
-                <XAxis dataKey="sprintLabel" />
-                <YAxis domain={[-3, 3]} ticks={[-3, -2, -1, 0, 1, 2, 3]} />
+              ) : (
+                <>
+                  <div className="space-y-6">
+                    <div className="text-sm text-muted-foreground">
+                      Please Enter Before{" "}
+                      <span className="font-semibold text-foreground">
+                        {moment(nextSubmission.submissionDate).format("YYYY-MM-DD HH:mm:ss")}
+                      </span>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="text-lg font-semibold text-foreground">
+                        How happy are you doing this project?
+                      </div>
+                      <div className="grid grid-cols-7 gap-2">
+                        {[-3, -2, -1, 0, 1, 2, 3].map((rating) => {
+                          const isSelected = userCurrentHappiness === rating;
+                          return (
+                            <button
+                              key={rating}
+                              onClick={() => handleHappinessSubmit(rating)}
+                              className={`flex flex-col items-center gap-1 rounded-lg p-3 text-sm font-semibold transition-all ${isSelected
+                                  ? "border-4 border-primary bg-primary/10 text-primary"
+                                  : "border-2 border-input bg-card text-card-foreground hover:border-primary hover:bg-accent"
+                                } active:bg-primary active:text-primary-foreground`}
+                              type="button"
+                            >
+                              {rating}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {showSuccess && (
+                        <div className="rounded-md bg-green-50 p-3 text-center text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Happiness updated successfully
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </SectionCard>
+          </TabsContent>
+          <TabsContent value="Display">
+            <SectionCard title={`Happiness - ${projectName}`}>
+              <ResponsiveContainer height={400} width="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 20, right: 70, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="1 1" />
+                  <XAxis dataKey="sprintLabel" />
+                  <YAxis domain={[-3, 3]} ticks={[-3, -2, -1, 0, 1, 2, 3]} />
 
-                {uniqueEmails.map((email) => (
-                  <Line
-                    key={email}
-                    type="monotone"
-                    dataKey={email}
-                    stroke={emailColors[email]}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </SectionCard>
-        </TabsContent>
+                  {uniqueEmails.map((email) => (
+                    <Line
+                      key={email}
+                      type="monotone"
+                      dataKey={email}
+                      stroke={emailColors[email]}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </SectionCard>
+          </TabsContent>
         </Tabs>
       </div>
     </div>

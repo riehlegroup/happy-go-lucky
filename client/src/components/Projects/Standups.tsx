@@ -107,7 +107,7 @@ const Standups: React.FC = () => {
             </div>
 
             {message && (
-              <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">
+              <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400">
                 {message}
               </div>
             )}

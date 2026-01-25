@@ -10,13 +10,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="space-y-1">
         {label && (
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground">
             {label}
           </label>
         )}
         <input
           ref={ref}
-          className={`box-border w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100 disabled:text-gray-500 ${className}`}
+          className={`box-border w-full rounded-md border border-border bg-background px-4 py-3 text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground ${className}`}
           {...props}
         />
         {error && (
