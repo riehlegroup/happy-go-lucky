@@ -51,3 +51,8 @@ npm run test
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment instructions.
+
+## State Model
+
+Details on user status, roles, and term value types are in
+[STATE_MODEL.md](STATE_MODEL.md)
