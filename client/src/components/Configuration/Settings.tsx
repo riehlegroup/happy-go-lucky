@@ -16,12 +16,12 @@ import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
 import { Mail, Lock, User, Pencil } from "lucide-react";
 
-type MessageState = {
+type SettingsMessageState = {
   text: string;
   type: "success" | "error";
 };
 
-const Message = ({ message }: { message: MessageState | null }) => {
+const SettingsMessage = ({ message }: { message: SettingsMessageState | null }) => {
   if (!message) return null;
 
   const styles =
@@ -36,7 +36,7 @@ const Message = ({ message }: { message: MessageState | null }) => {
   );
 };
 
-const Row = ({
+const SettingsRow = ({
   icon,
   label,
   value,
@@ -54,7 +54,7 @@ const Row = ({
       </div>
       <div>
         <div className="text-sm font-medium text-slate-900">{label}</div>
-        <div className="text-sm text-left text-slate-600">{value}</div>
+        <div className="text-sm text-slate-600">{value}</div>
       </div>
     </div>
     <div className="shrink-0">{children}</div>
@@ -69,9 +69,9 @@ const Settings: React.FC = () => {
   const [githubUsername, setGithubUsername] = useState("");
 
   /* messages */
-  const [emailMessage, setEmailMessage] = useState<MessageState | null>(null);
-  const [passwordMessage, setPasswordMessage] = useState<MessageState | null>(null);
-  const [githubMessage, setGithubMessage] = useState<MessageState | null>(null);
+  const [emailMessage, setEmailMessage] = useState<SettingsMessageState | null>(null);
+  const [passwordMessage, setPasswordMessage] = useState<SettingsMessageState | null>(null);
+  const [githubMessage, setGithubMessage] = useState<SettingsMessageState | null>(null);
 
   /* dialog state */
   const [emailOpen, setEmailOpen] = useState(false);
@@ -119,6 +119,10 @@ const Settings: React.FC = () => {
     }
 
     try {
+      if (!newEmail || !newEmail.trim()) {
+        setEmailMessage({ text: "Email address cannot be empty.", type: "error" });
+        return;
+      }
       const data = await usersApi.changeEmail({
         oldEmail: user.email,
         newEmail: newEmail,
@@ -127,15 +131,24 @@ const Settings: React.FC = () => {
       setEmailMessage({ text: data.message, type: "success" });
       setUser({ ...user, email: newEmail });
       AuthStorage.getInstance().setEmail(newEmail);
-      // setEmailOpen(false);
-    } catch (err: any) {
-      setEmailMessage({ text: err.message, type: "error" });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err.message);
+        setEmailMessage({ text: err.message, type: "error" });
+        return;
+      }
+      setEmailMessage({ text: "An unknown error occurred.", type: "error" });
     }
   };
 
   const handlePasswordChange = async () => {
     if (!user) {
       setPasswordMessage({ text: "User data not available. Please log in again.", type: "error" });
+      return;
+    }
+
+    if (!newPassword || newPassword.trim() === "") {
+      setPasswordMessage({ text: "Password cannot be empty.", type: "error" });
       return;
     }
 
@@ -146,14 +159,18 @@ const Settings: React.FC = () => {
       });
 
       setPasswordMessage({ text: data.message, type: "success" });
-      // setPasswordOpen(false);
-    } catch (err: any) {
-      setPasswordMessage({ text: err.message, type: "error" });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        setPasswordMessage({ text: error.message, type: "error" });
+        return;
+      }
+      setPasswordMessage({ text: "An error occurred.", type: "error" });
     }
   };
 
   const handleGithubChange = async () => {
-    if (!githubUsername) {
+    if (!githubUsername || githubUsername.trim() === "") {
       setGithubMessage({ text: "GitHub username cannot be empty.", type: "error" });
       return;
     }
@@ -171,9 +188,13 @@ const Settings: React.FC = () => {
 
       setGithubMessage({ text: data.message, type: "success" });
       setUser({ ...user, UserGithubUsername: githubUsername });
-      // setGithubOpen(false);
-    } catch (err: any) {
-      setGithubMessage({ text: err.message, type: "error" });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+        setGithubMessage({ text: error.message, type: "error" });
+        return;
+      }
+      setGithubMessage({ text: "An error occurred.", type: "error" });
     }
   };
 
@@ -184,9 +205,9 @@ const Settings: React.FC = () => {
       <div className="mx-auto max-w-4xl p-4 pt-16 space-y-4">
         <SectionCard title="Account settings">
           <Card>
-            <div className="divide-y divide-slate-200">
+            <div className="divide-y divide-slate-200 text-left">
               {/* Email */}
-              <Row
+              <SettingsRow
                 icon={<Mail className="h-5 w-5" />}
                 label="Email address"
                 value={user?.email || "Not available"}
@@ -208,7 +229,7 @@ const Settings: React.FC = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change Email Address</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change Email Address</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="email"
@@ -216,7 +237,7 @@ const Settings: React.FC = () => {
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                     />
-                    <Message message={emailMessage} />
+                    <SettingsMessage message={emailMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handleEmailChange}>
                         Change Email
@@ -224,10 +245,10 @@ const Settings: React.FC = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </Row>
+              </SettingsRow>
 
               {/* Password */}
-              <Row
+              <SettingsRow
                 icon={<Lock className="h-5 w-5" />}
                 label="Password"
                 value="••••••••"
@@ -249,7 +270,7 @@ const Settings: React.FC = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change Password</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="password"
@@ -257,7 +278,7 @@ const Settings: React.FC = () => {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                     />
-                    <Message message={passwordMessage} />
+                    <SettingsMessage message={passwordMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handlePasswordChange}>
                         Change Password
@@ -265,10 +286,10 @@ const Settings: React.FC = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </Row>
+              </SettingsRow>
 
               {/* GitHub */}
-              <Row
+              <SettingsRow
                 icon={<User className="h-5 w-5" />}
                 label="GitHub username"
                 value={user?.UserGithubUsername || "Not set"}
@@ -290,7 +311,7 @@ const Settings: React.FC = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Edit GitHub Username</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change GitHub Username</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="text"
@@ -298,7 +319,7 @@ const Settings: React.FC = () => {
                       value={githubUsername}
                       onChange={(e) => setGithubUsername(e.target.value)}
                     />
-                    <Message message={githubMessage} />
+                    <SettingsMessage message={githubMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handleGithubChange}>
                         Confirm
@@ -306,7 +327,7 @@ const Settings: React.FC = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </Row>
+              </SettingsRow>
             </div>
           </Card>
         </SectionCard>
