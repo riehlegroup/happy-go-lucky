@@ -8,9 +8,9 @@ export enum UserStatusEnum {
 export class UserStatus {
     private readonly status: UserStatusEnum;
 
-    // Define valid transitions between states
+    // Transition table; "removed" is terminal and confirmed -> removed matches current rules.
     private static validTransitions: Record<UserStatusEnum, UserStatusEnum[]> = {
-        [UserStatusEnum.confirmed]: [UserStatusEnum.suspended],
+        [UserStatusEnum.confirmed]: [UserStatusEnum.suspended, UserStatusEnum.removed],
         [UserStatusEnum.unconfirmed]: [UserStatusEnum.confirmed, UserStatusEnum.suspended, UserStatusEnum.removed],
         [UserStatusEnum.suspended]: [UserStatusEnum.confirmed, UserStatusEnum.removed],
         [UserStatusEnum.removed]: [],
@@ -23,11 +23,28 @@ export class UserStatus {
         this.status = initialStatus;
     }
 
+    // Validate raw inputs (e.g., API/DB) before casting to the enum.
+    static isValidStatus(status: string): status is UserStatusEnum {
+        return Object.values(UserStatusEnum).includes(status as UserStatusEnum);
+    }
+
+    // Convert persisted status strings into the value type.
+    static fromString(status: string): UserStatus {
+        if (!UserStatus.isValidStatus(status)) {
+            throw new Error(`Invalid initial status: ${status}`);
+        }
+        return new UserStatus(status);
+    }
+
     getStatus(): UserStatusEnum {
         return this.status;
     }
 
     canTransitionTo(newStatus: UserStatusEnum): boolean {
+        if (newStatus === this.status) {
+            // Same-status updates are treated as idempotent.
+            return true;
+        }
         const allowedTransitions = UserStatus.validTransitions[this.status];
         return allowedTransitions.includes(newStatus);
     }

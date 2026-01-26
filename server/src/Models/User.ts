@@ -3,13 +3,14 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
+import { UserStatus, UserStatusEnum } from "../Utils/UserStatus";
 
 export class User extends Visitor implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
-  protected status: string = "unconfirmed";
+  protected status: UserStatus = new UserStatus();
   protected role: string = "USER"; // @todo: remove and set UserRole
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
@@ -38,7 +39,8 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = reader.readString("status") as string;
+    // Status is required by the schema, so we treat it as non-null here.
+    this.status = UserStatus.fromString(reader.readString("status") as string);
     this.role = reader.readString("userRole") as string;
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
@@ -56,7 +58,7 @@ export class User extends Visitor implements Serializable {
     } else {
       writer.writeString("email", this.email.toString());
     }
-    writer.writeString("status", this.status);
+    writer.writeString("status", this.status.getStatus());
     writer.writeString("userRole", this.role);
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
@@ -89,8 +91,8 @@ export class User extends Visitor implements Serializable {
     return this.email;
   }
 
-  public getStatus(): string {
-    return this.status;
+  public getStatus(): UserStatusEnum {
+    return this.status.getStatus();
   }
 
   public getRole(): string {
@@ -130,8 +132,9 @@ export class User extends Visitor implements Serializable {
     this.email = email;
   }
 
-  public setStatus(status: string) {
-    this.status = status;
+  public setStatus(status: UserStatusEnum) {
+    // Enforce the status state machine via the value type.
+    this.status = this.status.transitionTo(status);
   }
 
   public setRole(role: string){

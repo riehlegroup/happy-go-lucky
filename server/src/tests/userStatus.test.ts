@@ -33,6 +33,20 @@ describe("UserStatus", () => {
         expect(userStatus.getStatus()).toBe(UserStatusEnum.unconfirmed); // Original remains unchanged
     });
 
+    it("should allow transitioning from 'confirmed' to 'removed'", () => {
+        const userStatus = new UserStatus(UserStatusEnum.confirmed);
+        const newStatus = userStatus.transitionTo(UserStatusEnum.removed);
+        expect(newStatus.getStatus()).toBe(UserStatusEnum.removed);
+        expect(userStatus.getStatus()).toBe(UserStatusEnum.confirmed); // Original remains unchanged
+    });
+
+    it("should allow transitioning to the same status", () => {
+        const userStatus = new UserStatus(UserStatusEnum.confirmed);
+        const newStatus = userStatus.transitionTo(UserStatusEnum.confirmed);
+        expect(newStatus.getStatus()).toBe(UserStatusEnum.confirmed);
+        expect(userStatus.getStatus()).toBe(UserStatusEnum.confirmed); // Original remains unchanged
+    });
+
     it("should allow transitioning from 'suspended' to 'confirmed'", () => {
         const userStatus = new UserStatus(UserStatusEnum.suspended);
         const newStatus = userStatus.transitionTo(UserStatusEnum.confirmed);
