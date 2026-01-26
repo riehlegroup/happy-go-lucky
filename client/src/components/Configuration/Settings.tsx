@@ -208,7 +208,7 @@ const Settings: React.FC = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Change Email</DialogTitle>
+                      <DialogTitle>Change Email Address</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="email"
@@ -219,7 +219,7 @@ const Settings: React.FC = () => {
                     <Message message={emailMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handleEmailChange}>
-                        Save
+                        Change Email
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -260,7 +260,7 @@ const Settings: React.FC = () => {
                     <Message message={passwordMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handlePasswordChange}>
-                        Save
+                        Change Password
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -290,7 +290,7 @@ const Settings: React.FC = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>GitHub Username</DialogTitle>
+                      <DialogTitle>Edit GitHub Username</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="text"
@@ -301,7 +301,7 @@ const Settings: React.FC = () => {
                     <Message message={githubMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handleGithubChange}>
-                        Save
+                        Confirm
                       </Button>
                     </DialogFooter>
                   </DialogContent>
