@@ -15,6 +15,8 @@ import Card from "@/components/common/Card";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
 import { Mail, Lock, User, Pencil } from "lucide-react";
+import { isValidEmail } from "@/utils/emailValidation";
+
 
 type SettingsMessageState = {
   text: string;
@@ -123,6 +125,11 @@ const Settings: React.FC = () => {
         setEmailMessage({ text: "Email address cannot be empty.", type: "error" });
         return;
       }
+
+      if(isValidEmail(newEmail) === false) {
+        setEmailMessage({ text: "Invalid email address format.", type: "error" });
+        return;
+      }
       const data = await usersApi.changeEmail({
         oldEmail: user.email,
         newEmail: newEmail,
@@ -131,6 +138,7 @@ const Settings: React.FC = () => {
       setEmailMessage({ text: data.message, type: "success" });
       setUser({ ...user, email: newEmail });
       AuthStorage.getInstance().setEmail(newEmail);
+      setEmailOpen(false);
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.error(err.message);
@@ -159,6 +167,7 @@ const Settings: React.FC = () => {
       });
 
       setPasswordMessage({ text: data.message, type: "success" });
+      setPasswordOpen(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -188,6 +197,7 @@ const Settings: React.FC = () => {
 
       setGithubMessage({ text: data.message, type: "success" });
       setUser({ ...user, UserGithubUsername: githubUsername });
+      setGithubOpen(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -203,7 +213,7 @@ const Settings: React.FC = () => {
       <TopNavBar title="Settings" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-4xl p-4 pt-16 space-y-4">
-        <SectionCard title="Account settings">
+        <SectionCard title="Account Settings">
           <Card>
             <div className="divide-y divide-slate-200 text-left">
               {/* Email */}
@@ -223,7 +233,7 @@ const Settings: React.FC = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button type="button">
+                    <Button type="button" aria-label="Edit email address">
                       <Pencil className="h-4 w-4 mr-2" /> Edit
                     </Button>
                   </DialogTrigger>
@@ -264,7 +274,7 @@ const Settings: React.FC = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button type="button">
+                    <Button type="button" aria-label="Edit password">
                       <Pencil className="h-4 w-4 mr-2" /> Edit
                     </Button>
                   </DialogTrigger>
@@ -280,7 +290,7 @@ const Settings: React.FC = () => {
                     />
                     <SettingsMessage message={passwordMessage} />
                     <DialogFooter>
-                      <Button type="button" onClick={handlePasswordChange}>
+                      <Button type="button" aria-label="Change password" onClick={handlePasswordChange}>
                         Change Password
                       </Button>
                     </DialogFooter>
@@ -305,7 +315,7 @@ const Settings: React.FC = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button type="button">
+                    <Button type="button" aria-label="Edit GitHub username">
                       <Pencil className="h-4 w-4 mr-2" /> Edit
                     </Button>
                   </DialogTrigger>
@@ -321,7 +331,7 @@ const Settings: React.FC = () => {
                     />
                     <SettingsMessage message={githubMessage} />
                     <DialogFooter>
-                      <Button type="button" onClick={handleGithubChange}>
+                      <Button type="button" aria-label="Change GitHub username" onClick={handleGithubChange}>
                         Confirm
                       </Button>
                     </DialogFooter>
