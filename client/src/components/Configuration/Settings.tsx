@@ -315,7 +315,7 @@ const Settings: React.FC = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button type="button" aria-label="Edit GitHub username">
+                    <Button type="button">
                       <Pencil className="h-4 w-4 mr-2" /> Edit
                     </Button>
                   </DialogTrigger>
