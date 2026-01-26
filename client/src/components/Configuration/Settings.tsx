@@ -212,7 +212,7 @@ const Settings: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Settings" showBackButton={true} showUserInfo={true} />
 
-      <div className="mx-auto max-w-4xl p-4 pt-16 space-y-4">
+      <div className="mx-auto max-w-4xl space-y-4 p-4 pt-16">
         <SectionCard title="Account Settings">
           <Card>
             <div className="divide-y divide-slate-200 text-left">
