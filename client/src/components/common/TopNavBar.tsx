@@ -73,7 +73,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
                 <button
                   type="button"
                   aria-label="Open user menu"
-                  className="flex size-10 items-center justify-center rounded-full bg-white text-primary transition-all hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+                  className="flex size-10 items-center justify-center rounded-full border-0 p-0 bg-white text-primary transition-all hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
                 >
                   <User className="size-5" />
                 </button>
