@@ -12,7 +12,7 @@ services:
       EMAIL_USER_FAU: ${EMAIL_USER_FAU}
       EMAIL_PASS_FAU: ${EMAIL_PASS_FAU}
     volumes:
-      - mini-meco-db:/app/server/data
+      - happy-go-lucky-db:/app/server/data
     restart: unless-stopped
     networks:
       - app-network
@@ -53,10 +53,11 @@ services:
     restart: "no"
 
 volumes:
-  mini-meco-db:
+  happy-go-lucky-db:
   caddy-data:
   caddy-config:
   client-dist:
+
 
 networks:
   app-network:
