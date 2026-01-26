@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Projects Section */}
         <SectionCard title="Projects">
           <div className="space-y-4">

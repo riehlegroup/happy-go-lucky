@@ -148,7 +148,7 @@ const CourseAdmin: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Manage Courses" showBackButton={true} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Display message if present */}
         {message && (
           <div className={`relative rounded-md border p-4 shadow-sm ${
