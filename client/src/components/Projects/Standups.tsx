@@ -11,6 +11,7 @@ const Standups: React.FC = () => {
   const location = useLocation();
   const [projectName, setProjectName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const projectNameFromState = location.state?.projectName;
@@ -22,6 +23,10 @@ const Standups: React.FC = () => {
     if (storedUserName) {
       setUserName(storedUserName);
     }
+    const storedUserEmail = authStorage.getEmail();
+    if (storedUserEmail) {
+      setUserEmail(storedUserEmail);
+    }
   }, [location.state]);
 
   const [doneText, setDoneText] = useState("");
@@ -32,7 +37,7 @@ const Standups: React.FC = () => {
   const handleSendStandups = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!projectName || !userName) {
+    if (!projectName || !userName || !userEmail) {
       setMessage("Missing project or user information");
       return;
     }
@@ -41,6 +46,7 @@ const Standups: React.FC = () => {
       await projectsApi.sendStandupEmail({
         projectName,
         userName,
+        userEmail,
         doneText,
         plansText,
         challengesText,

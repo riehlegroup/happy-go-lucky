@@ -51,6 +51,7 @@ export interface HappinessRating {
 export interface StandupEmail {
   projectName: string;
   userName: string;
+  userEmail: string;
   doneText: string;
   plansText: string;
   challengesText: string;

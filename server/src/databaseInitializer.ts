@@ -136,6 +136,24 @@ export async function initializeDB(filename: string, createAdmin = true) {
         OR NEW.submissionDate > (SELECT endDate FROM schedules WHERE id = NEW.scheduleId);
     END;
     `);
-  
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS project_activities (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projectId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      activityType TEXT NOT NULL,
+      activityData TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id),
+      FOREIGN KEY (projectId) REFERENCES projects(id)
+    )
+  `);
+
+  await db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_project_activities_project 
+    ON project_activities(projectId, timestamp DESC)
+  `);
+
   return db;
 }

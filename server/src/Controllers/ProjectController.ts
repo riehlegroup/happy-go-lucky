@@ -4,6 +4,7 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { Email } from "../ValueTypes/Email";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { ActivityController, ActivityType } from "./ActivityController";
 
 /**
  * Controller for handling project-related HTTP requests.
@@ -11,7 +12,7 @@ import { IEmailService } from "../Services/IEmailService";
  * (happiness metrics, sprints, standups).
  */
 export class ProjectController implements IAppController {
-  constructor(private db: Database, private emailService: IEmailService) {}
+  constructor(private db: Database, private emailService: IEmailService) { }
 
   /**
    * Initializes API routes for project management.
@@ -207,6 +208,15 @@ export class ProjectController implements IAppController {
         projectId,
         memberRole,
       ]);
+
+      // Log activity
+      await ActivityController.logActivityHelper(
+        this.db,
+        projectName,
+        memberEmail.toString(),
+        ActivityType.USER_JOINED
+      );
+
       res.status(201).json({ message: "Joined project successfully" });
     } catch (error) {
       console.error("Error during joining project:", error);
@@ -242,6 +252,14 @@ export class ProjectController implements IAppController {
         userId,
         projectId,
       ]);
+
+      // Log activity
+      await ActivityController.logActivityHelper(
+        this.db,
+        projectName,
+        userEmail,
+        ActivityType.USER_LEFT
+      );
 
       res.status(200).json({ message: "Left project successfully" });
     } catch (error) {
@@ -358,6 +376,15 @@ export class ProjectController implements IAppController {
         [projectId.id, userId.id, happiness, submissionDateId, timestamp]
       );
 
+      // Log activity
+      await ActivityController.logActivityHelper(
+        this.db,
+        projectName,
+        userEmail,
+        ActivityType.HAPPINESS_SUBMITTED,
+        { happiness }
+      );
+
       res.status(200).json({ message: "Happiness updated successfully" });
     } catch (error) {
       console.error("Error updating happiness:", error);
@@ -445,7 +472,7 @@ export class ProjectController implements IAppController {
   }
 
   async sendStandupEmails(req: Request, res: Response): Promise<void> {
-    const { projectName, userName, doneText, plansText, challengesText } = req.body;
+    const { projectName, userName, userEmail: submittingUserEmail, doneText, plansText, challengesText } = req.body;
 
     try {
       const members = await this.db.all(
@@ -455,8 +482,6 @@ export class ProjectController implements IAppController {
                 WHERE projects.projectName = ?`,
         [projectName]
       );
-
-      console.log(`Found ${members.length} members for project "${projectName}":`, members);
 
       if (members.length === 0) {
         res.status(400).json({ message: "No members in the project group" });
@@ -470,6 +495,21 @@ export class ProjectController implements IAppController {
         `Standup Update for ${projectName}`,
         `Standup report from ${userName}\n\nDone: ${doneText}\nPlans: ${plansText}\nChallenges: ${challengesText}`
       );
+
+      // Log activity using the unique user email instead of non-unique name lookup
+      if (submittingUserEmail) {
+        try {
+          await ActivityController.logActivityHelper(
+            this.db,
+            projectName,
+            submittingUserEmail,
+            ActivityType.STANDUP_SUBMITTED
+          );
+        } catch (activityError) {
+          // Don't fail the standup email if activity logging fails
+          console.error("Warning: Failed to log standup activity:", activityError);
+        }
+      }
 
       res.status(200).json({ message: "Standup email sent successfully" });
     } catch (error) {
