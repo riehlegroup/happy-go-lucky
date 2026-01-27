@@ -312,8 +312,8 @@ const Happiness: React.FC = (): React.ReactNode => {
                               key={rating}
                               onClick={() => handleHappinessSubmit(rating)}
                               className={`flex flex-col items-center gap-1 rounded-lg p-3 text-sm font-semibold transition-all ${isSelected
-                                  ? "border-4 border-primary bg-primary/10 text-primary"
-                                  : "border-2 border-input bg-card text-card-foreground hover:border-primary hover:bg-accent"
+                                ? "border-4 border-primary bg-primary/10 text-primary"
+                                : "border-2 border-input bg-card text-card-foreground hover:border-primary hover:bg-accent"
                                 } active:bg-primary active:text-primary-foreground`}
                               type="button"
                             >

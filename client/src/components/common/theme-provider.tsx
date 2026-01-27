@@ -32,22 +32,39 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
 
-    root.classList.remove("light", "dark")
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      return
+    const applyTheme = (resolvedTheme: Exclude<Theme, "system">) => {
+      root.classList.remove("light", "dark")
+      root.classList.add(resolvedTheme)
     }
 
-    root.classList.add(theme)
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+      const systemTheme = mediaQuery.matches ? "dark" : "light"
+
+      applyTheme(systemTheme)
+
+      const handleChange = (e: MediaQueryListEvent) => {
+        applyTheme(e.matches ? "dark" : "light")
+      }
+
+      if (typeof mediaQuery.addEventListener === "function") {
+        mediaQuery.addEventListener("change", handleChange)
+        return () => {
+          mediaQuery.removeEventListener("change", handleChange)
+        }
+      } else {
+        // Fallback for older browsers
+        mediaQuery.addListener(handleChange)
+        return () => {
+          mediaQuery.removeListener(handleChange)
+        }
+      }
+    }
+
+    applyTheme(theme)
   }, [theme])
 
-  const value = {
+  const themeContextValue = {
     theme,
     setTheme: (theme: Theme) => {
       localStorage.setItem(storageKey, theme)
@@ -56,7 +73,7 @@ export function ThemeProvider({
   }
 
   return (
-    <ThemeProviderContext.Provider value={value}>
+    <ThemeProviderContext.Provider value={themeContextValue}>
       {children}
     </ThemeProviderContext.Provider>
   )

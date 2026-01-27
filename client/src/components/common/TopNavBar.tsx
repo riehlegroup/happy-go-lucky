@@ -40,7 +40,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         {showBackButton && (
           <button
             onClick={handleBack}
-            className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
+            className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-primary focus-visible:outline-none active:outline-none"
           >
             ← Back
           </button>
@@ -55,7 +55,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             <span className="text-sm font-medium text-primary-foreground">User: {username}</span>
             <button
               onClick={handleLogout}
-              className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
+              className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-primary focus-visible:outline-none active:outline-none"
             >
               Logout
             </button>
