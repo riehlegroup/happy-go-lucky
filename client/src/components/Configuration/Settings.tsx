@@ -138,7 +138,6 @@ const Settings: React.FC = () => {
       setEmailMessage({ text: data.message, type: "success" });
       setUser({ ...user, email: newEmail });
       AuthStorage.getInstance().setEmail(newEmail);
-      setEmailOpen(false);
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.error(err.message);
@@ -167,7 +166,6 @@ const Settings: React.FC = () => {
       });
 
       setPasswordMessage({ text: data.message, type: "success" });
-      setPasswordOpen(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
@@ -197,7 +195,6 @@ const Settings: React.FC = () => {
 
       setGithubMessage({ text: data.message, type: "success" });
       setUser({ ...user, UserGithubUsername: githubUsername });
-      setGithubOpen(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
