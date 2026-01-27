@@ -2,6 +2,7 @@ import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { IAppController } from "./IAppController";
+import { Activity, ActivityFactory } from "../Models/Activity";
 
 /**
  * Activity Types - All possible activities that can be tracked
@@ -28,6 +29,16 @@ export interface ProjectActivity {
     activityData: string | null;  // JSON string with extra data (e.g., happiness level)
     timestamp: string;
 }
+
+/**
+ * Type guard to validate ActivityType
+ * 
+ * @param value - The value to check
+ * @returns True if value is a valid ActivityType
+ */
+const isValidActivityType = (value: any): value is ActivityType => {
+    return Object.values(ActivityType).includes(value);
+};
 
 /**
  * ActivityController
@@ -63,6 +74,13 @@ export class ActivityController implements IAppController {
             return;
         }
 
+        // Validate and parse limit parameter
+        const parsedLimit = parseInt(limit.toString(), 10);
+        if (isNaN(parsedLimit) || parsedLimit <= 0) {
+            res.status(400).json({ message: "Limit must be a positive integer" });
+            return;
+        }
+
         try {
             // Get project ID from name
             const projectId = await DatabaseHelpers.getProjectIdFromName(
@@ -86,7 +104,7 @@ export class ActivityController implements IAppController {
         WHERE pa.projectId = ?
         ORDER BY pa.timestamp DESC
         LIMIT ?`,
-                [projectId, parseInt(limit.toString())]
+                [projectId, parsedLimit]
             );
 
             res.json(activities);
@@ -116,22 +134,23 @@ export class ActivityController implements IAppController {
             return;
         }
 
-        // Validate activity type
-        if (!Object.values(ActivityType).includes(activityType)) {
+        // Validate activity type using type guard
+        if (!isValidActivityType(activityType)) {
             res.status(400).json({ message: "Invalid activity type" });
             return;
         }
 
         try {
+            // Create and validate activity using the Activity class
+            const activity = ActivityFactory.create(activityType, activityData);
+            const activityDataStr = activity.getActivityData();
+
             // Get IDs from names/emails
             const projectId = await DatabaseHelpers.getProjectIdFromName(
                 this.db,
                 projectName
             );
             const userId = await DatabaseHelpers.getUserIdFromEmail(this.db, userEmail);
-
-            // Convert activity data to JSON string if provided
-            const activityDataStr = activityData ? JSON.stringify(activityData) : null;
 
             // Insert activity into database
             await this.db.run(
@@ -143,9 +162,11 @@ export class ActivityController implements IAppController {
             res.status(201).json({ message: "Activity logged successfully" });
         } catch (error) {
             console.error("Error logging activity:", error);
-            res.status(500).json({
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            const statusCode = errorMessage.includes("Invalid") ? 400 : 500;
+            res.status(statusCode).json({
                 message: "Failed to log activity",
-                error: error instanceof Error ? error.message : "Unknown error"
+                error: errorMessage
             });
         }
     }
@@ -169,12 +190,13 @@ export class ActivityController implements IAppController {
         activityData?: any
     ): Promise<void> {
         try {
+            // Create and validate activity using the Activity class
+            const activity = ActivityFactory.create(activityType, activityData);
+            const activityDataStr = activity.getActivityData();
+
             // Get IDs
             const projectId = await DatabaseHelpers.getProjectIdFromName(db, projectName);
             const userId = await DatabaseHelpers.getUserIdFromEmail(db, userEmail);
-
-            // Convert data to JSON string
-            const activityDataStr = activityData ? JSON.stringify(activityData) : null;
 
             // Insert activity
             await db.run(

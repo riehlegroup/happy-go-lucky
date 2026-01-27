@@ -472,7 +472,7 @@ export class ProjectController implements IAppController {
   }
 
   async sendStandupEmails(req: Request, res: Response): Promise<void> {
-    const { projectName, userName, doneText, plansText, challengesText } = req.body;
+    const { projectName, userName, userEmail: submittingUserEmail, doneText, plansText, challengesText } = req.body;
 
     try {
       const members = await this.db.all(
@@ -482,8 +482,6 @@ export class ProjectController implements IAppController {
                 WHERE projects.projectName = ?`,
         [projectName]
       );
-
-      console.log(`Found ${members.length} members for project "${projectName}":`, members);
 
       if (members.length === 0) {
         res.status(400).json({ message: "No members in the project group" });
@@ -498,20 +496,19 @@ export class ProjectController implements IAppController {
         `Standup report from ${userName}\n\nDone: ${doneText}\nPlans: ${plansText}\nChallenges: ${challengesText}`
       );
 
-      // Get user email from the user submitting standup
-      const userEmail = await this.db.get(
-        `SELECT email FROM users WHERE name = ?`,
-        [userName]
-      );
-
-      if (userEmail) {
-        // Log activity
-        await ActivityController.logActivityHelper(
-          this.db,
-          projectName,
-          userEmail.email,
-          ActivityType.STANDUP_SUBMITTED
-        );
+      // Log activity using the unique user email instead of non-unique name lookup
+      if (submittingUserEmail) {
+        try {
+          await ActivityController.logActivityHelper(
+            this.db,
+            projectName,
+            submittingUserEmail,
+            ActivityType.STANDUP_SUBMITTED
+          );
+        } catch (activityError) {
+          // Don't fail the standup email if activity logging fails
+          console.error("Warning: Failed to log standup activity:", activityError);
+        }
       }
 
       res.status(200).json({ message: "Standup email sent successfully" });

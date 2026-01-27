@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Clock, Users, Smile, MessageSquare } from "lucide-react";
+import { Clock } from "lucide-react";
 import activitiesApi, { ProjectActivity } from "@/services/api/activities";
+import { getActivityIcon, getActivityText, formatTimestamp } from "@/utils/activityHelpers.tsx";
 
 interface ActivityTimelineProps {
     projectName: string;
@@ -39,79 +40,6 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ projectName }) => {
 
         fetchActivities();
     }, [projectName]);
-
-    /**
-     * Get the appropriate icon for each activity type
-     */
-    const getActivityIcon = (activityType: string) => {
-        switch (activityType) {
-            case "standup_submitted":
-                return <MessageSquare className="h-5 w-5 text-blue-500" />;
-            case "happiness_submitted":
-                return <Smile className="h-5 w-5 text-yellow-500" />;
-            case "user_joined":
-                return <Users className="h-5 w-5 text-green-500" />;
-            case "user_left":
-                return <Users className="h-5 w-5 text-red-500" />;
-            default:
-                return <Clock className="h-5 w-5 text-gray-500" />;
-        }
-    };
-
-    /**
-     * Generate human-readable text for each activity
-     */
-    const getActivityText = (activity: ProjectActivity): string => {
-        // Parse additional data if available
-        const activityData = activity.activityData
-            ? JSON.parse(activity.activityData)
-            : null;
-
-        switch (activity.activityType) {
-            case "standup_submitted":
-                return `submitted a standup update`;
-
-            case "happiness_submitted":
-                const happiness = activityData?.happiness;
-                const emoji = happiness >= 4 ? "😊" : happiness >= 3 ? "😐" : "😟";
-                return `submitted happiness level ${emoji}`;
-
-            case "user_joined":
-                return `joined the project`;
-
-            case "user_left":
-                return `left the project`;
-
-            default:
-                return `performed an action`;
-        }
-    };
-
-    /**
-     * Format timestamp to human-readable relative time
-     * Examples: "2 hours ago", "yesterday", "Jan 15"
-     */
-    const formatTimestamp = (timestamp: string): string => {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMins / 60);
-        const diffDays = Math.floor(diffHours / 24);
-
-        // Recent activities
-        if (diffMins < 1) return "just now";
-        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-
-        // Older activities - show date
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-        });
-    };
 
     // Loading state
     if (loading) {

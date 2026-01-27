@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { initializeDB } from '../databaseInitializer';
 
 /**
  * Generates mock data for development.
@@ -11,18 +12,21 @@ import { hashPassword } from '../Utils/hash';
 async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
   console.log(`Connecting to database at: ${dbPath}`);
 
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
+  // Initialize database with schema
+  const db = await initializeDB(dbPath, false);
 
   try {
     console.log('Starting mock data generation...\n');
 
     console.log('Cleaning up any existing mock data...');
-    await db.run(`DELETE FROM project_activities WHERE projectId IN (
-      SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
-    )`);
+    // Only delete from project_activities if the table exists
+    try {
+      await db.run(`DELETE FROM project_activities WHERE projectId IN (
+        SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
+      )`);
+    } catch (e) {
+      // Table might not exist yet, continue
+    }
     await db.run(`DELETE FROM happiness WHERE projectId IN (
       SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
     )`);
@@ -225,7 +229,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     for (let i = 0; i < 4; i++) {
       await db.run(
         `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
-         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i]} hours'))`,
+         VALUES (?, ?, ?, ?, datetime('now', '-${hoursAgo[i]} hours'))`,
         [amosProjectId, amosStudent1Id, activityTypes[i], activityData[i]]
       );
       totalActivities++;
@@ -236,7 +240,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     for (let i = 0; i < 4; i++) {
       await db.run(
         `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
-         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i] + 12} hours'))`,
+         VALUES (?, ?, ?, ?, datetime('now', '-${hoursAgo[i] - 12} hours'))`,
         [amosProjectId, amosStudent2Id, activityTypes[i], activityData[i]]
       );
       totalActivities++;
@@ -247,7 +251,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     for (let i = 0; i < 4; i++) {
       await db.run(
         `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp) 
-         VALUES (?, ?, ?, ?, datetime('now', '${-hoursAgo[i] + 6} hours'))`,
+         VALUES (?, ?, ?, ?, datetime('now', '-${hoursAgo[i] - 6} hours'))`,
         [adapProjectId, adapStudent1Id, activityTypes[i], activityData[i]]
       );
       totalActivities++;
