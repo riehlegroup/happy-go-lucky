@@ -228,7 +228,7 @@ const Happiness: React.FC = (): React.ReactNode => {
   }
 
   // Transform data for chart
-  const formattedData: { [sprintLabel: string]: { sprintLabel: string;[userEmail: string]: number | string | undefined } } = {};
+  const formattedData: { [sprintLabel: string]: { sprintLabel: string; [userEmail: string]: number | string | undefined } } = {};
   const now = new Date();
 
   // Find the next submission date after now (current sprint)
