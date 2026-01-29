@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { isValidEmail } from "@/utils/emailValidation";
 import Input from "./Input";
 
@@ -39,12 +39,12 @@ const EmailWidget: React.FC<EmailWidgetProps> = ({ onEmailChange, action }) => {
                 onChange={validateEmailInput}
             />
             {error && (
-                <p className="text-sm font-semibold text-red-600">
+                <p className="text-sm font-semibold text-destructive">
                     {error}
                 </p>
             )}
             {successMessage && (
-                <p className="text-sm font-semibold text-green-600">
+                <p className="text-sm font-semibold text-green-600 dark:text-green-400">
                     {successMessage}
                 </p>
             )}
