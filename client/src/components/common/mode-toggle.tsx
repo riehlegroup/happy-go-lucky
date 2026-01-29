@@ -48,7 +48,7 @@ export function ModeToggle() {
             variant="primary"
             onClick={toggleTheme}
             className="p-2 flex items-center justify-center min-w-[40px]"
-            aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label="Cycle through light, dark, and system themes"
         >
             {resolvedTheme === "dark" ? (
                 <Moon className="h-5 w-5" />
