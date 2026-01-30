@@ -9,7 +9,8 @@
   color-scheme: light dark;
   --foreground: 222.2 84% 4.9%;
   --background: 0 0% 100%;
-  background-color: #242424;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
 
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
@@ -33,7 +34,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: hsl(var(--background));
 }
 
 #root {
