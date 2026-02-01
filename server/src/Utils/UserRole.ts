@@ -1,6 +1,6 @@
 export enum UserRoleEnum {
-    user = "user",
-    admin = "admin",
+    user = "USER",
+    admin = "ADMIN",
 }
 
 export class UserRole {
@@ -13,7 +13,7 @@ export class UserRole {
     };
 
     constructor(initialRole: UserRoleEnum = UserRoleEnum.user) {
-        if (!(initialRole in UserRoleEnum)) {
+        if (!Object.values(UserRoleEnum).includes(initialRole)) {
             throw new Error(`Invalid initial role: ${initialRole}`);
         }
         this.role = initialRole;
@@ -29,6 +29,9 @@ export class UserRole {
     }
 
     transitionTo(newRole: UserRoleEnum): UserRole {
+        if (this.role === newRole) {
+            return this; // No transition needed
+        }
         if (this.canTransitionTo(newRole)) {
             return new UserRole(newRole); // Return a new instance since UserRole is a value object
         } else {

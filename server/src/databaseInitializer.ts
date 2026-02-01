@@ -7,6 +7,7 @@ import { User } from './Models/User';
 import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
+import { UserRoleEnum } from './Utils/UserRole';
 
 export async function initializeDB(filename: string, createAdmin = true) {
   const db = await open({
@@ -42,7 +43,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     admin.setEmail(new Email(email));
     admin.setPassword(await hashPassword(password));
     admin.setStatus('confirmed');
-    admin.setRole("ADMIN");
+    admin.setRole(UserRoleEnum.admin);
     await writer.writeRoot(admin);
     console.log(`Default admin user created: (email: '${email}', password: '${password}')`);
   }

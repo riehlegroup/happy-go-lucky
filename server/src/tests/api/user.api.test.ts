@@ -5,6 +5,7 @@ import { createTestDb, seedDatabase, getUserByEmail } from './helpers/testDb';
 import { generateAdminToken, generateUserToken, createAuthHeader } from './helpers/authHelpers';
 import { Application } from 'express';
 import { createApp } from '../../createApp';
+import { UserRoleEnum } from '../../Utils/UserRole';
 
 describe('User Management API', () => {
   let db: Database;
@@ -301,7 +302,7 @@ describe('User Management API', () => {
         .expect(200);
 
       expect(response.body).toBeDefined();
-      expect(response.body.userRole).toBe('ADMIN');
+      expect(response.body.userRole).toBe(UserRoleEnum.admin);
     });
 
     it('should return 404 for non-existent user', async () => {
@@ -319,7 +320,7 @@ describe('User Management API', () => {
         .query({ userEmail: 'test@test.com' })
         .expect(200);
 
-      expect(response.body.userRole).toBe('USER');
+      expect(response.body.userRole).toBe(UserRoleEnum.user);
     });
   });
 
@@ -331,19 +332,19 @@ describe('User Management API', () => {
     it('should update user role with valid data', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ email: 'test@test.com', role: 'ADMIN' })
+        .send({ email: 'test@test.com', role: UserRoleEnum.admin })
         .expect(200);
 
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'test@test.com');
-      expect(user.userRole).toBe('ADMIN');
+      expect(user.userRole).toBe(UserRoleEnum.admin);
     });
 
     it('should reject missing email', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ role: 'ADMIN' })
+        .send({ role: UserRoleEnum.admin })
         .expect(400);
 
       expect(response.body.message).toBe('Please provide email and role');
@@ -361,13 +362,13 @@ describe('User Management API', () => {
     it('should update role to USER', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ email: 'admin@test.com', role: 'USER' })
+        .send({ email: 'admin@test.com', role: UserRoleEnum.user })
         .expect(200);
 
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'admin@test.com');
-      expect(user.userRole).toBe('USER');
+      expect(user.userRole).toBe(UserRoleEnum.user);
     });
   });
 });
