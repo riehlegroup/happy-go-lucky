@@ -3,15 +3,16 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
-import { UserRole } from "../ValueTypes/UserRole";
+import { UserRole, UserRoleEnum} from "../Utils/UserRole";
+import { UserStatus, UserStatusEnum } from "../Utils/UserStatus";
 
 export class User extends Visitor implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
-  protected status: string = "unconfirmed";
-  protected role: UserRole = UserRole.user();
+  protected status: UserStatus = new UserStatus();
+  protected role: UserRole = UserRole.User();
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
   protected resetPasswordExpire: number | null = null;
@@ -39,8 +40,8 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = reader.readString("status") as string;
-    this.role = UserRole.fromString(reader.readString("userRole"));
+    this.status = this.status.transitionTo(reader.readString("status") as UserStatusEnum);
+    this.role = this.role.transitionTo(reader.readString("userRole") as UserRoleEnum);
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -57,8 +58,8 @@ export class User extends Visitor implements Serializable {
     } else {
       writer.writeString("email", this.email.toString());
     }
-    writer.writeString("status", this.status);
-    writer.writeString("userRole", this.role.toString());
+    writer.writeString("status", this.status.getStatusString());
+    writer.writeString("userRole", this.role.getRole());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
     writer.writeNumber("resetPasswordExpire", this.resetPasswordExpire);

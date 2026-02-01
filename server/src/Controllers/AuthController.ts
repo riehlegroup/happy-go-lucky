@@ -157,18 +157,19 @@ export class AuthController implements IAppController {
         }
       }
 
-      const userStatus = user.getStatus();
-      if (userStatus.is(UserStatusEnum.unconfirmed)) {
+      let st: string = user.getStatus().getStatusString();
+      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
+      if (userStatus.getStatusString() == UserStatusEnum.unconfirmed) {
         res
           .status(400)
           .json({ message: "Email not confirmed. Please contact system admin." });
         return;
-      } else if (userStatus.is(UserStatusEnum.suspended)) {
+      } else if (userStatus.getStatusString() == UserStatusEnum.suspended) {
         res.status(400).json({
           message: "User account is suspended. Please contact system admin.",
         });
         return;
-      } else if (userStatus.is(UserStatusEnum.removed)) {
+      } else if (userStatus.getStatusString() == UserStatusEnum.removed) {
         res.status(400).json({
           message: "User account is removed. Please contact system admin.",
         });
@@ -358,9 +359,9 @@ export class AuthController implements IAppController {
         res.status(400).json({ message: "User not found" });
         return;
       }
-
-      const userStatus = user.getStatus();
-      if (!userStatus.is(UserStatusEnum.unconfirmed)) {
+      let st: string = user.getStatus().getStatusString();
+      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
+      if (userStatus.getStatusString() != UserStatusEnum.unconfirmed) {
         res
           .status(400)
           .json({ message: "User not found or not unconfirmed" });
