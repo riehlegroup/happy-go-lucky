@@ -7,6 +7,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { msgKey, translate } from "../Resources/i18n";
 
 /**
  * Controller for handling term-related HTTP requests.
@@ -55,7 +56,7 @@ export class TermController implements IAppController {
       if (!termName || typeof termName !== "string") {
         res.status(400).json({
           success: false,
-          message: "Term name is required and must be a string",
+          message: translate(req, msgKey.term.termNameRequiredString),
         });
         return;
       }
@@ -64,7 +65,7 @@ export class TermController implements IAppController {
 
       res.status(201).json({
         success: true,
-        message: "Term created successfully",
+        message: translate(req, msgKey.term.termCreatedSuccessfully),
         data: term,
       });
     } catch (error) {
@@ -79,7 +80,7 @@ export class TermController implements IAppController {
       if (isNaN(termId)) {
         res.status(400).json({
           success: false,
-          message: "Term ID must be a valid number"
+          message: translate(req, msgKey.term.termIdMustBeValidNumber),
         });
         return;
       }
@@ -89,14 +90,14 @@ export class TermController implements IAppController {
       if (!deleted) {
         res.status(404).json({
           success: false,
-          message: "Term not found"
+          message: translate(req, msgKey.term.termNotFound),
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        message: "Term deleted successfully",
+        message: translate(req, msgKey.term.termDeletedSuccessfully),
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -110,7 +111,7 @@ export class TermController implements IAppController {
       if (termId === undefined || termId === null) {
         res.status(400).json({
           success: false,
-          message: "Term ID is required",
+          message: translate(req, msgKey.term.termIdRequired),
         });
         return;
       }
@@ -119,7 +120,7 @@ export class TermController implements IAppController {
       if (isNaN(id)) {
         res.status(400).json({
           success: false,
-          message: "Invalid term ID format",
+          message: translate(req, msgKey.term.invalidTermIdFormat),
         });
         return;
       }
@@ -128,7 +129,7 @@ export class TermController implements IAppController {
 
       res.status(201).json({
         success: true,
-        message: "Course added successfully",
+        message: translate(req, msgKey.term.courseAddedSuccessfully),
         data: {
           id: course.getId(),
           courseName: course.getName(),
@@ -145,19 +146,28 @@ export class TermController implements IAppController {
       const { termId } = req.query;
 
       if (!termId || typeof termId !== 'string') {
-        res.status(400).json({ success: false, message: "Term ID is required" });
+        res.status(400).json({
+          success: false,
+          message: translate(req, msgKey.term.termIdRequired),
+        });
         return;
       }
 
       const id = parseInt(termId);
       if (isNaN(id)) {
-        res.status(400).json({ success: false, message: "Invalid term ID" });
+        res.status(400).json({
+          success: false,
+          message: translate(req, msgKey.term.invalidTermId),
+        });
         return;
       }
 
       const term = await this.tm.readTerm(id);
       if (!term) {
-        res.status(404).json({ success: false, message: "Term not found" });
+        res.status(404).json({
+          success: false,
+          message: translate(req, msgKey.term.termNotFound),
+        });
         return;
       }
 
@@ -196,13 +206,13 @@ export class TermController implements IAppController {
     } else if (error.name === "MethodFailedException") {
       res.status(500).json({
         success: false,
-        message: "An error occurred while processing your request",
+        message: translate(msgKey.common.requestProcessingError),
       });
       return;
     } else {
       res.status(500).json({
         success: false,
-        message: "Internal server error",
+        message: translate(msgKey.common.internalServerError),
       });
     }
   }
