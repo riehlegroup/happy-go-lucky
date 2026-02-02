@@ -118,12 +118,17 @@ export function translate<K extends MessageKey>(
 ): string {
   const hasReq = typeof reqOrKey !== "string";
   const key = (hasReq ? keyOrArg : reqOrKey) as string;
+  const messageArgs = hasReq
+    ? rest
+    : keyOrArg === undefined
+      ? []
+      : [keyOrArg, ...rest];
 
   const catalog = startupCatalog;
   const value = getValueByPath(catalog, key) as LeafMessage | undefined;
 
   if (typeof value === "function") {
-    return value(...rest);
+    return value(...messageArgs);
   }
   if (typeof value === "string") {
     return value;
