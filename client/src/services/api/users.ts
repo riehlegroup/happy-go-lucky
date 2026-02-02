@@ -82,7 +82,7 @@ const usersApi = {
     );
   },
 
-  getGithubUsername: async (userEmail: string): Promise<string> => {
+  getGitHubUsername: async (userEmail: string): Promise<string> => {
     try {
       const response = await ApiClient.getInstance().get<{
         githubUsername: string;
@@ -94,7 +94,7 @@ const usersApi = {
     }
   },
 
-  updateGithubUsername: (body: {
+  updateGitHubUsername: (body: {
     userEmail: string;
     newGithubUsername: string;
   }): Promise<{ success: boolean; message: string }> => {

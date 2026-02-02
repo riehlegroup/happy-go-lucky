@@ -47,7 +47,7 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
         const promises = []
         if (githubUsername && githubUsername !== user.githubUsername) {
             promises.push(
-                usersApi.updateGithubUsername({ userEmail: user.email, newGithubUsername: githubUsername })
+                usersApi.updateGitHubUsername({ userEmail: user.email, newGithubUsername: githubUsername })
                     .catch(console.error)
             );
         }

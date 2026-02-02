@@ -225,7 +225,7 @@ describe('User Configuration API', () => {
         .query({ projectName: 'Test Project' })
         .expect(400);
 
-      expect(response.body.message).toBe('User Email and Project Name are mandatory!');
+      expect(response.body.message).toBe('User email and project name are mandatory!');
     });
 
     it('should reject missing projectName', async () => {
@@ -234,7 +234,7 @@ describe('User Configuration API', () => {
         .query({ userEmail: 'test@test.com' })
         .expect(400);
 
-      expect(response.body.message).toBe('User Email and Project Name are mandatory!');
+      expect(response.body.message).toBe('User email and project name are mandatory!');
     });
 
     it('should return null for user with no URL set', async () => {
@@ -332,7 +332,7 @@ describe('User Configuration API', () => {
         .get('/user/githubUsername')
         .expect(400);
 
-      expect(response.body.message).toBe('User Email is mandatory!');
+      expect(response.body.message).toBe('User email is mandatory!');
     });
 
     it('should return empty string for user with no username', async () => {

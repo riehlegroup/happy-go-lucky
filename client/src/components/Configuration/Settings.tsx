@@ -27,7 +27,7 @@ const Settings: React.FC = () => {
   const [user, setUser] = useState<{
     name: string;
     email: string;
-    UserGithubUsername: string;
+    githubUsername: string;
   } | null>(null);
 
   useEffect(() => {
@@ -40,13 +40,13 @@ const Settings: React.FC = () => {
         setUser({
           name: userName,
           email: userEmail,
-          UserGithubUsername: "",
+          githubUsername: "",
         });
 
         try {
-          const githubUser = await usersApi.getGithubUsername(userEmail);
+          const githubUser = await usersApi.getGitHubUsername(userEmail);
           setGithubUsername(githubUser);
-          setUser((prev) => prev ? { ...prev, UserGithubUsername: githubUser } : null);
+          setUser((prev) => (prev ? { ...prev, githubUsername: githubUser } : null));
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -117,14 +117,14 @@ const Settings: React.FC = () => {
     }
 
     try {
-      const data = await usersApi.updateGithubUsername({
+      const data = await usersApi.updateGitHubUsername({
         userEmail: user.email,
         newGithubUsername: githubUsername,
       });
 
       setGithubMessage(data.message || "GitHub username added successfully!");
       if (data.message.includes("successfully")) {
-        const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
+        const updatedUser = { ...user, githubUsername: githubUsername };
         setUser(updatedUser);
       }
     } catch (error: unknown) {
@@ -225,7 +225,7 @@ const Settings: React.FC = () => {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-slate-600">GitHub Username</p>
-                  <p className="font-medium">{user?.UserGithubUsername || "Not set"}</p>
+                  <p className="font-medium">{user?.githubUsername || "Not set"}</p>
                 </div>
                 <Dialog>
                   <DialogTrigger asChild>
