@@ -2,6 +2,7 @@ import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { IAppController } from "./IAppController";
+import { msgKey, translate } from "../Resources/i18n";
 
 /**
  * Controller for handling legacy HTTP endpoints.
@@ -23,10 +24,10 @@ export class LegacyController implements IAppController {
     const { userEmail, URL, projectName } = req.body;
 
     if (!URL) {
-      res.status(400).json({ message: "Please fill in URL!" });
+      res.status(400).json({ message: translate(req, msgKey.common.pleaseFillInUrl) });
       return;
     } else if (!URL.includes("git")) {
-      res.status(400).json({ message: "Invalid URL" });
+      res.status(400).json({ message: translate(req, msgKey.common.invalidUrl) });
       return;
     }
 
@@ -38,10 +39,10 @@ export class LegacyController implements IAppController {
         `UPDATE user_projects SET url = ? WHERE userId = ? AND projectId = ?`,
         [URL, userId, projectId]
       );
-      res.status(200).json({ message: "URL added successfully" });
+      res.status(200).json({ message: translate(req, msgKey.common.urlAddedSuccessfully) });
     } catch (error) {
       console.error("Error adding URL:", error);
-      res.status(500).json({ message: "Failed to add URL", error });
+      res.status(500).json({ message: translate(req, msgKey.common.failedToAddUrl), error });
     }
   }
 
@@ -54,7 +55,7 @@ export class LegacyController implements IAppController {
         projectId = await DatabaseHelpers.getProjectIdFromName(this.db, projectName);
       } catch (error) {
         if (error instanceof Error && error.message.includes("Unknown Course Name!")) {
-          res.status(404).json({ message: "Project not found" });
+          res.status(404).json({ message: translate(req, msgKey.common.projectNotFound) });
           return;
         }
         throw error;
@@ -66,7 +67,7 @@ export class LegacyController implements IAppController {
         [userId, projectId]
       );
       if (!isMember) {
-        res.status(400).json({ message: "You are not a member of this project" });
+        res.status(400).json({ message: translate(req, msgKey.common.notMemberOfProject) });
         return;
       }
       await this.db.run("DELETE FROM user_projects WHERE userId = ? AND projectId = ?", [
@@ -74,10 +75,10 @@ export class LegacyController implements IAppController {
         projectId,
       ]);
 
-      res.status(200).json({ message: "Left project successfully" });
+      res.status(200).json({ message: translate(req, msgKey.common.leftProjectSuccessfully) });
     } catch (error) {
       console.error("Error during leaving project:", error);
-      res.status(500).json({ message: "Failed to leave project", error });
+      res.status(500).json({ message: translate(req, msgKey.common.failedToLeaveProject), error });
     }
   }
 }
