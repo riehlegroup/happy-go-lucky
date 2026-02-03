@@ -19,17 +19,26 @@ export const TermNameInput: React.FC<TermNameInputProps> = ({
 }) => {
   const [text, setText] = useState<string>(value ?? "");
   const [touched, setTouched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
+    if (isFocused) return;
+
+    // If the user typed something invalid, keep their text instead of
+    // snapping to empty because the parsed value is currently null.
+    if (touched && text.trim() && value === null) return;
+
     setText(value ?? "");
-  }, [value]);
+  }, [value, isFocused, touched, text]);
 
-  const parsed = useMemo(() => {
-    if (!text.trim()) return { ok: false as const, error: "" };
-    return parseTermName(text);
-  }, [text]);
+  const parsed = useMemo(() => parseTermName(text), [text]);
 
-  const error = touched && text.trim() && !parsed.ok ? parsed.error : "";
+  const error = useMemo(() => {
+    if (!touched) return "";
+    if (!text.trim()) return "Term name is required";
+    if (!parsed.ok) return parsed.error;
+    return "";
+  }, [touched, text, parsed]);
 
   return (
     <div className="flex-col items-center justify-between">
@@ -43,6 +52,7 @@ export const TermNameInput: React.FC<TermNameInputProps> = ({
         value={text}
         placeholder={placeholder}
         disabled={disabled}
+        onFocus={() => setIsFocused(true)}
         onChange={(e) => {
           const next = e.target.value;
           setTouched(true);
@@ -53,13 +63,26 @@ export const TermNameInput: React.FC<TermNameInputProps> = ({
             return;
           }
 
+          // While typing, allow intermediate invalid states (e.g. "WS2024/")
+          // without clearing the input. We still report null upstream so the
+          // form cannot be submitted until it's valid.
           const result = parseTermName(next);
           onChange(result.ok ? result.value : null);
         }}
         onBlur={() => {
           setTouched(true);
+          setIsFocused(false);
+
           const result = parseTermName(text);
-          if (result.ok) setText(result.value);
+          if (result.ok) {
+            // Canonicalize display on blur (but not during typing)
+            setText(result.value);
+            onChange(result.value);
+          } else if (!text.trim()) {
+            onChange(null);
+          } else {
+            onChange(null);
+          }
         }}
       />
       {error && <div className="text-sm text-red-500">{error}</div>}
