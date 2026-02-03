@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import { ObjectHandler } from "../ObjectHandler";
-import { msgKey, translate } from "../Resources/i18n";
+import { msgKey, translate } from "../Services/I18nService";
 
 const secret = process.env.JWT_SECRET || "your_jwt_secret";
 

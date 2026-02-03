@@ -5,7 +5,7 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
-import { msgKey, translate } from "../Resources/i18n";
+import { msgKey, translate } from "../Services/I18nService";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -56,12 +56,8 @@ export class UserController implements IAppController {
     const { status } = req.query;
 
     try {
-      const user = await this.db.all("SELECT * FROM users WHERE status = ?", [status]);
-      if (user) {
-        res.json(user);
-      } else {
-        res.status(404).json({ message: translate(req, msgKey.common.userNotFound) });
-      }
+      const users = await this.db.all("SELECT * FROM users WHERE status = ?", [status]);
+      res.json(users);
     } catch (error) {
       console.error("Error during retrieving user status:", error);
       res
@@ -111,7 +107,9 @@ export class UserController implements IAppController {
         [status]
       );
 
-      if (result.changes === 0) {
+      const changes = result.changes ?? 0;
+
+      if (changes === 0) {
         res
           .status(404)
           .json({ message: translate(req, msgKey.user.noConfirmedUsersFoundToUpdate) });

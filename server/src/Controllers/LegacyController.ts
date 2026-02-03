@@ -2,7 +2,7 @@ import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { IAppController } from "./IAppController";
-import { msgKey, translate } from "../Resources/i18n";
+import { msgKey, translate } from "../Services/I18nService";
 
 /**
  * Controller for handling legacy HTTP endpoints.

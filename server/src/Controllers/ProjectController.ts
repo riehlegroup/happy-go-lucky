@@ -4,7 +4,7 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { Email } from "../ValueTypes/Email";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
-import { msgKey, translate } from "../Resources/i18n";
+import { msgKey, translate } from "../Services/I18nService";
 
 /**
  * Controller for handling project-related HTTP requests.

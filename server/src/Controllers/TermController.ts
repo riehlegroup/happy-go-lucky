@@ -7,7 +7,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
-import { msgKey, translate } from "../Resources/i18n";
+import { msgKey, translate } from "../Services/I18nService";
 
 /**
  * Controller for handling term-related HTTP requests.
