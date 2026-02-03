@@ -8,7 +8,10 @@ import { hashPassword } from '../Utils/hash';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
+export async function generateMockData(
+  dbPath: string = './server/happyGoLucky.db',
+  deleteOnly: boolean = false
+) {
   console.log(`Connecting to database at: ${dbPath}`);
 
   const db = await open({
@@ -237,15 +240,25 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
   }
 }
 
-const args = process.argv.slice(2);
-const deleteOnly = args.includes('--delete-only');
-const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
+export function parseArgs(args: string[]) {
+  const deleteOnly = args.includes('--delete-only');
+  const dbPath = args.find(arg => !arg.startsWith('--')) || './server/happyGoLucky.db';
 
-generateMockData(dbPath, deleteOnly)
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Script failed:', error);
-    process.exit(1);
-  });
+  return { dbPath, deleteOnly };
+}
+
+export async function runFromCli(args: string[]) {
+  const { dbPath, deleteOnly } = parseArgs(args);
+  await generateMockData(dbPath, deleteOnly);
+}
+
+if (require.main === module) {
+  runFromCli(process.argv.slice(2))
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Script failed:', error);
+      process.exit(1);
+    });
+}

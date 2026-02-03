@@ -40,7 +40,8 @@ dist
 
 # User files
 /server/database.sqlite
-/server/myDatabase.db
+/server/happyGoLucky.db
+/happyGoLucky.db
 
 # AI agents
 CLAUDE.md

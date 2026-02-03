@@ -113,7 +113,7 @@ dig your-domain.com
    VITE_GITHUB_TOKEN=your_github_personal_access_token
    ```
 
-   **Important**: The `DB_PATH` should remain as `/app/server/data/myDatabase.db` (container path).
+   **Important**: The `DB_PATH` should remain as `/app/server/data/happyGoLucky.db` (container path).
 
 ### HTTPS Configuration
 
@@ -243,7 +243,7 @@ For local testing without a domain or HTTPS:
 |----------|----------|---------|-------------|
 | `NODE_ENV` | No | `development` | Set to `production` for production deployment |
 | `PORT` | No | `3000` | Internal port for backend server (not exposed outside container) |
-| `DB_PATH` | No | `./myDatabase.db` | Path to SQLite database file |
+| `DB_PATH` | No | `./happyGoLucky.db` | Path to SQLite database file |
 | `JWT_SECRET` | **Yes** | `your_jwt_secret` | Secret key for JWT token signing (use strong random value!) |
 
 ### Email Configuration
@@ -273,12 +273,12 @@ The SQLite database is stored in a Docker named volume for persistence across co
 
 **Method 1: Copy from running container**
 ```bash
-docker cp $(docker compose ps -q server):/app/server/data/myDatabase.db ./backup-$(date +%Y%m%d-%H%M%S).db
+docker cp $(docker compose ps -q server):/app/server/data/happyGoLucky.db ./backup-$(date +%Y%m%d-%H%M%S).db
 ```
 
 **Method 2: Export via docker compose**
 ```bash
-docker compose exec server cat /app/server/data/myDatabase.db > ./backup-$(date +%Y%m%d-%H%M%S).db
+docker compose exec server cat /app/server/data/happyGoLucky.db > ./backup-$(date +%Y%m%d-%H%M%S).db
 ```
 
 **Method 3: Automated backup script**
@@ -287,7 +287,7 @@ docker compose exec server cat /app/server/data/myDatabase.db > ./backup-$(date 
 # backup-db.sh
 BACKUP_DIR="./backups"
 mkdir -p $BACKUP_DIR
-docker compose exec -T server cat /app/server/data/myDatabase.db > \
+docker compose exec -T server cat /app/server/data/happyGoLucky.db > \
   $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db
 echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 ```
@@ -302,7 +302,7 @@ echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 2. **Copy backup to volume:**
    ```bash
    docker run --rm -v mini-meco_mini-meco-db:/app/server/data -v $(pwd):/backup alpine \
-     cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/myDatabase.db
+   cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/happyGoLucky.db
    ```
 
 3. **Restart containers:**
@@ -313,7 +313,7 @@ echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 ### Reset/Delete Database
 
 ```bash
-   docker compose exec server rm /app/server/data/myDatabase.db
+   docker compose exec server rm /app/server/data/happyGoLucky.db
 ```
 
 ### Manual Database Access
@@ -322,7 +322,7 @@ echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
 # Access SQLite database interactively
 docker compose exec server sh
 cd /app/server/data
-sqlite3 myDatabase.db
+sqlite3 happyGoLucky.db
 ```
 
 ### Inspect Volume
@@ -649,7 +649,7 @@ docker compose exec server ls -la /app/server/data/
 **Database locked:**
 ```bash
 # Check for multiple processes accessing database
-docker compose exec server sh -c "cd /app/server/data && fuser myDatabase.db"
+docker compose exec server sh -c "cd /app/server/data && fuser happyGoLucky.db"
 
 # Restart container
 docker compose restart server
