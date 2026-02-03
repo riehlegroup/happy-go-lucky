@@ -187,7 +187,7 @@ export class UserController implements IAppController {
     const { userEmail, projectName } = req.query;
 
     if (!userEmail || !projectName) {
-      res.status(400).json({ message: "User Email and Project Name are mandatory!" });
+      res.status(400).json({ message: "User email and project name are mandatory!" });
       return;
     }
 
@@ -244,7 +244,7 @@ export class UserController implements IAppController {
     const { userEmail } = req.query;
 
     if (!userEmail) {
-      res.status(400).json({ message: "User Email is mandatory!" });
+      res.status(400).json({ message: "User email is mandatory!" });
       return;
     }
 
