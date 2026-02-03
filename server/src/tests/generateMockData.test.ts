@@ -67,10 +67,10 @@ describe("generateMockData", () => {
                      FROM user_projects up
                      JOIN users u ON u.id = up.userId
                      WHERE u.email IN (
-                                             'tarikul.islam@fau.de',
-                                             'ashraf.ullah@fau.de',
-                                             'sazid.rahaman@fau.de',
-                                             'kawser.hamid@fau.de'
+                        'tarikul.islam@fau.de',
+                        'ashraf.ullah@fau.de',
+                        'sazid.rahaman@fau.de',
+                        'kawser.hamid@fau.de'
                      )
                      ORDER BY u.email`
                 );
@@ -84,16 +84,16 @@ describe("generateMockData", () => {
                 );
 
                 expect(membershipMap.get("tarikul.islam@fau.de")).toBe(
-                    "https://github.com/octocat/Hello-World"
+                    "https://github.com/night-fury-me/digital-alchemy"
                 );
                 expect(membershipMap.get("ashraf.ullah@fau.de")).toBe(
-                    "https://github.com/octocat/Hello-World"
+                    "https://github.com/night-fury-me/advanced-data-engineering-fau"
                 );
                 expect(membershipMap.get("sazid.rahaman@fau.de")).toBe(
-                    "https://github.com/vitejs/vite"
+                    "https://github.com/night-fury-me/real-time-vehicle-data-processing"
                 );
                 expect(membershipMap.get("kawser.hamid@fau.de")).toBe(
-                    "https://github.com/vitejs/vite"
+                    "https://github.com/night-fury-me/happy-go-lucky"
                 );
             } finally {
                 await db.close();

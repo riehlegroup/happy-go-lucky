@@ -126,32 +126,34 @@ export async function generateMockData(dbPath: string = './server/myDatabase.db'
     console.log(`  ✓ Kawser Hamid (kawser.hamid@fau.de) created with ID: ${kawserHamidId}\n`);
 
     console.log('Creating project memberships...');
-    const amosRepoUrl = 'https://github.com/octocat/Hello-World';
-    const adapRepoUrl = 'https://github.com/vitejs/vite';
+    const tarikulRepoUrl = 'https://github.com/night-fury-me/digital-alchemy';
+    const ashrafRepoUrl = 'https://github.com/night-fury-me/advanced-data-engineering-fau';
+    const sazidRepoUrl = 'https://github.com/night-fury-me/real-time-vehicle-data-processing';
+    const kawserRepoUrl = 'https://github.com/night-fury-me/happy-go-lucky';
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
-      [tarikulIslamId, amosProjectId, 'Owner', amosRepoUrl]
+      [tarikulIslamId, amosProjectId, 'Owner', tarikulRepoUrl]
     );
-    console.log(`  ✓ Tarikul Islam → AMOS Project 1 (Owner) | Repo: ${amosRepoUrl}`);
+    console.log(`  ✓ Tarikul Islam → AMOS Project 1 (Owner) | Repo: ${tarikulRepoUrl}`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
-      [ashrafUllahId, amosProjectId, 'Developer', amosRepoUrl]
+      [ashrafUllahId, amosProjectId, 'Developer', ashrafRepoUrl]
     );
-    console.log(`  ✓ Ashraf Ullah → AMOS Project 1 (Developer) | Repo: ${amosRepoUrl}`);
+    console.log(`  ✓ Ashraf Ullah → AMOS Project 1 (Developer) | Repo: ${ashrafRepoUrl}`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
-      [sazidRahamanId, adapProjectId, 'Owner', adapRepoUrl]
+      [sazidRahamanId, adapProjectId, 'Owner', sazidRepoUrl]
     );
-    console.log(`  ✓ Sazid Rahaman → ADAP Project 1 (Owner) | Repo: ${adapRepoUrl}`);
+    console.log(`  ✓ Sazid Rahaman → ADAP Project 1 (Owner) | Repo: ${sazidRepoUrl}`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
-      [kawserHamidId, adapProjectId, 'Developer', adapRepoUrl]
+      [kawserHamidId, adapProjectId, 'Developer', kawserRepoUrl]
     );
-    console.log(`  ✓ Kawser Hamid → ADAP Project 1 (Developer) | Repo: ${adapRepoUrl}\n`);
+    console.log(`  ✓ Kawser Hamid → ADAP Project 1 (Developer) | Repo: ${kawserRepoUrl}\n`);
 
     console.log('Creating course schedules (15 weeks, started 3 weeks ago)...');
     await db.run(
