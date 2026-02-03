@@ -107,16 +107,9 @@ const usersApi = {
   // User status
   updateUserStatus: (body: {
     userEmail: string;
-    userStatus: string;
-  }): Promise<Response> => {
-    return ApiClient.getInstance().put<Response>("/user/status", body);
-  },
-
-  updateUserStatusPost: (body: {
-    userEmail: string;
     status: string;
-  }): Promise<Response> => {
-    return ApiClient.getInstance().post<Response>("/updateUserStatus", body);
+  }): Promise<{ message: string }> => {
+    return ApiClient.getInstance().post<{ message: string }>("/user/status", body, true);
   },
 
   updateUserRole: (body: {

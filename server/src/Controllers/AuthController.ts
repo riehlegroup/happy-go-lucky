@@ -3,7 +3,7 @@ import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import { UserStatus, UserStatusEnum } from "../ValueTypes/UserStatus";
+import { UserStatusEnum } from "../ValueTypes/UserStatus";
 import { ObjectHandler } from "../ObjectHandler";
 import { comparePassword, hashPassword } from "../Utils/hash";
 import { Password } from "../Models/Password";
