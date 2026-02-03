@@ -8,6 +8,7 @@ import { AuthController } from './Controllers/AuthController';
 import { UserController } from './Controllers/UserController';
 import { ProjectController } from './Controllers/ProjectController';
 import { LegacyController } from './Controllers/LegacyController';
+import { AdminController } from './Controllers/AdminController';
 import { IEmailService } from './Services/IEmailService';
 import { ConsoleEmailService } from './Services/ConsoleEmailService';
 import { SmtpEmailService } from './Services/SmtpEmailService';
@@ -24,6 +25,17 @@ export function createApp(db: Database): Application {
 
   app.use(bodyParser.json());
   app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+
+  // Global shutdown flag + handler. Once shutdown is initiated, reject new requests.
+  app.locals.isShuttingDown = false;
+  app.locals.shutdownHandler = async () => {};
+  app.use((req, res, next) => {
+    if (app.locals.isShuttingDown && req.path !== "/admin/shutdown") {
+      res.status(503).json({ message: "Server is shutting down" });
+      return;
+    }
+    next();
+  });
 
   app.get('/', (req, res) => {
     res.send('Server is running!');
@@ -63,6 +75,7 @@ export function createApp(db: Database): Application {
   const userController = new UserController(db, emailService);
   const projectController = new ProjectController(db, emailService);
   const legacyController = new LegacyController(db);
+  const adminController = new AdminController(db);
 
   // Register all routes
   courseController.init(app);
@@ -71,6 +84,7 @@ export function createApp(db: Database): Application {
   userController.init(app);
   projectController.init(app);
   legacyController.init(app);
+  adminController.init(app);
 
   return app;
 }

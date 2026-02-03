@@ -1,4 +1,5 @@
 import "./App.css";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ForgotPassword from "./screens/Auth/ForgotPassword";
 import ResetPassword from "./screens/Auth/ResetPassword";
@@ -14,11 +15,34 @@ import Happiness from "./components/Projects/Happiness";
 import ConfirmedEmail from "./screens/Auth/ConfirmedEmail";
 import UserPanel from "./components/Configuration/UserPanel";
 import CourseAdmin from "./components/Administration/CourseAdmin";
+import SystemStorage from "./services/storage/system";
+import ShutdownOverlay from "./components/common/ShutdownOverlay";
 
 function App() {
+  const [isShuttingDown, setIsShuttingDown] = useState(
+    SystemStorage.getInstance().isShutdownInProgress()
+  );
+
+  useEffect(() => {
+    const onShutdownStateChange = () => {
+      setIsShuttingDown(SystemStorage.getInstance().isShutdownInProgress());
+    };
+
+    window.addEventListener(
+      SystemStorage.shutdownEventName(),
+      onShutdownStateChange
+    );
+    return () =>
+      window.removeEventListener(
+        SystemStorage.shutdownEventName(),
+        onShutdownStateChange
+      );
+  }, []);
+
   return (
     <div>
       <BrowserRouter>
+        {isShuttingDown && <ShutdownOverlay />}
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginScreen />} />

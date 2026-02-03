@@ -14,11 +14,25 @@ import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
 import projectsApi from "@/services/api/projects";
+import adminApi from "@/services/api/admin";
+import SystemStorage from "@/services/storage/system";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [shutdownDialogOpen, setShutdownDialogOpen] = useState(false);
+  const [shutdownPending, setShutdownPending] = useState(false);
+  const [shutdownError, setShutdownError] = useState<string | null>(null);
   const userRole = useUserRole();
 
   const authStorage = AuthStorage.getInstance();
@@ -97,6 +111,28 @@ const Dashboard: React.FC = () => {
     navigate("/course-admin");
   }
 
+  async function shutdownSystem() {
+    setShutdownPending(true);
+    setShutdownError(null);
+
+    try {
+      await adminApi.shutdown();
+      SystemStorage.getInstance().setShutdownInProgress(true);
+      setShutdownDialogOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Shutdown failed";
+
+      if (message.toLowerCase().includes("shutting down")) {
+        SystemStorage.getInstance().setShutdownInProgress(true);
+        setShutdownDialogOpen(false);
+      } else {
+        setShutdownError(message);
+      }
+    } finally {
+      setShutdownPending(false);
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
@@ -172,6 +208,45 @@ const Dashboard: React.FC = () => {
               <Button onClick={goCourseAdmin} className="w-48">
                 Course Admin
               </Button>
+
+              <Dialog open={shutdownDialogOpen} onOpenChange={setShutdownDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" className="w-48">
+                    Shutdown system
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Shutdown the system?</DialogTitle>
+                    <DialogDescription>
+                      This will stop the server and block further interactions.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {shutdownError && (
+                    <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                      {shutdownError}
+                    </div>
+                  )}
+
+                  <DialogFooter>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShutdownDialogOpen(false)}
+                      disabled={shutdownPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={shutdownSystem}
+                      disabled={shutdownPending}
+                    >
+                      {shutdownPending ? "Shutting down…" : "Confirm shutdown"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </SectionCard>
         )}
