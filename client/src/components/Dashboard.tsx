@@ -14,11 +14,25 @@ import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
 import projectsApi from "@/services/api/projects";
+import adminApi from "@/services/api/admin";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [shutdownDialogOpen, setShutdownDialogOpen] = useState(false);
+  const [shutdownPending, setShutdownPending] = useState(false);
+  const [shutdownError, setShutdownError] = useState<string | null>(null);
+  const [shutdownInProgress, setShutdownInProgress] = useState(false);
   const userRole = useUserRole();
 
   const authStorage = AuthStorage.getInstance();
@@ -51,6 +65,23 @@ const Dashboard: React.FC = () => {
 
     fetchProjects();
   }, [navigate, authStorage]);
+
+  useEffect(() => {
+    if (userRole !== "ADMIN") {
+      return;
+    }
+
+    const load = async () => {
+      try {
+        const status = await adminApi.getShutdownStatus();
+        setShutdownInProgress(Boolean(status.isShuttingDown));
+      } catch {
+        // ignore (e.g., server down)
+      }
+    };
+
+    void load();
+  }, [userRole]);
 
   const handleProjectChange = (projectName: string) => {
     setSelectedProject(projectName);
@@ -95,6 +126,37 @@ const Dashboard: React.FC = () => {
 
   function goCourseAdmin() {
     navigate("/course-admin");
+  }
+
+  async function shutdownSystem() {
+    // Close dialog immediately for a clean UX.
+    setShutdownDialogOpen(false);
+    setShutdownPending(true);
+    setShutdownError(null);
+
+    try {
+      await adminApi.shutdown();
+      setShutdownInProgress(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Shutdown failed";
+      setShutdownError(message);
+    } finally {
+      setShutdownPending(false);
+    }
+  }
+
+  function startSystem() {
+    setShutdownPending(true);
+    setShutdownError(null);
+
+    adminApi
+      .start()
+      .then(() => setShutdownInProgress(false))
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Start failed";
+        setShutdownError(message);
+      })
+      .finally(() => setShutdownPending(false));
   }
 
   return (
@@ -172,6 +234,61 @@ const Dashboard: React.FC = () => {
               <Button onClick={goCourseAdmin} className="w-48">
                 Course Admin
               </Button>
+
+              {shutdownInProgress ? (
+                <Button
+                  variant="success"
+                  className="w-48"
+                  onClick={startSystem}
+                  disabled={shutdownPending}
+                >
+                  Start system
+                </Button>
+              ) : (
+                <Dialog open={shutdownDialogOpen} onOpenChange={setShutdownDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" className="w-48">
+                      Shutdown system
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirm shutdown</DialogTitle>
+                      <DialogDescription>
+                        Do you really want to shut down the system?
+                        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900">
+                          After shutdown, the system enters read-only mode: all write
+                          operations will be rejected, but read requests will still
+                          work.
+                        </div>
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {shutdownError && (
+                      <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        {shutdownError}
+                      </div>
+                    )}
+
+                    <DialogFooter>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShutdownDialogOpen(false)}
+                        disabled={shutdownPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={shutdownSystem}
+                        disabled={shutdownPending}
+                      >
+                        {shutdownPending ? "Shutting down…" : "Confirm shutdown"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </SectionCard>
         )}
