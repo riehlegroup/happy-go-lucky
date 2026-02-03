@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 type ValidationResult = string | boolean;
 
 type ValidationRule = {
-  validate: (value: string | boolean | number) => ValidationResult;
+  validate: (value: string | boolean | number | null) => ValidationResult;
 };
 
 type ValidationSchema<T> = {
@@ -17,12 +17,12 @@ type FormErrors<T> = {
 // Predefined validation rules
 const rules = {
   required: (fieldName: string): ValidationRule => ({
-    validate: (value: string | boolean | number) =>
+    validate: (value: string | boolean | number | null) =>
       !value ? `${fieldName} is required` : "",
   }),
 
   pattern: (pattern: RegExp, message: string): ValidationRule => ({
-    validate: (value: string | boolean | number) =>
+    validate: (value: string | boolean | number | null) =>
       typeof value === "string" && !pattern.test(value.toLowerCase())
         ? message
         : "",
@@ -37,7 +37,7 @@ const rules = {
 export const createCourseValidation = () => ({
   termId: [
     {
-      validate: (value: string | boolean | number) =>
+      validate: (value: string | boolean | number | null) =>
         !value || value === 0 ? "Term is required" : "",
     },
   ],
@@ -98,7 +98,7 @@ export const useForm = <T extends object>(
 
   // Validate a single field
   const validateField = useCallback(
-    (field: keyof T, value: string | boolean | number): string => {
+    (field: keyof T, value: string | boolean | number | null): string => {
       const fieldRules = validationSchema[field];
       if (!fieldRules) return "";
 
@@ -113,7 +113,7 @@ export const useForm = <T extends object>(
   );
 
   const handleChanges = useCallback(
-    (field: keyof T, value: string | boolean | number) => {
+    (field: keyof T, value: string | boolean | number | null) => {
       setData((prevData) => ({ ...prevData, [field]: value }));
       setErrors((prevErrors) => ({
         ...prevErrors,

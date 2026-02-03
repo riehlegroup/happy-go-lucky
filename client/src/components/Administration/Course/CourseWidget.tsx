@@ -197,7 +197,10 @@ const CourseWidget: React.FC<CourseProps> = ({
           message={message || undefined}
           onChange={updateDialogData}
           onSubmit={handleSubmit}
-          termOptions={terms.map(t => ({ id: t.id, label: t.displayName || t.termName }))}
+          termOptions={terms.map((t) => ({
+            id: t.id,
+            label: t.displayName || t.termName || String(t.id),
+          }))}
         />
       </CourseDialog>
 

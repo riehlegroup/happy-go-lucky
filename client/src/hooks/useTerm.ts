@@ -3,10 +3,11 @@ import { Term } from "@/components/Administration/Term/types";
 import { Course } from "@/components/Administration/Course/types";
 import termApi from "@/components/Administration/Term/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
+import { parseTermName } from "@/valueTypes/TermName";
 
 const DEFAULT: Term = {
   id: 0,
-  termName: "",
+  termName: null,
   displayName: "",
   courses: [],
 };
@@ -39,7 +40,13 @@ export const useTerm = () => {
 
       const validTerms = response.map((term) => ({
         id: term.id ?? 0,
-        termName: term.termName ?? "",
+        termName:
+          typeof term.termName === "string"
+            ? (() => {
+                const parsed = parseTermName(term.termName);
+                return parsed.ok ? parsed.value : null;
+              })()
+            : null,
         displayName: term.displayName ?? "",
         courses: term.courses ?? [],
       }));
@@ -54,6 +61,11 @@ export const useTerm = () => {
 
   const createTerm = async (term: Term) => {
     setMessage(null);
+
+    if (!term.termName) {
+      showMessage("Term name is required", "error", false);
+      return;
+    }
 
     const body = {
       termName: term.termName,
@@ -81,7 +93,7 @@ export const useTerm = () => {
     try {
       await termApi.deleteTerm(term.id);
       showMessage(
-        `Term "${term.termName}" deleted successfully`,
+        `Term "${term.termName ?? ''}" deleted successfully`,
         "success"
       );
     } catch (error) {
@@ -89,7 +101,7 @@ export const useTerm = () => {
       console.error("Delete term error:", errorMessage);
 
       // Try to parse JSON error message, fall back to simple message
-      let displayMessage = `Failed to delete term "${term.termName}"`;
+      let displayMessage = `Failed to delete term "${term.termName ?? ''}"`;
       try {
         const parsed = JSON.parse(errorMessage);
         if (parsed.message) displayMessage = parsed.message;

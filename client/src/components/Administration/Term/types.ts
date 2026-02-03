@@ -1,8 +1,9 @@
 import { Course } from "../Course/types";
+import { TermName } from "@/valueTypes/TermName";
 
 export interface Term {
   id: number;
-  termName: string;
+  termName: TermName | null;
   displayName: string;
   courses: Course[];
 }

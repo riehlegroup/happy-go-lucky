@@ -2,10 +2,11 @@ import { Reader } from "../Serializer/Reader";
 import { Serializable } from "../Serializer/Serializable";
 import { Writer } from "../Serializer/Writer";
 import { Course } from "./Course";
+import { TermName } from "../ValueTypes/TermName";
 
 export class Term implements Serializable {
   protected id: number;
-  protected termName: string | null = null;
+  protected termName: TermName | null = null;
   protected displayName: string | null = null;
   protected courses: Course[] = []; // 1:N relationship
 
@@ -15,14 +16,15 @@ export class Term implements Serializable {
 
   async readFrom(reader: Reader): Promise<void> {
     this.id = reader.readNumber("id") as number;
-    this.termName = reader.readString("termName");
+    const termNameStr = reader.readString("termName");
+    this.termName = termNameStr ? new TermName(termNameStr) : null;
     this.displayName = reader.readString("displayName");
     this.courses = (await reader.readObjects("termId", "courses")) as Course[];
   }
 
   writeTo(writer: Writer): void {
     writer.writeNumber("id", this.id);
-    writer.writeString("termName", this.termName);
+    writer.writeString("termName", this.termName ? this.termName.toString() : null);
     writer.writeString("displayName", this.displayName);
   }
 
@@ -31,7 +33,7 @@ export class Term implements Serializable {
     return this.id;
   }
 
-  public getTermName(): string | null {
+  public getTermName(): TermName | null {
     return this.termName;
   }
 
@@ -44,7 +46,7 @@ export class Term implements Serializable {
   }
 
   // Setters
-  public setTermName(termName: string | null) {
+  public setTermName(termName: TermName | null) {
     this.termName = termName;
   }
 

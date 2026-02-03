@@ -66,7 +66,7 @@ const CourseAdmin: React.FC = () => {
   const tableTerms = useMemo(() => {
     return terms.map((term) => [
       term.id,
-      term.termName,
+      term.termName ?? "",
       term.displayName,
       <div key={term.id} className="flex flex-wrap gap-2">
         <TermWidget type="course" label="add course" action="add" term={term} onFetch={fetchCourse} />
