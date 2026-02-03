@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { msgKey, translate } from "@/Resources/i18n";
 
 /**
  * CheckboxSelect component provides a dropdown select menu. Using the checkboxes multiple selections are possible.
@@ -21,7 +22,7 @@ const CheckboxSelect = ({ options, active, setActive, children }: { options: Arr
                     <ul className="space-y-3 p-3 text-sm text-gray-700">
                         <li className="flex items-center">
                             <input type="checkbox" checked={active.length == options.length} onChange={e => e.target.checked ? setActive(options) : setActive([])} className="size-4 rounded border-gray-300 bg-gray-100 text-blue-600" />
-                            <label className="ms-2 text-sm font-medium text-gray-900">all</label>
+                            <label className="ms-2 text-sm font-medium text-gray-900">{translate(msgKey.common.actions.all)}</label>
                         </li>
                     </ul>
                     <ul className="space-y-3 p-3 text-sm text-gray-700">

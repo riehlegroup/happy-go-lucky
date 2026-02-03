@@ -8,6 +8,7 @@ import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import CourseSchedule from "./components/CourseSchedule";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface CourseProps {
   label?: string;
@@ -93,7 +94,11 @@ const CourseWidget: React.FC<CourseProps> = ({
 
   const handleDelete = async () => {
     if (type === "project" && project) {
-      if (window.confirm(`Are you sure you want to delete project "${project.projectName}"?`)) {
+      if (
+        window.confirm(
+          translate(msgKey.admin.course.confirmDeleteProject, project.projectName)
+        )
+      ) {
         await deleteProject(project);
         onFetch?.();
       }
@@ -174,9 +179,11 @@ const CourseWidget: React.FC<CourseProps> = ({
     <>
       <CourseDialog
         isOpen={dialogState.isOpen}
-        title={`${action === "edit" ? "Edit" : "Create"} ${
-          type === "project" ? "Project" : "Course"
-        }`}
+        title={translate(
+          msgKey.admin.course.dialogTitle,
+          action === "edit" ? "edit" : "create",
+          type === "project" ? "project" : "course"
+        )}
         trigger={
           <CourseAction
             label={label}
@@ -192,7 +199,11 @@ const CourseWidget: React.FC<CourseProps> = ({
       >
         <CourseForm
           type={type}
-          label={["Term", "Course Name", "Students Can Create Project"]}
+          label={[
+            translate(msgKey.admin.course.formLabels.term),
+            translate(msgKey.admin.course.formLabels.courseName),
+            translate(msgKey.admin.course.formLabels.studentsCanCreateProject),
+          ]}
           data={dialogState.data || undefined}
           message={message || undefined}
           onChange={updateDialogData}
@@ -205,11 +216,14 @@ const CourseWidget: React.FC<CourseProps> = ({
         <ConfirmationDialog
           open={showDeleteConfirmation}
           onOpenChange={setShowDeleteConfirmation}
-          title="Delete Course"
-          description={`Are you sure you want to delete course "${course.courseName}"? This will also delete the course schedule and submissions. This action cannot be undone.`}
+          title={translate(msgKey.admin.course.deleteCourseDialog.title)}
+          description={translate(
+            msgKey.admin.course.deleteCourseDialog.description,
+            course.courseName
+          )}
           onConfirm={handleConfirmDelete}
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmText={translate(msgKey.common.actions.delete)}
+          cancelText={translate(msgKey.common.actions.cancel)}
         />
       )}
     </>

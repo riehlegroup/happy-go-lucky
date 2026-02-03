@@ -8,6 +8,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./CourseMessage";
 import { cn } from "@/lib/utils";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface FormFieldProps {
   label: string;
@@ -130,7 +131,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   message,
   onChange,
   onSubmit,
-  submitText = "submit",
+  submitText,
   children,
   termOptions = [],
 }: CourseFormProps) => {
@@ -193,7 +194,9 @@ export const CourseForm: React.FC<CourseFormProps> = ({
               value={(formData as Course).termId || 0}
               onChange={(e) => courseHandleChanges("termId", parseInt(e.target.value))}
             >
-              <option value={0}>Select a term...</option>
+              <option value={0}>
+                {translate(msgKey.admin.course.placeholders.selectTerm)}
+              </option>
               {termOptions.map((term) => (
                 <option key={term.id} value={term.id}>
                   {term.label}
@@ -220,7 +223,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
         </>
       ) : (
         <FormField
-          label="Project Name"
+          label={translate(msgKey.admin.course.formLabels.projectName)}
           value={(formData as Project).projectName || ""}
           error={(errors as Record<keyof Project, string>).projectName}
           onChange={(value) => projectHandleChanges("projectName", value)}
@@ -233,7 +236,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
           className={getButtonStyles(isValid, message)}
           onClick={handleSubmit}
         >
-          {submitText.toUpperCase()}
+          {(submitText ?? translate(msgKey.common.actions.submit)).toUpperCase()}
         </Button>
       </div>
     </div>

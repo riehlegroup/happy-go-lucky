@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
+import { msgKey, translate } from "@/Resources/i18n";
 
 type ArrayElement<T> = T extends (infer U)[] ? U : never;
 type Commit = ArrayElement<Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"]>;
@@ -320,9 +321,13 @@ const CodeActivity: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Code Activity" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.projects.codeActivity.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Commits on GitHub">
+        <SectionCard title={translate(msgKey.projects.codeActivity.sectionTitle)}>
           <div className="space-y-4">
             {commits.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -336,11 +341,15 @@ const CodeActivity: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : loading ? (
-              <p className="text-slate-600">Loading...</p>
+              <p className="text-slate-600">{translate(msgKey.projects.codeActivity.loading)}</p>
             ) : (
-              <p className="text-slate-500">No commits found.</p>
+              <p className="text-slate-500">{translate(msgKey.projects.codeActivity.noCommits)}</p>
             )}
-            {loading && <p className="text-sm text-slate-500">Loading more commits...</p>}
+            {loading && (
+              <p className="text-sm text-slate-500">
+                {translate(msgKey.projects.codeActivity.loadingMore)}
+              </p>
+            )}
           </div>
         </SectionCard>
       </div>

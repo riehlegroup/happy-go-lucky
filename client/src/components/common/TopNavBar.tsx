@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import AuthStorage from "@/services/storage/auth";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface TopNavBarProps {
   title: string;
@@ -41,7 +42,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             onClick={handleBack}
             className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
           >
-            ← Back
+            {translate(msgKey.common.actions.back)}
           </button>
         )}
         <h1 className="text-xl font-bold text-primary-foreground">{title}</h1>
@@ -50,12 +51,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
       {/* Right section: Username and Logout button */}
       {showUserInfo && username && (
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-primary-foreground">User: {username}</span>
+          <span className="text-sm font-medium text-primary-foreground">
+            {translate(msgKey.common.topNav.user, username)}
+          </span>
           <button
             onClick={handleLogout}
             className="rounded-md border-2 border-transparent bg-primary px-4 py-2 font-medium text-primary-foreground transition-all hover:border-white hover:bg-white hover:text-slate-900 focus-visible:outline-none active:outline-none"
           >
-            Logout
+            {translate(msgKey.common.actions.logout)}
           </button>
         </div>
       )}

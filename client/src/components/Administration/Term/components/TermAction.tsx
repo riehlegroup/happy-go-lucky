@@ -2,6 +2,7 @@ import React from "react";
 import Add from "@/assets/Add.png";
 import Edit from "@/assets/Edit.png";
 import { cn } from "@/lib/utils";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface TermActionProps {
   label?: string;
@@ -17,11 +18,23 @@ export const TermAction = React.forwardRef<HTMLButtonElement, TermActionProps>(
     const getIcon = () => {
       switch (action) {
         case "edit":
-          return <img className="size-6" src={Edit} alt="Edit" />;
+          return (
+            <img
+              className="size-6"
+              src={Edit}
+              alt={translate(msgKey.common.actions.edit)}
+            />
+          );
         case "delete":
           return;
         case "add":
-          return <img className="size-6 " src={Add} alt="Add" />;
+          return (
+            <img
+              className="size-6 "
+              src={Add}
+              alt={translate(msgKey.common.actions.add)}
+            />
+          );
         default:
           return null;
       }

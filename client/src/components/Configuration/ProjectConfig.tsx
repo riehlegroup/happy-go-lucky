@@ -23,6 +23,7 @@ import {
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const ProjectConfig: React.FC = () => {
   const navigate = useNavigate();
@@ -171,23 +172,26 @@ const ProjectConfig: React.FC = () => {
           "/user/project/url",
           { userEmail, URL: newURL, projectName: selectedProject }
         );
-        setMessage(data.message || "URL changed successfully");
+        setMessage(
+          data.message ||
+            translate(msgKey.configuration.projectConfig.messages.urlChangedFallback)
+        );
         setURL(newURL);
         setNewURL("");
       } catch (error: unknown) {
         if (error instanceof Error) {
           setMessage(error.message);
         } else {
-          setMessage("An unexpected error occurred");
+          setMessage(translate(msgKey.common.errors.unexpected));
         }
       }
     } else {
-      setMessage("User email or selected project is missing");
+      setMessage(translate(msgKey.configuration.projectConfig.messages.missingUserEmailOrProject));
     }
   };
   const handleJoin = async (projectName: string, role: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(translate(msgKey.configuration.projectConfig.messages.userDataMissing));
       return;
     }
 
@@ -197,7 +201,7 @@ const ProjectConfig: React.FC = () => {
         { projectName, memberName: user.name, memberRole: role, memberEmail: user.email }
       );
 
-      setMessage(data.message || "Successfully joined the project!");
+      setMessage(data.message || translate(msgKey.configuration.projectConfig.messages.joinedSuccessFallback));
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -211,7 +215,7 @@ const ProjectConfig: React.FC = () => {
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(translate(msgKey.configuration.projectConfig.messages.userDataMissing));
       return;
     }
 
@@ -220,7 +224,7 @@ const ProjectConfig: React.FC = () => {
         `/user/project?projectName=${projectName}&memberEmail=${user.email}`
       );
 
-      setMessage(data.message || "Successfully left the project!");
+      setMessage(data.message || translate(msgKey.configuration.projectConfig.messages.leftSuccessFallback));
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -234,7 +238,7 @@ const ProjectConfig: React.FC = () => {
 
   const handleCreate = async (projectName: string) => {
     if (!selectedCourse?.id) {
-      setMessage("No course selected");
+      setMessage(translate(msgKey.configuration.projectConfig.messages.noCourseSelected));
       return;
     }
 
@@ -244,7 +248,7 @@ const ProjectConfig: React.FC = () => {
         { courseId: selectedCourse.id, projectName }
       );
 
-      setMessage(data.message || "Project created successfully");
+      setMessage(data.message || translate(msgKey.configuration.projectConfig.messages.projectCreatedFallback));
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -252,7 +256,7 @@ const ProjectConfig: React.FC = () => {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(translate(msgKey.common.errors.unexpected));
       }
     }
   };
@@ -260,7 +264,7 @@ const ProjectConfig: React.FC = () => {
   const validateProjectName = (name: string) => {
     const isValid = /^[a-zA-Z0-9_]+$/.test(name);
     if (!isValid) {
-      setError('Project name can only contain letters, numbers, and underscores.');
+      setError(translate(msgKey.configuration.projectConfig.messages.invalidProjectName));
     } else {
       setError('');
     }
@@ -273,14 +277,18 @@ const ProjectConfig: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Project Configuration" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.configuration.projectConfig.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Select Course">
+        <SectionCard title={translate(msgKey.configuration.projectConfig.sections.selectCourse)}>
           <div className="space-y-4">
             <Select onValueChange={handleCourseChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue placeholder={translate(msgKey.configuration.projectConfig.placeholders.selectCourse)} />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
@@ -296,7 +304,7 @@ const ProjectConfig: React.FC = () => {
         {selectedCourse && (
           <>
             {/* Enrolled Projects Section */}
-            <SectionCard title="Enrolled Projects">
+            <SectionCard title={translate(msgKey.configuration.projectConfig.sections.enrolledProjects)}>
               <div className="space-y-2">
                 {enrolledProjects.length > 0 ? (
                   enrolledProjects.map((project) => (
@@ -305,7 +313,9 @@ const ProjectConfig: React.FC = () => {
                         <div>
                           <p className="font-medium">{project}</p>
                           {projectRoles[project] === "owner" && (
-                            <p className="text-xs text-slate-500">Owner</p>
+                            <p className="text-xs text-slate-500">
+                              {translate(msgKey.configuration.projectConfig.messages.owner)}
+                            </p>
                           )}
                         </div>
                         <div className="flex gap-2">
@@ -320,26 +330,32 @@ const ProjectConfig: React.FC = () => {
                             }}>
                               <DialogTrigger asChild>
                                 <Button variant="primary" className="px-3 py-1 text-sm">
-                                  Edit
+                                  {translate(msgKey.common.actions.edit)}
                                 </Button>
                               </DialogTrigger>
                               <DialogContent>
                                 <DialogHeader>
-                                  <DialogTitle>Edit Project URL</DialogTitle>
+                                  <DialogTitle>
+                                    {translate(msgKey.configuration.projectConfig.dialogs.editProjectUrl)}
+                                  </DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div className="break-words text-sm">
-                                    <p className="font-semibold text-slate-700">Current URL:</p>
+                                    <p className="font-semibold text-slate-700">
+                                      {translate(msgKey.configuration.projectConfig.labels.currentUrl)}
+                                    </p>
                                     {url ? (
                                       <p className="break-all text-slate-600">{url}</p>
                                     ) : (
-                                      <p className="italic text-slate-400">No URL currently set</p>
+                                      <p className="italic text-slate-400">
+                                        {translate(msgKey.configuration.projectConfig.messages.noUrlCurrentlySet)}
+                                      </p>
                                     )}
                                   </div>
                                   <Input
                                     type="text"
-                                    label="New URL"
-                                    placeholder="Enter new URL"
+                                    label={translate(msgKey.configuration.projectConfig.labels.newUrl)}
+                                    placeholder={translate(msgKey.configuration.projectConfig.placeholders.newUrl)}
                                     value={newURL}
                                     onChange={(e) => setNewURL(e.target.value)}
                                   />
@@ -350,7 +366,9 @@ const ProjectConfig: React.FC = () => {
                                   )}
                                 </div>
                                 <DialogFooter>
-                                  <Button onClick={handleChangeURL}>Save</Button>
+                                  <Button onClick={handleChangeURL}>
+                                    {translate(msgKey.common.actions.save)}
+                                  </Button>
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
@@ -359,9 +377,9 @@ const ProjectConfig: React.FC = () => {
                               variant="primary"
                               className="px-3 py-1 text-sm"
                               disabled={true}
-                              title="You must be an owner to edit this course"
+                              title={translate(msgKey.configuration.projectConfig.messages.ownerRequiredToEdit)}
                             >
-                              Edit
+                              {translate(msgKey.common.actions.edit)}
                             </Button>
                           )}
                           <Button
@@ -369,24 +387,26 @@ const ProjectConfig: React.FC = () => {
                             className="px-3 py-1 text-sm"
                             onClick={() => handleLeave(project)}
                           >
-                            Leave
+                            {translate(msgKey.common.actions.leave)}
                           </Button>
                         </div>
                       </div>
                     </Card>
                   ))
                 ) : (
-                  <p className="text-slate-500">No enrolled projects</p>
+                  <p className="text-slate-500">
+                    {translate(msgKey.configuration.projectConfig.messages.noEnrolledProjects)}
+                  </p>
                 )}
               </div>
             </SectionCard>
 
             {/* Available Projects Section */}
-            <SectionCard title="Available Projects">
+            <SectionCard title={translate(msgKey.configuration.projectConfig.sections.availableProjects)}>
               <div className="space-y-4">
                 <Select onValueChange={setSelectedAvailableProject}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Project to Join" />
+                    <SelectValue placeholder={translate(msgKey.configuration.projectConfig.placeholders.selectProjectToJoin)} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProjects.map((project) => (
@@ -400,17 +420,19 @@ const ProjectConfig: React.FC = () => {
                 {selectedAvailableProject && (
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="primary">Join</Button>
+                      <Button variant="primary">
+                        {translate(msgKey.common.actions.join)}
+                      </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Join Project</DialogTitle>
+                        <DialogTitle>{translate(msgKey.configuration.projectConfig.dialogs.joinProject)}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <Input
                           type="text"
-                          label="Role"
-                          placeholder="Enter your role"
+                          label={translate(msgKey.configuration.projectConfig.labels.role)}
+                          placeholder={translate(msgKey.configuration.projectConfig.placeholders.role)}
                           value={memberRole}
                           onChange={(e) => setMemberRole(e.target.value)}
                         />
@@ -424,7 +446,7 @@ const ProjectConfig: React.FC = () => {
                         <Button
                           onClick={() => handleJoin(selectedAvailableProject, memberRole)}
                         >
-                          Join
+                          {translate(msgKey.common.actions.join)}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -434,20 +456,20 @@ const ProjectConfig: React.FC = () => {
             </SectionCard>
 
             {/* Create Project Section */}
-            <SectionCard title="Create New Project">
+            <SectionCard title={translate(msgKey.configuration.projectConfig.sections.createNewProject)}>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Create Project</Button>
+                  <Button>{translate(msgKey.configuration.projectConfig.dialogs.createProject)}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create Project</DialogTitle>
+                    <DialogTitle>{translate(msgKey.configuration.projectConfig.dialogs.createProject)}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <Input
                       type="text"
-                      label="Project Name"
-                      placeholder="Enter project name"
+                      label={translate(msgKey.configuration.projectConfig.labels.projectName)}
+                      placeholder={translate(msgKey.configuration.projectConfig.placeholders.projectName)}
                       value={createdProject}
                       error={error}
                       onChange={(e) => {
@@ -466,7 +488,7 @@ const ProjectConfig: React.FC = () => {
                       onClick={() => handleCreateAndJoin(createdProject)}
                       disabled={!!error}
                     >
-                      Create
+                      {translate(msgKey.common.actions.create)}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

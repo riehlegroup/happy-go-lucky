@@ -15,6 +15,7 @@ import {
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const Happiness: React.FC = (): React.ReactNode => {
   const location = useLocation();
@@ -132,7 +133,7 @@ const Happiness: React.FC = (): React.ReactNode => {
 
   const handleHappinessSubmit = async (ratingValue: number) => {
     if (!projectName || !user?.email || !nextSubmission) {
-      alert("Missing project, user, or submission information");
+      alert(translate(msgKey.projects.happiness.messages.missingRequiredInfo));
       return;
     }
 
@@ -274,35 +275,39 @@ const Happiness: React.FC = (): React.ReactNode => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Happiness" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.projects.happiness.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         <Tabs defaultValue="User" className="w-full">
           <TabsList className="inline-flex h-auto gap-1 bg-slate-100 p-2">
             <TabsTrigger value="User" className="data-[state=active]:bg-white data-[state=active]:shadow">
-              User
+              {translate(msgKey.projects.happiness.tabs.user)}
             </TabsTrigger>
             <TabsTrigger value="Display" className="data-[state=active]:bg-white data-[state=active]:shadow">
-              Display
+              {translate(msgKey.projects.happiness.tabs.display)}
             </TabsTrigger>
           </TabsList>
         <TabsContent value="User">
-          <SectionCard title="Submit Happiness Rating">
+          <SectionCard title={translate(msgKey.projects.happiness.submitSectionTitle)}>
             {!nextSubmission ? (
               <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700">
-                No active submission window available. Please contact an administrator to set up a course schedule.
+                {translate(msgKey.projects.happiness.messages.noActiveSubmission)}
               </div>
             ) : (
               <>
                 <div className="space-y-6">
                   <div className="text-sm text-slate-600">
-                    Please Enter Before{" "}
+                    {translate(msgKey.projects.happiness.prompts.enterBefore)}{" "}
                     <span className="font-semibold">
                       {moment(nextSubmission.submissionDate).format("YYYY-MM-DD HH:mm:ss")}
                     </span>
                   </div>
                   <div className="space-y-6">
                     <div className="text-lg font-semibold text-slate-900">
-                      How happy are you doing this project?
+                      {translate(msgKey.projects.happiness.prompts.question)}
                     </div>
                     <div className="grid grid-cols-7 gap-2">
                       {[-3, -2, -1, 0, 1, 2, 3].map((rating) => {
@@ -325,7 +330,7 @@ const Happiness: React.FC = (): React.ReactNode => {
                     </div>
                     {showSuccess && (
                       <div className="rounded-md bg-green-50 p-3 text-center text-sm font-medium text-green-700">
-                        Happiness updated successfully
+                        {translate(msgKey.projects.happiness.messages.updatedSuccess)}
                       </div>
                     )}
                   </div>
@@ -335,7 +340,12 @@ const Happiness: React.FC = (): React.ReactNode => {
           </SectionCard>
         </TabsContent>
         <TabsContent value="Display">
-          <SectionCard title={`Happiness - ${projectName}`}>
+          <SectionCard
+            title={translate(
+              msgKey.projects.happiness.displaySectionTitle,
+              String(projectName ?? "")
+            )}
+          >
             <ResponsiveContainer height={400} width="100%">
               <LineChart
                 data={chartData}

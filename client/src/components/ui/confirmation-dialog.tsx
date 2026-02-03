@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "./dialog";
 import Button from "../common/Button";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface ConfirmationDialogProps {
   open: boolean;
@@ -25,8 +26,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   title,
   description,
   onConfirm,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText = translate(msgKey.common.actions.confirm),
+  cancelText = translate(msgKey.common.actions.cancel),
 }) => {
   const handleConfirm = () => {
     onConfirm();

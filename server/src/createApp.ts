@@ -13,6 +13,7 @@ import { ConsoleEmailService } from './Services/ConsoleEmailService';
 import { SmtpEmailService } from './Services/SmtpEmailService';
 import { LocalMtaEmailService } from './Services/LocalMtaEmailService';
 import { EMAIL_CONFIG } from './Config/email';
+import { createI18nFromEnv, II18nService } from './Services/I18nService';
 
 /**
  * Creates and configures an Express application with all routes
@@ -56,13 +57,15 @@ export function createApp(db: Database): Application {
     );
   }
 
+  const i18n: II18nService = createI18nFromEnv();
+  
   // Initialize all controllers
-  const courseController = new CourseController(db);
-  const termController = new TermController(db);
-  const authController = new AuthController(db, emailService);
-  const userController = new UserController(db, emailService);
-  const projectController = new ProjectController(db, emailService);
-  const legacyController = new LegacyController(db);
+  const courseController = new CourseController(db, i18n);
+  const termController = new TermController(db, i18n);
+  const authController = new AuthController(db, emailService, i18n);
+  const userController = new UserController(db, emailService, i18n);
+  const projectController = new ProjectController(db, emailService, i18n);
+  const legacyController = new LegacyController(db, i18n);
 
   // Register all routes
   courseController.init(app);

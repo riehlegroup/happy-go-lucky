@@ -7,6 +7,7 @@ import { TermAction } from "./components/TermAction";
 import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { msgKey, translate } from "@/Resources/i18n";
 
 interface TermWidgetProps {
   label?: string;
@@ -115,9 +116,11 @@ const TermWidget: React.FC<TermWidgetProps> = ({
     <>
       <TermDialog
         isOpen={dialogState.isOpen}
-        title={`${action === "edit" ? "Edit" : "Create"} ${
-          type === "course" ? "Course" : "Term"
-        }`}
+        title={translate(
+          msgKey.admin.term.dialogTitle,
+          action === "edit" ? "edit" : "create",
+          type === "course" ? "course" : "term"
+        )}
         trigger={
           <TermAction
             label={label}
@@ -133,7 +136,14 @@ const TermWidget: React.FC<TermWidgetProps> = ({
       >
         <TermForm
           type={type}
-          label={type === "term" ? ["Term Name", "Display Name"] : ["Course Name"]}
+          label={
+            type === "term"
+              ? [
+                  translate(msgKey.admin.term.formLabels.termName),
+                  translate(msgKey.admin.term.formLabels.displayName),
+                ]
+              : [translate(msgKey.admin.term.formLabels.courseName)]
+          }
           data={dialogState.data || undefined}
           message={message || undefined}
           onChange={updateDialogData}
@@ -145,11 +155,14 @@ const TermWidget: React.FC<TermWidgetProps> = ({
         <ConfirmationDialog
           open={showDeleteConfirmation}
           onOpenChange={setShowDeleteConfirmation}
-          title="Delete Term"
-          description={`Are you sure you want to delete term "${term.termName}"? This action cannot be undone.`}
+          title={translate(msgKey.admin.term.deleteTermDialog.title)}
+          description={translate(
+            msgKey.admin.term.deleteTermDialog.description,
+            term.termName
+          )}
           onConfirm={handleConfirmDelete}
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmText={translate(msgKey.common.actions.delete)}
+          cancelText={translate(msgKey.common.actions.cancel)}
         />
       )}
     </>

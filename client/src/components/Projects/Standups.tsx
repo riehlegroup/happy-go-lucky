@@ -6,6 +6,7 @@ import Textarea from "@/components/common/Textarea";
 import SectionCard from "@/components/common/SectionCard";
 import AuthStorage from "@/services/storage/auth";
 import projectsApi from "@/services/api/projects";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const Standups: React.FC = () => {
   const location = useLocation();
@@ -33,7 +34,7 @@ const Standups: React.FC = () => {
     e.preventDefault();
 
     if (!projectName || !userName) {
-      setMessage("Missing project or user information");
+      setMessage(translate(msgKey.projects.standups.messages.missingProjectOrUser));
       return;
     }
 
@@ -46,7 +47,7 @@ const Standups: React.FC = () => {
         challengesText,
       });
 
-      setMessage("Standup email sent successfully");
+      setMessage(translate(msgKey.projects.standups.messages.emailSent));
       setDoneText("");
       setPlansText("");
       setChallengesText("");
@@ -54,7 +55,7 @@ const Standups: React.FC = () => {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(translate(msgKey.common.errors.unexpected));
       }
     }
   };
@@ -68,14 +69,18 @@ const Standups: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Standup Emails" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.projects.standups.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Submit Standup">
+        <SectionCard title={translate(msgKey.projects.standups.sectionTitle)}>
           <form onSubmit={handleSendStandups} className="space-y-6">
             <Textarea
-              label="What did you complete yesterday?"
-              placeholder="Enter completed work..."
+              label={translate(msgKey.projects.standups.fields.done.label)}
+              placeholder={translate(msgKey.projects.standups.fields.done.placeholder)}
               value={doneText}
               onChange={(e) => handleInputChange(e, setDoneText)}
               rows={5}
@@ -83,8 +88,8 @@ const Standups: React.FC = () => {
             />
 
             <Textarea
-              label="What are your plans for today?"
-              placeholder="Enter your plans..."
+              label={translate(msgKey.projects.standups.fields.plans.label)}
+              placeholder={translate(msgKey.projects.standups.fields.plans.placeholder)}
               value={plansText}
               onChange={(e) => handleInputChange(e, setPlansText)}
               rows={5}
@@ -92,8 +97,8 @@ const Standups: React.FC = () => {
             />
 
             <Textarea
-              label="What blockers or challenges do you face?"
-              placeholder="Enter any challenges..."
+              label={translate(msgKey.projects.standups.fields.challenges.label)}
+              placeholder={translate(msgKey.projects.standups.fields.challenges.placeholder)}
               value={challengesText}
               onChange={(e) => handleInputChange(e, setChallengesText)}
               rows={5}
@@ -102,7 +107,7 @@ const Standups: React.FC = () => {
 
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="min-w-32">
-                Send Email
+                {translate(msgKey.common.actions.sendEmail)}
               </Button>
             </div>
 

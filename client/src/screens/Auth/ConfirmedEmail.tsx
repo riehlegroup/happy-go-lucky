@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authApi from "@/services/api/auth";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search); // search: '?query=string'
@@ -22,19 +23,19 @@ const ConfirmedEmail = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage("Invalid or missing confirmation token");
+      setMessage(translate(msgKey.auth.messages.invalidOrMissingConfirmationToken));
       return;
     }
 
     try {
       await authApi.confirmEmail(token);
-      setMessage("Email has been confirmed successfully!");
+      setMessage(translate(msgKey.auth.messages.emailConfirmedSuccess));
       setTimeout(() => navigate("/login"), 2000);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(translate(msgKey.common.errors.unexpected));
       }
     }
   };
@@ -43,17 +44,17 @@ const ConfirmedEmail = () => {
     <>
       <div className="container">
         <div className="COnfirmEMailheader">
-          <div className="text">Confirm Email</div>
+          <div className="text">{translate(msgKey.auth.headings.confirmEmail)}</div>
           <br />
           <div className="underline"></div>
         </div>
         <div className="text ConfirmEmailText">
-          Thank you for confirming your email!
-          <br /> Please click the button to confirm and go back to Login Page
+          {translate(msgKey.auth.helperText.confirmEmail.line1)}
+          <br /> {translate(msgKey.auth.helperText.confirmEmail.line2)}
         </div>
         <div className="ConfirmEmailsubmit-container">
           <button type="submit" className="submit" onClick={handleSubmit}>
-            Confirm
+            {translate(msgKey.auth.actions.confirm)}
           </button>
         </div>
 

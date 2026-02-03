@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./AuthScreens.css";
 import EmailIcon from "./../../assets/EmailIcon.png";
 import authApi from "@/services/api/auth";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -12,12 +13,12 @@ const ForgotPassword = () => {
 
     try {
       await authApi.forgotPassword(email);
-      setMessage("Password reset link sent! Please check your email.");
+      setMessage(translate(msgKey.auth.messages.passwordResetLinkSent));
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(translate(msgKey.common.errors.unexpected));
       }
     }
   };
@@ -26,13 +27,13 @@ const ForgotPassword = () => {
     <>
       <div className="container">
         <div className="header">
-          <div className="text">Forgot Your Password</div>
+          <div className="text">{translate(msgKey.auth.headings.forgotPassword)}</div>
           <br />
           <div className="underline"></div>
         </div>
         <div className="text ForgotPasswordText">
-          Enter your email address and
-          <br /> we will send you a link to reset your password
+          {translate(msgKey.auth.helperText.forgotPassword.line1)}
+          <br /> {translate(msgKey.auth.helperText.forgotPassword.line2)}
         </div>
         <form onSubmit={handleSubmit}>
           <div className="inputs">
@@ -41,7 +42,7 @@ const ForgotPassword = () => {
               <input
                 className="inputBox"
                 type="email"
-                placeholder="Please enter your email address"
+                placeholder={translate(msgKey.auth.placeholders.email)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -49,7 +50,7 @@ const ForgotPassword = () => {
           </div>
           <div className="submit-container">
             <button type="submit" className="submit">
-              Send
+              {translate(msgKey.auth.actions.send)}
             </button>
           </div>
         </form>

@@ -23,6 +23,7 @@ import AuthStorage from "@/services/storage/auth";
 import coursesApi from "@/services/api/courses";
 import projectsApi from "@/services/api/projects";
 import ApiClient from "@/services/api/client";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const CourseParticipation: React.FC = () => {
   type Project = {
@@ -164,7 +165,7 @@ const CourseParticipation: React.FC = () => {
 
   const handleJoin = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(translate(msgKey.configuration.courseParticipation.messages.userDataMissing));
       return;
     }
 
@@ -179,7 +180,10 @@ const CourseParticipation: React.FC = () => {
         }
       );
 
-      setMessage(data.message || "Successfully joined the project!");
+      setMessage(
+        data.message ||
+          translate(msgKey.configuration.courseParticipation.messages.joinedSuccessFallback)
+      );
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -193,7 +197,7 @@ const CourseParticipation: React.FC = () => {
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(translate(msgKey.configuration.courseParticipation.messages.userDataMissing));
       return;
     }
 
@@ -202,7 +206,10 @@ const CourseParticipation: React.FC = () => {
         `/user/project?projectName=${projectName}&memberEmail=${user.email}`
       );
 
-      setMessage(data.message || "Successfully left the project!");
+      setMessage(
+        data.message ||
+          translate(msgKey.configuration.courseParticipation.messages.leftSuccessFallback)
+      );
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -216,11 +223,15 @@ const CourseParticipation: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Course Participation" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.configuration.courseParticipation.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         {/* Enrolled Courses Section */}
-        <SectionCard title="Projects you are enrolled in">
+        <SectionCard title={translate(msgKey.configuration.courseParticipation.sections.enrolled)}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -228,7 +239,11 @@ const CourseParticipation: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue
+                  placeholder={translate(
+                    msgKey.configuration.courseParticipation.placeholders.selectCourse
+                  )}
+                />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((group, index) => (
@@ -248,16 +263,23 @@ const CourseParticipation: React.FC = () => {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="destructive" className="w-fit text-sm">
-                            Leave
+                            {translate(msgKey.common.actions.leave)}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Leave Project</DialogTitle>
+                            <DialogTitle>
+                              {translate(
+                                msgKey.configuration.courseParticipation.dialogs.leaveProject
+                              )}
+                            </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <p className="text-sm">
-                              Are you sure you want to leave {project.projectName}?
+                              {translate(
+                                msgKey.configuration.courseParticipation.dialogs.confirmLeave,
+                                project.projectName
+                              )}
                             </p>
                             {message && (
                               <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
@@ -272,12 +294,12 @@ const CourseParticipation: React.FC = () => {
                                 setMessage("");
                               }}
                             >
-                              Cancel
+                              {translate(msgKey.common.actions.cancel)}
                             </Button>
                             <Button
                               onClick={() => handleLeave(project.projectName)}
                             >
-                              Confirm
+                              {translate(msgKey.common.actions.confirm)}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -287,13 +309,17 @@ const CourseParticipation: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-500">No enrolled projects</p>
+              <p className="text-slate-500">
+                {translate(
+                  msgKey.configuration.courseParticipation.messages.noEnrolledProjects
+                )}
+              </p>
             )}
           </div>
         </SectionCard>
 
         {/* Available Courses Section */}
-        <SectionCard title="Available Projects">
+        <SectionCard title={translate(msgKey.configuration.courseParticipation.sections.available)}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -301,7 +327,11 @@ const CourseParticipation: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Course" />
+                <SelectValue
+                  placeholder={translate(
+                    msgKey.configuration.courseParticipation.placeholders.selectCourse
+                  )}
+                />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((group, index) => (
@@ -321,18 +351,26 @@ const CourseParticipation: React.FC = () => {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="primary" className="px-3 py-1 text-sm">
-                            Join
+                            {translate(msgKey.common.actions.join)}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Join Project</DialogTitle>
+                            <DialogTitle>
+                              {translate(
+                                msgKey.configuration.courseParticipation.dialogs.joinProject
+                              )}
+                            </DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <Input
                               type="text"
-                              label="Role"
-                              placeholder="Enter your role"
+                              label={translate(
+                                msgKey.configuration.courseParticipation.labels.role
+                              )}
+                              placeholder={translate(
+                                msgKey.configuration.courseParticipation.placeholders.role
+                              )}
                               value={role}
                               onChange={(e) => setRole(e.target.value)}
                             />
@@ -350,12 +388,12 @@ const CourseParticipation: React.FC = () => {
                                 setMessage("");
                               }}
                             >
-                              Cancel
+                              {translate(msgKey.common.actions.cancel)}
                             </Button>
                             <Button
                               onClick={() => handleJoin(project.projectName)}
                             >
-                              Join
+                              {translate(msgKey.common.actions.join)}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -365,7 +403,11 @@ const CourseParticipation: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-slate-500">No available projects</p>
+              <p className="text-slate-500">
+                {translate(
+                  msgKey.configuration.courseParticipation.messages.noAvailableProjects
+                )}
+              </p>
             )}
           </div>
         </SectionCard>

@@ -5,6 +5,7 @@ import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
+import { msgKey, translate } from "@/Resources/i18n";
 
 const UserPanel: React.FC = () => {
 
@@ -53,7 +54,7 @@ const UserPanel: React.FC = () => {
  
   const handleEmailChange = async () => {
     if (!user) {
-      setEmailMessage("User data not available. Please log in again.");
+      setEmailMessage(translate(msgKey.common.errors.userDataMissing));
       return;
     }
 
@@ -63,7 +64,10 @@ const UserPanel: React.FC = () => {
         newEmail: newEmail,
       });
 
-      setEmailMessage(data.message || "Email changed successfully!");
+      setEmailMessage(
+        data.message ||
+          translate(msgKey.configuration.settings.messages.emailChangedFallback)
+      );
       if (data.message.includes("successfully")) {
         const updatedUser = { ...user, email: newEmail };
         setUser(updatedUser);
@@ -79,7 +83,7 @@ const UserPanel: React.FC = () => {
 
   const handlePasswordChange = async () => {
     if (!user) {
-      setPasswordMessage("User data not available. Please log in again.");
+      setPasswordMessage(translate(msgKey.common.errors.userDataMissing));
       return;
     }
 
@@ -89,7 +93,10 @@ const UserPanel: React.FC = () => {
         password: newPassword,
       });
 
-      setPasswordMessage(data.message || "Password changed successfully!");
+      setPasswordMessage(
+        data.message ||
+          translate(msgKey.configuration.settings.messages.passwordChangedFallback)
+      );
       if (data.message.includes("successfully")) {
         setNewPassword("");
       }
@@ -102,12 +109,14 @@ const UserPanel: React.FC = () => {
 
   const handleAddGithubUsername = async () => {
     if (!user?.email) {
-      setGithubMessage("User email not available. Please log in again.");
+      setGithubMessage(translate(msgKey.common.errors.userDataMissing));
       return;
     }
 
     if (!githubUsername || githubUsername.trim() === "") {
-      setGithubMessage("GitHub username cannot be empty");
+      setGithubMessage(
+        translate(msgKey.configuration.settings.messages.githubUsernameEmpty)
+      );
       return;
     }
 
@@ -117,7 +126,12 @@ const UserPanel: React.FC = () => {
         newGithubUsername: githubUsername.trim(),
       });
 
-      setGithubMessage(data.message || "GitHub username updated successfully!");
+      setGithubMessage(
+        data.message ||
+          translate(
+            msgKey.configuration.settings.messages.githubUsernameUpdatedFallback
+          )
+      );
       if (data.message.includes("successfully")) {
         const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
         setUser(updatedUser);
@@ -143,14 +157,18 @@ const UserPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="User Profile" showBackButton={true} showUserInfo={true} />
+      <TopNavBar
+        title={translate(msgKey.configuration.userPanel.title)}
+        showBackButton={true}
+        showUserInfo={true}
+      />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
-        <SectionCard title="Update Profile">
+        <SectionCard title={translate(msgKey.configuration.userPanel.updateProfile)}>
           <div className="space-y-6">
             <Input
               type="email"
-              label="Email Address"
+              label={translate(msgKey.configuration.settings.labels.emailAddress)}
               placeholder={user?.email || ""}
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
@@ -163,8 +181,10 @@ const UserPanel: React.FC = () => {
 
             <Input
               type="password"
-              label="New Password"
-              placeholder="Enter new password"
+              label={translate(msgKey.configuration.userPanel.labels.newPassword)}
+              placeholder={translate(
+                msgKey.configuration.userPanel.placeholders.newPassword
+              )}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -176,8 +196,10 @@ const UserPanel: React.FC = () => {
 
             <Input
               type="text"
-              label="GitHub Username"
-              placeholder="Enter your GitHub username"
+              label={translate(msgKey.configuration.userPanel.labels.githubUsername)}
+              placeholder={translate(
+                msgKey.configuration.userPanel.placeholders.githubUsername
+              )}
               value={githubUsername}
               onChange={(e) => setGithubUsername(e.target.value)}
             />
@@ -188,7 +210,9 @@ const UserPanel: React.FC = () => {
             )}
 
             <div className="flex gap-4 pt-4">
-              <Button onClick={handleSubmitAll}>Submit Changes</Button>
+              <Button onClick={handleSubmitAll}>
+                {translate(msgKey.configuration.userPanel.submitChanges)}
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -200,7 +224,7 @@ const UserPanel: React.FC = () => {
                   setGithubMessage("");
                 }}
               >
-                Reset
+                {translate(msgKey.common.actions.reset)}
               </Button>
             </div>
           </div>
