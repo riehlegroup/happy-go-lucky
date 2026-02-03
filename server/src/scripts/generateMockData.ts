@@ -8,7 +8,7 @@ import { hashPassword } from '../Utils/hash';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
+export async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
   console.log(`Connecting to database at: ${dbPath}`);
 
   const db = await open({
@@ -34,7 +34,8 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     )`);
     await db.run(`DELETE FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')`);
     await db.run(`DELETE FROM users WHERE email IN (
-      'amos-student-1@fau.de', 'amos-student-2@fau.de', 'adap-student-1@fau.de'
+      'amos-student-1@fau.de', 'amos-student-2@fau.de', 'adap-student-1@fau.de',
+      'tarikul.islam@fau.de', 'ashraf.ullah@fau.de', 'sazid.rahaman@fau.de', 'kawser.hamid@fau.de'
     )`);
     await db.run(`DELETE FROM courses WHERE courseName IN ('AMOS Course Mock', 'ADAP Course Mock')`);
     await db.run(`DELETE FROM terms WHERE termName = 'WS26'`);
@@ -92,48 +93,67 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log(`  ✓ ADAP Project 1 created with ID: ${adapProjectId}\n`);
 
     console.log('Creating users...');
-    const amosStudent1Password = await hashPassword('amos-student-1-password');
-    const amosStudent1Result = await db.run(
-      `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', 'USER']
+    const tarikulIslamPassword = await hashPassword('tarikul-islam-password');
+    const tarikulIslamResult = await db.run(
+      `INSERT INTO users (name, githubUsername, email, password, status, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
+      ['Tarikul Islam', 'tarikul-amos', 'tarikul.islam@fau.de', tarikulIslamPassword, 'confirmed', 'USER']
     );
-    const amosStudent1Id = amosStudent1Result.lastID;
-    console.log(`  ✓ AMOS Student 1 (amos-student-1@fau.de) created with ID: ${amosStudent1Id}`);
+    const tarikulIslamId = tarikulIslamResult.lastID!;
+    console.log(`  ✓ Tarikul Islam (tarikul.islam@fau.de) created with ID: ${tarikulIslamId}`);
 
-    const amosStudent2Password = await hashPassword('amos-student-2-password');
-    const amosStudent2Result = await db.run(
-      `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', 'USER']
+    const ashrafUllahPassword = await hashPassword('ashraf-ullah-password');
+    const ashrafUllahResult = await db.run(
+      `INSERT INTO users (name, githubUsername, email, password, status, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
+      ['Ashraf Ullah', 'ashraf-amosso', 'ashraf.ullah@fau.de', ashrafUllahPassword, 'confirmed', 'USER']
     );
-    const amosStudent2Id = amosStudent2Result.lastID;
-    console.log(`  ✓ AMOS Student 2 (amos-student-2@fau.de) created with ID: ${amosStudent2Id}`);
+    const ashrafUllahId = ashrafUllahResult.lastID!;
+    console.log(`  ✓ Ashraf Ullah (ashraf.ullah@fau.de) created with ID: ${ashrafUllahId}`);
 
-    const adapStudent1Password = await hashPassword('adap-student-1-password');
-    const adapStudent1Result = await db.run(
-      `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', 'USER']
+    const sazidRahamanPassword = await hashPassword('sazid-rahaman-password');
+    const sazidRahamanResult = await db.run(
+      `INSERT INTO users (name, githubUsername, email, password, status, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
+      ['Sazid Rahaman', 'sazid-adap', 'sazid.rahaman@fau.de', sazidRahamanPassword, 'confirmed', 'USER']
     );
-    const adapStudent1Id = adapStudent1Result.lastID;
-    console.log(`  ✓ ADAP Student 1 (adap-student-1@fau.de) created with ID: ${adapStudent1Id}\n`);
+    const sazidRahamanId = sazidRahamanResult.lastID!;
+    console.log(`  ✓ Sazid Rahaman (sazid.rahaman@fau.de) created with ID: ${sazidRahamanId}`);
+
+    const kawserHamidPassword = await hashPassword('kawser-hamid-password');
+    const kawserHamidResult = await db.run(
+      `INSERT INTO users (name, githubUsername, email, password, status, userRole) VALUES (?, ?, ?, ?, ?, ?)`,
+      ['Kawser Hamid', 'kawser-adaptor', 'kawser.hamid@fau.de', kawserHamidPassword, 'confirmed', 'USER']
+    );
+    const kawserHamidId = kawserHamidResult.lastID!;
+    console.log(`  ✓ Kawser Hamid (kawser.hamid@fau.de) created with ID: ${kawserHamidId}\n`);
 
     console.log('Creating project memberships...');
-    await db.run(
-      `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
-      [amosStudent1Id, amosProjectId, 'Owner']
-    );
-    console.log(`  ✓ AMOS Student 1 → AMOS Project 1 (Owner)`);
+    const tarikulRepoUrl = 'https://github.com/night-fury-me/digital-alchemy';
+    const ashrafRepoUrl = 'https://github.com/night-fury-me/advanced-data-engineering-fau';
+    const sazidRepoUrl = 'https://github.com/night-fury-me/real-time-vehicle-data-processing';
+    const kawserRepoUrl = 'https://github.com/night-fury-me/happy-go-lucky';
 
     await db.run(
-      `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
-      [amosStudent2Id, amosProjectId, 'Developer']
+      `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
+      [tarikulIslamId, amosProjectId, 'Owner', tarikulRepoUrl]
     );
-    console.log(`  ✓ AMOS Student 2 → AMOS Project 1 (Developer)`);
+    console.log(`  ✓ Tarikul Islam → AMOS Project 1 (Owner) | Repo: ${tarikulRepoUrl}`);
 
     await db.run(
-      `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
-      [adapStudent1Id, adapProjectId, 'Owner']
+      `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
+      [ashrafUllahId, amosProjectId, 'Developer', ashrafRepoUrl]
     );
-    console.log(`  ✓ ADAP Student 1 → ADAP Project 1 (Owner)\n`);
+    console.log(`  ✓ Ashraf Ullah → AMOS Project 1 (Developer) | Repo: ${ashrafRepoUrl}`);
+
+    await db.run(
+      `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
+      [sazidRahamanId, adapProjectId, 'Owner', sazidRepoUrl]
+    );
+    console.log(`  ✓ Sazid Rahaman → ADAP Project 1 (Owner) | Repo: ${sazidRepoUrl}`);
+
+    await db.run(
+      `INSERT INTO user_projects (userId, projectId, role, url) VALUES (?, ?, ?, ?)`,
+      [kawserHamidId, adapProjectId, 'Developer', kawserRepoUrl]
+    );
+    console.log(`  ✓ Kawser Hamid → ADAP Project 1 (Developer) | Repo: ${kawserRepoUrl}\n`);
 
     console.log('Creating course schedules (15 weeks, started 3 weeks ago)...');
     await db.run(
@@ -173,41 +193,46 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
 
     console.log('Creating happiness ratings for past/current sprints...');
 
-    let amosStudent1Ratings = 0;
-    let amosStudent2Ratings = 0;
-    let adapStudent1Ratings = 0;
+    const amosMembers = [
+      { id: tarikulIslamId, label: 'Tarikul Islam' },
+      { id: ashrafUllahId, label: 'Ashraf Ullah' },
+    ];
+    const adapMembers = [
+      { id: sazidRahamanId, label: 'Sazid Rahaman' },
+      { id: kawserHamidId, label: 'Kawser Hamid' },
+    ];
+
+    const ratingsCountByUserId = new Map<number, number>();
 
     for (let i = 0; i < 15; i++) {
       const submissionTime = threeWeeksAgo + ((i + 1) * 7 * 24 * 60 * 60 * 1000);
       const submissionTimestamp = Math.floor(submissionTime / 1000);
 
       if (submissionTimestamp <= currentTime) {
-        const happiness1 = Math.floor(Math.random() * 7) - 3;
-        await db.run(
-          `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
-          [amosProjectId, amosStudent1Id, happiness1, amosSubmissionIds[i], submissionTimestamp]
-        );
-        amosStudent1Ratings++;
+        for (const member of amosMembers) {
+          const happiness = Math.floor(Math.random() * 7) - 3;
+          await db.run(
+            `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
+            [amosProjectId, member.id, happiness, amosSubmissionIds[i], submissionTimestamp]
+          );
+          ratingsCountByUserId.set(member.id, (ratingsCountByUserId.get(member.id) ?? 0) + 1);
+        }
 
-        const happiness2 = Math.floor(Math.random() * 7) - 3;
-        await db.run(
-          `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
-          [amosProjectId, amosStudent2Id, happiness2, amosSubmissionIds[i], submissionTimestamp]
-        );
-        amosStudent2Ratings++;
-
-        const happiness3 = Math.floor(Math.random() * 7) - 3;
-        await db.run(
-          `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
-          [adapProjectId, adapStudent1Id, happiness3, adapSubmissionIds[i], submissionTimestamp]
-        );
-        adapStudent1Ratings++;
+        for (const member of adapMembers) {
+          const happiness = Math.floor(Math.random() * 7) - 3;
+          await db.run(
+            `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
+            [adapProjectId, member.id, happiness, adapSubmissionIds[i], submissionTimestamp]
+          );
+          ratingsCountByUserId.set(member.id, (ratingsCountByUserId.get(member.id) ?? 0) + 1);
+        }
       }
     }
 
-    console.log(`  ✓ Created ${amosStudent1Ratings} happiness ratings for AMOS Student 1`);
-    console.log(`  ✓ Created ${amosStudent2Ratings} happiness ratings for AMOS Student 2`);
-    console.log(`  ✓ Created ${adapStudent1Ratings} happiness ratings for ADAP Student 1\n`);
+    for (const member of [...amosMembers, ...adapMembers]) {
+      console.log(`  ✓ Created ${ratingsCountByUserId.get(member.id) ?? 0} happiness ratings for ${member.label}`);
+    }
+    console.log('');
 
     console.log('='.repeat(60));
     console.log('Mock data generation completed successfully!');
@@ -216,15 +241,16 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
     console.log(`  Terms: 1`);
     console.log(`  Courses: 2 (AMOS Course Mock, ADAP Course Mock)`);
     console.log(`  Projects: 2 (AMOS Project 1, ADAP Project 1)`);
-    console.log(`  Students: 3`);
-    console.log(`  Project memberships: 3`);
+    console.log(`  Students: 4`);
+    console.log(`  Project memberships: 4`);
     console.log(`  Schedules: 2 (15 weeks each, started 3 weeks ago)`);
     console.log(`  Submission dates: 30 (15 per course)`);
-    console.log(`  Happiness ratings: ${amosStudent1Ratings + amosStudent2Ratings + adapStudent1Ratings}`);
+    console.log(`  Happiness ratings: ${Array.from(ratingsCountByUserId.values()).reduce((a, b) => a + b, 0)}`);
     console.log('\nStudent Accounts:');
-    console.log('  Email: amos-student-1@fau.de | Password: amos-student-1-password | Project: AMOS (Owner)');
-    console.log('  Email: amos-student-2@fau.de | Password: amos-student-2-password | Project: AMOS (Developer)');
-    console.log('  Email: adap-student-1@fau.de | Password: adap-student-1-password | Project: ADAP (Owner)');
+    console.log('  Email: tarikul.islam@fau.de | Password: tarikul-islam-password | Project: AMOS (Owner)');
+    console.log('  Email: ashraf.ullah@fau.de | Password: ashraf-ullah-password | Project: AMOS (Developer)');
+    console.log('  Email: sazid.rahaman@fau.de | Password: sazid-rahaman-password | Project: ADAP (Owner)');
+    console.log('  Email: kawser.hamid@fau.de | Password: kawser-hamid-password | Project: ADAP (Developer)');
     console.log('='.repeat(60));
 
   } catch (error) {
@@ -237,15 +263,25 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
   }
 }
 
-const args = process.argv.slice(2);
-const deleteOnly = args.includes('--delete-only');
-const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
+export function parseArgs(args: string[]) {
+  return {
+    deleteOnly: args.includes('--delete-only'),
+    dbPath: args.find((arg) => !arg.startsWith('--')) || './server/myDatabase.db',
+  };
+}
 
-generateMockData(dbPath, deleteOnly)
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Script failed:', error);
-    process.exit(1);
-  });
+export async function runFromCli(args: string[]) {
+  const parsed = parseArgs(args);
+  await generateMockData(parsed.dbPath, parsed.deleteOnly);
+}
+
+if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+  runFromCli(process.argv.slice(2))
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Script failed:', error);
+      process.exit(1);
+    });
+}
