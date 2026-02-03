@@ -33,6 +33,9 @@ const Dashboard: React.FC = () => {
   const [shutdownDialogOpen, setShutdownDialogOpen] = useState(false);
   const [shutdownPending, setShutdownPending] = useState(false);
   const [shutdownError, setShutdownError] = useState<string | null>(null);
+  const [shutdownInProgress, setShutdownInProgress] = useState(
+    SystemStorage.getInstance().isShutdownInProgress()
+  );
   const userRole = useUserRole();
 
   const authStorage = AuthStorage.getInstance();
@@ -65,6 +68,23 @@ const Dashboard: React.FC = () => {
 
     fetchProjects();
   }, [navigate, authStorage]);
+
+  useEffect(() => {
+    const onShutdownStateChange = () => {
+      const inProgress = SystemStorage.getInstance().isShutdownInProgress();
+      setShutdownInProgress(inProgress);
+      if (inProgress) {
+        setShutdownDialogOpen(false);
+      }
+    };
+
+    window.addEventListener(SystemStorage.shutdownEventName(), onShutdownStateChange);
+    return () =>
+      window.removeEventListener(
+        SystemStorage.shutdownEventName(),
+        onShutdownStateChange
+      );
+  }, []);
 
   const handleProjectChange = (projectName: string) => {
     setSelectedProject(projectName);
@@ -131,6 +151,11 @@ const Dashboard: React.FC = () => {
     } finally {
       setShutdownPending(false);
     }
+  }
+
+  function startSystem() {
+    SystemStorage.getInstance().setShutdownInProgress(false);
+    window.location.reload();
   }
 
   return (
@@ -209,44 +234,50 @@ const Dashboard: React.FC = () => {
                 Course Admin
               </Button>
 
-              <Dialog open={shutdownDialogOpen} onOpenChange={setShutdownDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive" className="w-48">
-                    Shutdown system
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Shutdown the system?</DialogTitle>
-                    <DialogDescription>
-                      This will stop the server and block further interactions.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  {shutdownError && (
-                    <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                      {shutdownError}
-                    </div>
-                  )}
-
-                  <DialogFooter>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShutdownDialogOpen(false)}
-                      disabled={shutdownPending}
-                    >
-                      Cancel
+              {shutdownInProgress ? (
+                <Button variant="success" className="w-48" onClick={startSystem}>
+                  Start system
+                </Button>
+              ) : (
+                <Dialog open={shutdownDialogOpen} onOpenChange={setShutdownDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" className="w-48">
+                      Shutdown system
                     </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={shutdownSystem}
-                      disabled={shutdownPending}
-                    >
-                      {shutdownPending ? "Shutting down…" : "Confirm shutdown"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirm shutdown</DialogTitle>
+                      <DialogDescription>
+                        Do you really want to shut down the system?
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {shutdownError && (
+                      <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        {shutdownError}
+                      </div>
+                    )}
+
+                    <DialogFooter>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShutdownDialogOpen(false)}
+                        disabled={shutdownPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={shutdownSystem}
+                        disabled={shutdownPending}
+                      >
+                        {shutdownPending ? "Shutting down…" : "Confirm shutdown"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </SectionCard>
         )}
