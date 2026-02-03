@@ -92,11 +92,11 @@ class AuthStorage {
     localStorage.setItem(this.USER_ROLE_KEY, role);
   }
 
-  getGithubUsername(): string | null {
+  getGitHubUsername(): string | null {
     return localStorage.getItem(this.GITHUB_USERNAME_KEY);
   }
 
-  setGithubUsername(username: string): void {
+  setGitHubUsername(username: string): void {
     localStorage.setItem(this.GITHUB_USERNAME_KEY, username);
   }
 

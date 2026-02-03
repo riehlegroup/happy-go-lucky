@@ -178,7 +178,7 @@ export class AuthController implements IAppController {
         token,
         name: user.getName(),
         email: user.getEmailString(),
-        githubUsername: user.getGithubUsername(),
+        githubUsername: user.getGitHubUsername(),
       });
     } catch (error) {
       console.error("Error during login:", error);

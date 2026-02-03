@@ -47,6 +47,10 @@ Run automated tests:
 npm run test
 ```
 
+## Naming
+
+See [docs/naming-guidelines.md](docs/naming-guidelines.md) for the project-wide naming rules (capitalization, file naming, identifiers, API keys, etc.).
+
 
 ## Deployment
 

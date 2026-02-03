@@ -84,7 +84,7 @@ export class CourseManager implements IManager {
    */
   async readCourse(id: number): Promise<Course> {
     const c = await this.oh.getCourse(id, this.db);
-    if (!c) throw new IllegalArgumentException("CourseID not found.");
+    if (!c) throw new IllegalArgumentException("Course ID not found.");
 
     const projects = await this.getProjectsForCourse(c);
     for (const p of projects) {

@@ -10,14 +10,14 @@ const UserPanel: React.FC = () => {
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [githubUsername, setGithubUsername] = useState("");
+  const [githubUsername, setGitHubUsername] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
-  const [githubMessage, setGithubMessage] = useState("");
+  const [githubMessage, setGitHubMessage] = useState("");
   const [user, setUser] = useState<{
     name: string;
     email: string;
-    UserGithubUsername: string;
+    githubUsername: string;
   } | null>(null);
 
   const fetchUserData = async () => {
@@ -29,13 +29,13 @@ const UserPanel: React.FC = () => {
       setUser({
         name: userName,
         email: userEmail,
-        UserGithubUsername: "",
+        githubUsername: "",
       });
 
       try {
-        const githubUser = await usersApi.getGithubUsername(userEmail);
-        setGithubUsername(githubUser);
-        setUser((prev) => prev ? { ...prev, UserGithubUsername: githubUser } : null);
+        const githubUser = await usersApi.getGitHubUsername(userEmail);
+        setGitHubUsername(githubUser);
+        setUser((prev) => (prev ? { ...prev, githubUsername: githubUser } : null));
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -100,31 +100,31 @@ const UserPanel: React.FC = () => {
     }
   };
 
-  const handleAddGithubUsername = async () => {
+  const handleAddGitHubUsername = async () => {
     if (!user?.email) {
-      setGithubMessage("User email not available. Please log in again.");
+    setGitHubMessage("User email not available. Please log in again.");
       return;
     }
 
     if (!githubUsername || githubUsername.trim() === "") {
-      setGithubMessage("GitHub username cannot be empty");
+    setGitHubMessage("GitHub username cannot be empty");
       return;
     }
 
     try {
-      const data = await usersApi.updateGithubUsername({
+      const data = await usersApi.updateGitHubUsername({
         userEmail: user.email,
-        newGithubUsername: githubUsername.trim(),
+        newGitHubUsername: githubUsername.trim(),
       });
 
-      setGithubMessage(data.message || "GitHub username updated successfully!");
+  setGitHubMessage(data.message || "GitHub username updated successfully!");
       if (data.message.includes("successfully")) {
-        const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
+        const updatedUser = { ...user, githubUsername: githubUsername };
         setUser(updatedUser);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setGithubMessage(error.message);
+        setGitHubMessage(error.message);
       }
     }
   };
@@ -137,7 +137,7 @@ const UserPanel: React.FC = () => {
       await handlePasswordChange();
     }
     if (githubUsername) {
-      await handleAddGithubUsername();
+      await handleAddGitHubUsername();
     }
   };
 
@@ -179,7 +179,7 @@ const UserPanel: React.FC = () => {
               label="GitHub Username"
               placeholder="Enter your GitHub username"
               value={githubUsername}
-              onChange={(e) => setGithubUsername(e.target.value)}
+              onChange={(e) => setGitHubUsername(e.target.value)}
             />
             {githubMessage && (
               <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
@@ -194,10 +194,10 @@ const UserPanel: React.FC = () => {
                 onClick={() => {
                   setNewEmail("");
                   setNewPassword("");
-                  setGithubUsername("");
+                  setGitHubUsername("");
                   setEmailMessage("");
                   setPasswordMessage("");
-                  setGithubMessage("");
+                  setGitHubMessage("");
                 }}
               >
                 Reset
