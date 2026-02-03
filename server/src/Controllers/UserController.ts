@@ -5,6 +5,7 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { UserStatus, UserStatusEnum } from "../ValueTypes/UserStatus";
 
 /**
  * Controller for handling user-related HTTP requests.
@@ -68,21 +69,73 @@ export class UserController implements IAppController {
   async updateUserStatus(req: Request, res: Response): Promise<void> {
     const { userEmail, status } = req.body;
 
-    if (!userEmail || !status) {
+    if (typeof userEmail !== "string" || typeof status !== "string" || !userEmail || !status) {
       res.status(400).json({ message: "Please provide email and status" });
       return;
     }
 
-    if (status == "suspended") {
-      await this.sendSuspendedEmail(userEmail);
-    } else if (status == "removed") {
-      await this.sendRemovedEmail(userEmail);
+    if (!Object.values(UserStatusEnum).includes(status as UserStatusEnum)) {
+      res.status(400).json({ message: `Invalid user status: ${status}` });
+      return;
     }
 
     try {
-      await this.db.run("UPDATE users SET status = ? WHERE email = ?", [status, userEmail]);
+      const row = await this.db.get<{ status: string }>(
+        "SELECT status FROM users WHERE email = ?",
+        [userEmail]
+      );
+
+      if (!row) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      const currentStatus = UserStatus.fromString(row.status);
+      const desiredStatus = status as UserStatusEnum;
+
+      if (currentStatus.getStatus() === desiredStatus) {
+        res.status(200).json({ message: "User status updated successfully" });
+        return;
+      }
+
+      let nextStatus: UserStatus;
+      switch (desiredStatus) {
+        case UserStatusEnum.confirmed:
+          nextStatus = currentStatus.confirm();
+          break;
+        case UserStatusEnum.suspended:
+          nextStatus = currentStatus.suspend();
+          break;
+        case UserStatusEnum.removed:
+          nextStatus = currentStatus.remove();
+          break;
+        case UserStatusEnum.unconfirmed:
+          res
+            .status(409)
+            .json({
+              message: `Invalid transition from ${currentStatus.getStatus()} to ${desiredStatus}`,
+            });
+          return;
+      }
+
+      await this.db.run("UPDATE users SET status = ? WHERE email = ?", [
+        nextStatus.getStatus(),
+        userEmail,
+      ]);
+
+      if (nextStatus.is(UserStatusEnum.suspended)) {
+        await this.sendSuspendedEmail(userEmail);
+      } else if (nextStatus.is(UserStatusEnum.removed)) {
+        await this.sendRemovedEmail(userEmail);
+      }
+
       res.status(200).json({ message: "User status updated successfully" });
     } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Invalid transition from")) {
+        res.status(409).json({ message: error.message });
+        return;
+      }
+
       console.error("Error during updating user status:", error);
       res.status(500).json({ message: "Failed to update user status", error });
     }

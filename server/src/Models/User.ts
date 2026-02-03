@@ -3,13 +3,14 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
+import { UserStatus } from "../ValueTypes/UserStatus";
 
 export class User extends Visitor implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
-  protected status: string = "unconfirmed";
+  protected status: UserStatus = UserStatus.unconfirmed();
   protected role: string = "USER"; // @todo: remove and set UserRole
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
@@ -38,7 +39,7 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = reader.readString("status") as string;
+    this.status = UserStatus.fromString(reader.readString("status"));
     this.role = reader.readString("userRole") as string;
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
@@ -56,7 +57,7 @@ export class User extends Visitor implements Serializable {
     } else {
       writer.writeString("email", this.email.toString());
     }
-    writer.writeString("status", this.status);
+    writer.writeString("status", this.status.toString());
     writer.writeString("userRole", this.role);
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
@@ -89,7 +90,7 @@ export class User extends Visitor implements Serializable {
     return this.email;
   }
 
-  public getStatus(): string {
+  public getStatus(): UserStatus {
     return this.status;
   }
 
@@ -130,8 +131,16 @@ export class User extends Visitor implements Serializable {
     this.email = email;
   }
 
-  public setStatus(status: string) {
-    this.status = status;
+  public confirm(): void {
+    this.status = this.status.confirm();
+  }
+
+  public suspend(): void {
+    this.status = this.status.suspend();
+  }
+
+  public remove(): void {
+    this.status = this.status.remove();
   }
 
   public setRole(role: string){

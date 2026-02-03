@@ -206,6 +206,18 @@ describe('User Management API', () => {
       expect(response.body.message).toBe('User status updated successfully');
     });
 
+    it('should reject invalid status transition', async () => {
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/user/status')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({ userEmail: 'removed@test.com', status: 'confirmed' })
+        .expect(409);
+
+      expect(response.body.message).toBe('Invalid transition from removed to confirmed');
+    });
+
     it('should reject missing userEmail', async () => {
       const adminToken = generateAdminToken();
 

@@ -17,6 +17,7 @@ import EmailIcon from "./../../assets/EmailIcon.png";
 
 import { isValidEmail } from "@/utils/emailValidation";
 import usersApi from "@/services/api/users";
+import { useToast } from "@/components/ui/toast";
 
 const userStatus = ["unconfirmed", "confirmed", "suspended", "removed"];
 
@@ -42,39 +43,68 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
     const [status, setStatus] = useState<string>(user.status);
     const [password, setPassword] = useState<string>("");
     const [userRole, setUserRole] = useState<string>(user.userRole);
+    const { toast } = useToast();
 
-    function onSave() {
-        const promises = []
+    async function onSave() {
+        const promises: Promise<unknown>[] = [];
+
         if (githubUsername && githubUsername !== user.githubUsername) {
             promises.push(
                 usersApi.updateGithubUsername({ userEmail: user.email, newGithubUsername: githubUsername })
-                    .catch(console.error)
             );
         }
         if (status !== user.status) {
             promises.push(
-                usersApi.updateUserStatusPost({ userEmail: user.email, status: status })
-                    .catch(console.error)
+                usersApi.updateUserStatus({ userEmail: user.email, status: status })
             );
         }
         if (password) {
             promises.push(
                 usersApi.changePassword({ userEmail: user.email, password: password })
-                    .catch(console.error)
             );
         }
         if (userRole !== user.userRole) {
             promises.push(
                 usersApi.updateUserRole({ email: user.email, role: userRole })
-                    .catch(console.error)
+            );
+        }
+        if (email !== user.email) {
+            promises.push(
+                usersApi.changeEmail({ newEmail: email, oldEmail: user.email })
             );
         }
 
-        Promise.all(promises).then(() =>
-            email !== user.email ?
-                usersApi.changeEmail({ newEmail: email, oldEmail: user.email })
-                    .catch(console.error) : null
-        ).then(() => onClose(true));
+        if (promises.length === 0) {
+            onClose(false);
+            return;
+        }
+
+        const results = await Promise.allSettled(promises);
+        const failures = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+
+        if (failures.length > 0) {
+            const first = failures[0]?.reason;
+            const firstMessage = first instanceof Error ? first.message : String(first);
+            const description =
+                failures.length === 1
+                    ? firstMessage
+                    : `${firstMessage} (+${failures.length - 1} more error(s))`;
+
+            toast({
+                variant: "destructive",
+                title: "Save failed",
+                description,
+            });
+            return;
+        }
+
+        toast({
+            variant: "success",
+            title: "Saved",
+            description: "User updated successfully.",
+            durationMs: 2500,
+        });
+        onClose(true);
     }
 
     function onCancel() {

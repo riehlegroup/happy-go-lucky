@@ -1,6 +1,5 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { initializeDB } from '../databaseInitializer';
 
 /**
  * Generates mock data for development.
@@ -11,10 +10,9 @@ import { hashPassword } from '../Utils/hash';
 async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
   console.log(`Connecting to database at: ${dbPath}`);
 
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
+  // Ensure schema exists before we attempt any cleanup/inserts.
+  // This also creates the default admin user if the DB is empty.
+  const db = await initializeDB(dbPath, true);
 
   try {
     console.log('Starting mock data generation...\n');
