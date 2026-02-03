@@ -6,6 +6,7 @@ import { DatabaseSerializableFactory } from './Serializer/DatabaseSerializableFa
 import { User } from './Models/User';
 import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
+import { UserRole } from './ValueTypes/UserRole';
 import { DEFAULT_USER } from './Config/database';
 
 export async function initializeDB(filename: string, createAdmin = true) {
@@ -42,7 +43,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     admin.setEmail(new Email(email));
     admin.setPassword(await hashPassword(password));
     admin.setStatus('confirmed');
-    admin.setRole("ADMIN");
+    admin.setRole(UserRole.admin());
     await writer.writeRoot(admin);
     console.log(`Default admin user created: (email: '${email}', password: '${password}')`);
   }
