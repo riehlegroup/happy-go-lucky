@@ -1,5 +1,14 @@
 import ApiClient from "./client";
 
+export enum ActivityType {
+    STANDUP_SUBMITTED = "standup_submitted",
+    HAPPINESS_SUBMITTED = "happiness_submitted",
+    USER_JOINED = "user_joined",
+    USER_LEFT = "user_left",
+    PROJECT_CREATED = "project_created",
+    PROJECT_UPDATED = "project_updated",
+}
+
 /**
  * Project Activity Interface
  * Represents a single activity in a project timeline
@@ -10,7 +19,7 @@ export interface ProjectActivity {
     userId: number;
     userName: string;
     userEmail: string;
-    activityType: string;  // e.g., "standup_submitted", "happiness_submitted"
+    activityType: ActivityType;
     activityData: string | null;  // JSON string with extra info
     timestamp: string;
 }
@@ -48,14 +57,15 @@ class ActivitiesApi {
     async logActivity(
         projectName: string,
         userEmail: string,
-        activityType: string,
-        activityData?: any
+        activityType: ActivityType,
+        activityData?: unknown
     ): Promise<void> {
         return this.client.post("/project/activity", {
             projectName,
             userEmail,
             activityType,
-            activityData,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            activityData: activityData as any,
         });
     }
 }

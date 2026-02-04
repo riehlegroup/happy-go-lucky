@@ -1,4 +1,4 @@
-import { ProjectActivity } from "@/services/api/activities";
+import { ActivityType, ProjectActivity } from "@/services/api/activities";
 import { Clock, Users, Smile, MessageSquare } from "lucide-react";
 
 /**
@@ -7,18 +7,22 @@ import { Clock, Users, Smile, MessageSquare } from "lucide-react";
  * @param activityType - The type of activity
  * @returns JSX element representing the icon
  */
-export const getActivityIcon = (activityType: string) => {
+export const getActivityIcon = (activityType: ActivityType) => {
     switch (activityType) {
-        case "standup_submitted":
-            return <MessageSquare className="h-5 w-5 text-blue-500" />;
-        case "happiness_submitted":
-            return <Smile className="h-5 w-5 text-yellow-500" />;
-        case "user_joined":
-            return <Users className="h-5 w-5 text-green-500" />;
-        case "user_left":
-            return <Users className="h-5 w-5 text-red-500" />;
+        case ActivityType.STANDUP_SUBMITTED:
+            return <MessageSquare className="size-5 text-blue-500" />;
+        case ActivityType.HAPPINESS_SUBMITTED:
+            return <Smile className="size-5 text-yellow-500" />;
+        case ActivityType.USER_JOINED:
+            return <Users className="size-5 text-green-500" />;
+        case ActivityType.USER_LEFT:
+            return <Users className="size-5 text-red-500" />;
+        case ActivityType.PROJECT_CREATED:
+            return <Users className="size-5 text-indigo-500" />;
+        case ActivityType.PROJECT_UPDATED:
+            return <MessageSquare className="size-5 text-purple-500" />;
         default:
-            return <Clock className="h-5 w-5 text-gray-500" />;
+            return <Clock className="size-5 text-gray-500" />;
     }
 };
 
@@ -31,7 +35,7 @@ export const getActivityIcon = (activityType: string) => {
  */
 export const getActivityText = (activity: ProjectActivity): string => {
     // Parse additional data if available
-    let activityData: any = null;
+    let activityData: Record<string, unknown> | null = null;
 
     if (activity.activityData) {
         try {
@@ -43,19 +47,41 @@ export const getActivityText = (activity: ProjectActivity): string => {
     }
 
     switch (activity.activityType) {
-        case "standup_submitted":
+        case ActivityType.STANDUP_SUBMITTED:
             return `submitted a standup update`;
 
-        case "happiness_submitted":
-            const happiness = activityData?.happiness;
+        case ActivityType.HAPPINESS_SUBMITTED: {
+            const happiness = activityData?.happiness as number;
             const emoji = happiness >= 4 ? "😊" : happiness >= 3 ? "😐" : "😟";
             return `submitted happiness level ${emoji}`;
+        }
 
-        case "user_joined":
-            return `joined the project`;
+        case ActivityType.USER_JOINED: {
+            const role = activityData?.role as string | undefined;
+            return role ? `joined the project as ${role}` : "joined the project";
+        }
 
-        case "user_left":
+        case ActivityType.USER_LEFT:
             return `left the project`;
+
+        case ActivityType.PROJECT_CREATED: {
+            const projectName = activityData?.name as string | undefined;
+            const courseName = activityData?.courseName as string | undefined;
+            if (projectName && courseName) {
+                return `created project "${projectName}" in course "${courseName}"`;
+            }
+            return "created a project";
+        }
+
+        case ActivityType.PROJECT_UPDATED: {
+            const changes = activityData && typeof activityData === "object"
+                ? Object.keys(activityData)
+                : [];
+            if (changes.length > 0) {
+                return `updated project settings: ${changes.join(", ")}`;
+            }
+            return "updated project settings";
+        }
 
         default:
             return `performed an action`;

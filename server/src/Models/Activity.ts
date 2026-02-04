@@ -178,9 +178,9 @@ export class ProjectCreatedActivity extends Activity {
  * Represents project settings being updated
  */
 export class ProjectUpdatedActivity extends Activity {
-    private changes: Record<string, any>;
+    private changes: Record<string, unknown>;
 
-    constructor(changes: Record<string, any> = {}) {
+    constructor(changes: Record<string, unknown> = {}) {
         super('project_updated');
         this.changes = changes;
         this.validate();
@@ -201,7 +201,7 @@ export class ProjectUpdatedActivity extends Activity {
         return `updated project settings: ${changeKeys.join(', ')}`;
     }
 
-    getChanges(): Record<string, any> {
+    getChanges(): Record<string, unknown> {
         return this.changes;
     }
 }
@@ -212,6 +212,7 @@ export class ProjectUpdatedActivity extends Activity {
  * Ensures type safety and validation
  */
 export class ActivityFactory {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static create(activityType: string, activityData?: any): Activity {
         switch (activityType) {
             case 'standup_submitted':

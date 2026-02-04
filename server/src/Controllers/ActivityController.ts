@@ -2,7 +2,7 @@ import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { IAppController } from "./IAppController";
-import { Activity, ActivityFactory } from "../Models/Activity";
+import { ActivityFactory } from "../Models/Activity";
 
 /**
  * Activity Types - All possible activities that can be tracked
@@ -36,8 +36,18 @@ export interface ProjectActivity {
  * @param value - The value to check
  * @returns True if value is a valid ActivityType
  */
-const isValidActivityType = (value: any): value is ActivityType => {
-    return Object.values(ActivityType).includes(value);
+const isValidActivityType = (value: unknown): value is ActivityType => {
+    return (Object.values(ActivityType) as unknown[]).includes(value);
+};
+
+const isClientErrorMessage = (message: string): boolean => {
+    return (
+        message.includes("Invalid") ||
+        message.includes("requires") ||
+        message.includes("must be") ||
+        message.includes("must be specified") ||
+        message.includes("At least one change")
+    );
 };
 
 /**
@@ -109,10 +119,15 @@ export class ActivityController implements IAppController {
 
             res.json(activities);
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            if (errorMessage.includes("Unknown Project Name!")) {
+                res.status(404).json({ message: "Project not found" });
+                return;
+            }
             console.error("Error fetching project activities:", error);
             res.status(500).json({
                 message: "Failed to retrieve project activities",
-                error: error instanceof Error ? error.message : "Unknown error"
+                error: errorMessage
             });
         }
     }
@@ -154,16 +169,27 @@ export class ActivityController implements IAppController {
 
             // Insert activity into database
             await this.db.run(
-                `INSERT INTO project_activities (projectId, userId, activityType, activityData)
-         VALUES (?, ?, ?, ?)`,
-                [projectId, userId, activityType, activityDataStr]
+                `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp)
+         VALUES (?, ?, ?, ?, ?)`,
+                [projectId, userId, activityType, activityDataStr, activity.timestamp]
             );
 
             res.status(201).json({ message: "Activity logged successfully" });
         } catch (error) {
             console.error("Error logging activity:", error);
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
-            const statusCode = errorMessage.includes("Invalid") ? 400 : 500;
+
+            if (errorMessage.includes("Unknown Project Name!")) {
+                res.status(404).json({ message: "Project not found" });
+                return;
+            }
+
+            if (errorMessage.includes("User not found with email")) {
+                res.status(404).json({ message: "User not found" });
+                return;
+            }
+
+            const statusCode = isClientErrorMessage(errorMessage) ? 400 : 500;
             res.status(statusCode).json({
                 message: "Failed to log activity",
                 error: errorMessage
@@ -187,7 +213,7 @@ export class ActivityController implements IAppController {
         projectName: string,
         userEmail: string,
         activityType: ActivityType,
-        activityData?: any
+        activityData?: unknown
     ): Promise<void> {
         try {
             // Create and validate activity using the Activity class
@@ -200,9 +226,9 @@ export class ActivityController implements IAppController {
 
             // Insert activity
             await db.run(
-                `INSERT INTO project_activities (projectId, userId, activityType, activityData)
-         VALUES (?, ?, ?, ?)`,
-                [projectId, userId, activityType, activityDataStr]
+                `INSERT INTO project_activities (projectId, userId, activityType, activityData, timestamp)
+         VALUES (?, ?, ?, ?, ?)`,
+                [projectId, userId, activityType, activityDataStr, activity.timestamp]
             );
         } catch (error) {
             // Don't throw - activity logging should never break main functionality

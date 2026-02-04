@@ -84,7 +84,7 @@ describe('Activity API', () => {
             const response = await request(app)
                 .get('/project/activities')
                 .query({ projectName: 'Non-Existent Project', limit: '10' })
-                .expect(500);
+                .expect(404);
 
             expect(response.body).toHaveProperty('message');
         });
@@ -96,7 +96,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: ActivityType.STANDUP_SUBMITTED,
                     activityData: null
                 })
@@ -110,7 +110,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: ActivityType.HAPPINESS_SUBMITTED,
                     activityData: { happiness: 5 }
                 })
@@ -123,7 +123,7 @@ describe('Activity API', () => {
             const response = await request(app)
                 .post('/project/activity')
                 .send({
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: ActivityType.USER_JOINED
                 })
                 .expect(400);
@@ -148,7 +148,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com'
+                    userEmail: 'test@test.com'
                 })
                 .expect(400);
 
@@ -160,7 +160,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: 'invalid_activity_type'
                 })
                 .expect(400);
@@ -179,12 +179,24 @@ describe('Activity API', () => {
             ];
 
             for (const activityType of validTypes) {
+                const activityData =
+                    activityType === ActivityType.HAPPINESS_SUBMITTED
+                        ? { happiness: 5 }
+                        : activityType === ActivityType.USER_JOINED
+                            ? { role: 'DEVELOPER' }
+                            : activityType === ActivityType.PROJECT_CREATED
+                                ? { name: 'Test Project', courseName: 'Test Course' }
+                                : activityType === ActivityType.PROJECT_UPDATED
+                                    ? { status: 'active' }
+                                    : null;
+
                 const response = await request(app)
                     .post('/project/activity')
                     .send({
                         projectName: 'Test Project',
-                        userEmail: 'testuser@example.com',
-                        activityType
+                        userEmail: 'test@test.com',
+                        activityType,
+                        activityData
                     });
 
                 // Some may fail due to user/project not existing, but not due to invalid type
@@ -203,7 +215,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: ActivityType.USER_JOINED
                 })
                 .expect(201);
@@ -215,7 +227,7 @@ describe('Activity API', () => {
                 .post('/project/activity')
                 .send({
                     projectName: 'Test Project',
-                    userEmail: 'testuser@example.com',
+                    userEmail: 'test@test.com',
                     activityType: ActivityType.STANDUP_SUBMITTED
                 })
                 .expect(201);

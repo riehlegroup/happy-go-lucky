@@ -1,5 +1,3 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
 import { initializeDB } from '../databaseInitializer';
 
@@ -24,7 +22,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
       await db.run(`DELETE FROM project_activities WHERE projectId IN (
         SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
       )`);
-    } catch (e) {
+    } catch {
       // Table might not exist yet, continue
     }
     await db.run(`DELETE FROM happiness WHERE projectId IN (

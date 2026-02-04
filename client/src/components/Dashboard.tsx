@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
       <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
 
       <div className="mx-auto max-w-7xl p-4 pt-16">
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row">
           {/* Left Column - Main Content */}
           <div className="flex-1 space-y-4">
             {/* Projects Section */}
@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
 
           {/* Right Column - Activity Timeline Sidebar */}
           {selectedProject && (
-            <div className="w-full lg:w-80 sticky top-20 h-fit">
+            <div className="sticky top-20 h-fit w-full lg:w-80">
               <SectionCard title="Recent Activity">
                 <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                   <ActivityTimeline projectName={selectedProject} />

@@ -145,8 +145,8 @@ export async function initializeDB(filename: string, createAdmin = true) {
       activityType TEXT NOT NULL,
       activityData TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (userId) REFERENCES users(id),
-      FOREIGN KEY (projectId) REFERENCES projects(id)
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE
     )
   `);
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
 import activitiesApi, { ProjectActivity } from "@/services/api/activities";
-import { getActivityIcon, getActivityText, formatTimestamp } from "@/utils/activityHelpers.tsx";
+import { getActivityIcon, getActivityText, formatTimestamp } from "@/utils/activityHelpers";
 
 interface ActivityTimelineProps {
     projectName: string;
@@ -63,7 +63,7 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ projectName }) => {
     if (activities.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                <Clock className="h-12 w-12 mb-2 opacity-50" />
+                <Clock className="mb-2 size-12 opacity-50" />
                 <p>No activity yet. Be the first to contribute!</p>
             </div>
         );
@@ -75,20 +75,20 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ projectName }) => {
             {activities.map((activity) => (
                 <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-gray-50"
                 >
                     {/* Activity icon */}
                     <div className="mt-0.5">{getActivityIcon(activity.activityType)}</div>
 
                     {/* Activity details */}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                         <p className="text-sm">
                             <span className="font-medium text-gray-900">
                                 {activity.userName}
                             </span>{" "}
                             <span className="text-gray-600">{getActivityText(activity)}</span>
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="mt-0.5 text-xs text-gray-500">
                             {formatTimestamp(activity.timestamp)}
                         </p>
                     </div>

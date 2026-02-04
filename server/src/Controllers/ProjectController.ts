@@ -214,7 +214,8 @@ export class ProjectController implements IAppController {
         this.db,
         projectName,
         memberEmail.toString(),
-        ActivityType.USER_JOINED
+        ActivityType.USER_JOINED,
+        { role: memberRole }
       );
 
       res.status(201).json({ message: "Joined project successfully" });
