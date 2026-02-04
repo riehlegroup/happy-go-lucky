@@ -22,16 +22,16 @@ export class GitHubRepoURL {
 
         if (!this.isValidProtocol())
             throw new IllegalArgumentException("Unsupported protocol");
-        
+
         if (!this.isRepo())
             throw new IllegalArgumentException("The URL has no repository structure");
-        }
-    
+    }
+
     /**
      * @returns The whole URL as a string
-    */
-   public asString() {
-       return this.url.href;
+     */
+    public asString() {
+        return this.url.href;
     }
 
     /**
