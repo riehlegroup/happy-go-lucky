@@ -231,6 +231,47 @@ describe('Authentication API', () => {
       expect(response.body.email).toBe('test@test.com');
       expect(response.body.githubUsername).toBeDefined();
     });
+
+    // exp - iat is the token's lifetime
+    it('should return token with 1 hour expiry when rememberMe is false', async () => {
+      const response = await request(app)
+        .post('/session')
+        .send({ email: 'test@test.com', password: 'Test123!', rememberMe: false })
+        .expect(200);
+
+      const decoded = JSON.parse(Buffer.from(response.body.token.split('.')[1], 'base64').toString());
+      expect(decoded.exp - decoded.iat).toBe(3600); // 1 hour
+    });
+
+    it('should return token with 30 day expiry when rememberMe is true', async () => {
+      const response = await request(app)
+        .post('/session')
+        .send({ email: 'test@test.com', password: 'Test123!', rememberMe: true })
+        .expect(200);
+
+      const decoded = JSON.parse(Buffer.from(response.body.token.split('.')[1], 'base64').toString());
+      expect(decoded.exp - decoded.iat).toBe(2592000); // 30 days
+    });
+
+    it('should default to 1 hour expiry when rememberMe is not provided', async () => {
+      const response = await request(app)
+        .post('/session')
+        .send({ email: 'test@test.com', password: 'Test123!' })
+        .expect(200);
+
+      const decoded = JSON.parse(Buffer.from(response.body.token.split('.')[1], 'base64').toString());
+      expect(decoded.exp - decoded.iat).toBe(3600); // 1 hour (default)
+    });
+
+    it('should reject login when rememberMe is not a boolean', async () => {
+      const response = await request(app)
+        .post('/session')
+        .send({ email: 'test@test.com', password: 'Test123!', rememberMe: 'true' })
+        .expect(400);
+
+      expect(response.body.message).toBe('rememberMe must be a boolean');
+      expect(response.body.token).toBeUndefined();
+    });
   });
 
   describe('POST /user/password/forgotMail', () => {
