@@ -5,10 +5,11 @@ import { LoginResponse, RegisterResponse } from "@/types/api";
  * Authentication API methods
  */
 const authApi = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
+  login: async (email: string, password: string, rememberMe: boolean = false): Promise<LoginResponse> => {
     return ApiClient.getInstance().post<LoginResponse>("/session", {
       email,
       password,
+      rememberMe,
     });
   },
 

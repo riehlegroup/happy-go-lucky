@@ -115,10 +115,15 @@ export class AuthController implements IAppController {
   }
 
   async login(req: Request, res: Response): Promise<void> {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const passwordObj = Password.create(password);
     if (!email || !passwordObj || typeof email !== "string") {
       res.status(400).json({ message: "Email and password are required" });
+      return;
+    }
+
+    if (rememberMe !== undefined && typeof rememberMe !== "boolean") {
+      res.status(400).json({ message: "rememberMe must be a boolean" });
       return;
     }
 
@@ -171,8 +176,9 @@ export class AuthController implements IAppController {
         return;
       }
 
+      // Token expiry: 30 days if rememberMe, otherwise 1 hour
       const token = jwt.sign({ id: user.getId() }, process.env.JWT_SECRET || "your_jwt_secret", {
-        expiresIn: "1h",
+        expiresIn: rememberMe === true ? "30d" : "1h",
       });
       res.status(200).json({
         token,
