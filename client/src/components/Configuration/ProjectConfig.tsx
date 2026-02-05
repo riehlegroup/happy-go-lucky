@@ -12,6 +12,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
 import Card from "@/components/common/Card";
+import MessageBanner from "@/components/common/MessageBanner";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ const ProjectConfig: React.FC = () => {
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedAvailableProject, setSelectedAvailableProject] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [courses, setCourses] = useState<{ id: number; courseName: string }[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<{ id: number; courseName: string } | null>(null);
   const [user, setUser] = useState<{
@@ -171,23 +172,23 @@ const ProjectConfig: React.FC = () => {
           "/user/project/url",
           { userEmail, URL: newURL, projectName: selectedProject }
         );
-        setMessage(data.message || "URL changed successfully");
+        setMessage({ text: data.message || "URL changed successfully", type: "success" });
         setURL(newURL);
         setNewURL("");
       } catch (error: unknown) {
         if (error instanceof Error) {
-          setMessage(error.message);
+          setMessage({ text: error.message, type: "error" });
         } else {
-          setMessage("An unexpected error occurred");
+          setMessage({ text: "An unexpected error occurred", type: "error" });
         }
       }
     } else {
-      setMessage("User email or selected project is missing");
+      setMessage({ text: "User email or selected project is missing", type: "error" });
     }
   };
   const handleJoin = async (projectName: string, role: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -197,21 +198,22 @@ const ProjectConfig: React.FC = () => {
         { projectName, memberName: user.name, memberRole: role, memberEmail: user.email }
       );
 
-      setMessage(data.message || "Successfully joined the project!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Successfully joined the project!";
+      setMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         window.location.reload();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       }
     }
   };
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -220,21 +222,22 @@ const ProjectConfig: React.FC = () => {
         `/user/project?projectName=${projectName}&memberEmail=${user.email}`
       );
 
-      setMessage(data.message || "Successfully left the project!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Successfully left the project!";
+      setMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         window.location.reload();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       }
     }
   };
 
   const handleCreate = async (projectName: string) => {
     if (!selectedCourse?.id) {
-      setMessage("No course selected");
+      setMessage({ text: "No course selected", type: "error" });
       return;
     }
 
@@ -244,15 +247,16 @@ const ProjectConfig: React.FC = () => {
         { courseId: selectedCourse.id, projectName }
       );
 
-      setMessage(data.message || "Project created successfully");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Project created successfully";
+      setMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         window.location.reload();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -314,7 +318,7 @@ const ProjectConfig: React.FC = () => {
                               if (open) {
                                 handleProjectChange(project);
                               } else {
-                                setMessage("");
+                                setMessage(null);
                                 setNewURL("");
                               }
                             }}>
@@ -343,11 +347,7 @@ const ProjectConfig: React.FC = () => {
                                     value={newURL}
                                     onChange={(e) => setNewURL(e.target.value)}
                                   />
-                                  {message && (
-                                    <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                                      {message}
-                                    </div>
-                                  )}
+                                  {message && <MessageBanner message={message} />}
                                 </div>
                                 <DialogFooter>
                                   <Button onClick={handleChangeURL}>Save</Button>
@@ -414,11 +414,7 @@ const ProjectConfig: React.FC = () => {
                           value={memberRole}
                           onChange={(e) => setMemberRole(e.target.value)}
                         />
-                        {message && (
-                          <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                            {message}
-                          </div>
-                        )}
+                        {message && <MessageBanner message={message} />}
                       </div>
                       <DialogFooter>
                         <Button
@@ -455,11 +451,7 @@ const ProjectConfig: React.FC = () => {
                         validateProjectName(e.target.value);
                       }}
                     />
-                    {message && (
-                      <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                        {message}
-                      </div>
-                    )}
+                    {message && <MessageBanner message={message} />}
                   </div>
                   <DialogFooter>
                     <Button

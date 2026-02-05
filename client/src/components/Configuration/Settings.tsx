@@ -12,6 +12,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
 import Card from "@/components/common/Card";
+import MessageBanner from "@/components/common/MessageBanner";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
 
@@ -19,9 +20,9 @@ const Settings: React.FC = () => {
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [emailMessage, setEmailMessage] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState("");
-  const [githubMessage, setGithubMessage] = useState("");
+  const [emailMessage, setEmailMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [passwordMessage, setPasswordMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [githubMessage, setGithubMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [githubUsername, setGithubUsername] = useState("");
 
   const [user, setUser] = useState<{
@@ -60,7 +61,7 @@ const Settings: React.FC = () => {
 
   const handleEmailChange = async () => {
     if (!user) {
-      setEmailMessage("User data not available. Please log in again.");
+      setEmailMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -70,8 +71,9 @@ const Settings: React.FC = () => {
         newEmail: newEmail,
       });
 
-      setEmailMessage(data.message || "Email changed successfully!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Email changed successfully!";
+      setEmailMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         const updatedUser = { ...user, email: newEmail };
         setUser(updatedUser);
         AuthStorage.getInstance().setEmail(newEmail);
@@ -79,14 +81,14 @@ const Settings: React.FC = () => {
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setEmailMessage(error.message);
+        setEmailMessage({ text: error.message, type: "error" });
       }
     }
   };
 
   const handlePasswordChange = async () => {
     if (!user) {
-      setPasswordMessage("User data not available. Please log in again.");
+      setPasswordMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -96,23 +98,24 @@ const Settings: React.FC = () => {
         password: newPassword,
       });
 
-      setPasswordMessage(data.message || "Password changed successfully!");
+      const responseMessage = data.message || "Password changed successfully!";
+      setPasswordMessage({ text: responseMessage, type: "success" });
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setPasswordMessage(error.message);
+        setPasswordMessage({ text: error.message, type: "error" });
       }
     }
   };
 
   const handleAddGithubUsername = async () => {
     if (!githubUsername) {
-      setGithubMessage("GitHub username cannot be empty");
+      setGithubMessage({ text: "GitHub username cannot be empty", type: "error" });
       return;
     }
 
     if (!user?.email) {
-      setGithubMessage("User email not available");
+      setGithubMessage({ text: "User email not available", type: "error" });
       return;
     }
 
@@ -122,15 +125,16 @@ const Settings: React.FC = () => {
         newGithubUsername: githubUsername,
       });
 
-      setGithubMessage(data.message || "GitHub username added successfully!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "GitHub username added successfully!";
+      setGithubMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         const updatedUser = { ...user, UserGithubUsername: githubUsername } as typeof user;
         setUser(updatedUser);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setGithubMessage(error.message);
+        setGithubMessage({ text: error.message, type: "error" });
       }
     }
   };
@@ -167,11 +171,7 @@ const Settings: React.FC = () => {
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                       />
-                      {emailMessage && (
-                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                          {emailMessage}
-                        </div>
-                      )}
+                      {emailMessage && <MessageBanner message={emailMessage} />}
                     </div>
                     <DialogFooter>
                       <Button onClick={handleEmailChange}>Change Email</Button>
@@ -206,11 +206,7 @@ const Settings: React.FC = () => {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                       />
-                      {passwordMessage && (
-                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                          {passwordMessage}
-                        </div>
-                      )}
+                      {passwordMessage && <MessageBanner message={passwordMessage} />}
                     </div>
                     <DialogFooter>
                       <Button onClick={handlePasswordChange}>Change Password</Button>
@@ -245,11 +241,7 @@ const Settings: React.FC = () => {
                         value={githubUsername}
                         onChange={(e) => setGithubUsername(e.target.value)}
                       />
-                      {githubMessage && (
-                        <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                          {githubMessage}
-                        </div>
-                      )}
+                      {githubMessage && <MessageBanner message={githubMessage} />}
                     </div>
                     <DialogFooter>
                       <Button onClick={handleAddGithubUsername}>Confirm</Button>

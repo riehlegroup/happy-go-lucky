@@ -2,22 +2,23 @@ import React, { useState } from "react";
 import "./AuthScreens.css";
 import EmailIcon from "./../../assets/EmailIcon.png";
 import authApi from "@/services/api/auth";
+import MessageBanner from "@/components/common/MessageBanner";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
       await authApi.forgotPassword(email);
-      setMessage("Password reset link sent! Please check your email.");
+      setMessage({ text: "Password reset link sent! Please check your email.", type: "success" });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -53,7 +54,7 @@ const ForgotPassword = () => {
             </button>
           </div>
         </form>
-        {message && <div className="message">{message}</div>}
+        {message && <MessageBanner message={message} className="mt-4" />}
       </div>
     </>
   );

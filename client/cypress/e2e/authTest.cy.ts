@@ -20,7 +20,7 @@ describe('User Authentication Test', () => {
       cy.contains('Sign Up').click();
   
 
-      cy.get('.message').should('contain', 'Success!'); 
+      cy.get('[data-testid="message-banner"]').should('contain', 'Success!'); 
   
       // Verify that the user is redirected to the dashboard or the login page
       cy.url().should('include', '/dashboard'); 

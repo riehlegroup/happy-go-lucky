@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import TopNavBar from "../common/TopNavBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SectionCard from "@/components/common/SectionCard";
+import MessageBanner from "@/components/common/MessageBanner";
 import moment from "moment";
 import {
   LineChart,
@@ -37,7 +38,7 @@ const Happiness: React.FC = (): React.ReactNode => {
     id: number;
     submissionDate: string;
   } | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [userCurrentHappiness, setUserCurrentHappiness] = useState<number | null>(null);
   const [courseId, setCourseId] = useState<number | null>(null);
   const [allSubmissionDates, setAllSubmissionDates] = useState<string[]>([]);
@@ -151,13 +152,14 @@ const Happiness: React.FC = (): React.ReactNode => {
       );
 
       // Show success message
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setMessage({ text: "Happiness updated successfully", type: "success" });
+      setTimeout(() => setMessage(null), 3000);
 
       // Reload happiness data to update the display
       await fetchHappinessData();
     } catch (error) {
       console.error("Error updating happiness:", error);
+      setMessage({ text: "Failed to update happiness", type: "error" });
     }
   };
 
@@ -323,11 +325,7 @@ const Happiness: React.FC = (): React.ReactNode => {
                         );
                       })}
                     </div>
-                    {showSuccess && (
-                      <div className="rounded-md bg-green-50 p-3 text-center text-sm font-medium text-green-700">
-                        Happiness updated successfully
-                      </div>
-                    )}
+                    {message && <MessageBanner message={message} className="text-center font-medium" />}
                   </div>
                 </div>
               </>

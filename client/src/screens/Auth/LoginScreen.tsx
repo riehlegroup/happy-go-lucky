@@ -5,6 +5,7 @@ import * as Tabs from "@radix-ui/react-tabs";
 import Input from "@/components/common/Input";
 import EmailWidget from "@/components/common/EmailWidget.tsx";
 import PasswordWidget from "@/components/common/PasswordWidget";
+import MessageBanner from "@/components/common/MessageBanner";
 import authApi from "@/services/api/auth";
 import AuthStorage from "@/services/storage/auth";
 
@@ -15,7 +16,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Updates email based on the value from EmailWidget
   const handleEmailChange = (newEmail: string) => {
@@ -40,7 +41,7 @@ const LoginScreen = () => {
 
       if (action === "Registration") {
         const data = await authApi.register(email, password, name);
-        setMessage(data.message || "Registration successful! Please check your email to confirm your account.");
+        setMessage({ text: data.message || "Registration successful! Please check your email to confirm your account.", type: "success" });
       } else {
         const data = await authApi.login(email, password);
         console.log("Response data:", data);
@@ -52,14 +53,14 @@ const LoginScreen = () => {
           githubUsername: data.githubUsername,
         });
 
-        setMessage("Login successful!");
+        setMessage({ text: "Login successful!", type: "success" });
         navigate("/dashboard");
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -186,11 +187,7 @@ const LoginScreen = () => {
               </Tabs.Content>
             </Form.Root>
 
-            {message && (
-              <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                {message}
-              </div>
-            )}
+            {message && <MessageBanner message={message} className="mt-4" />}
           </div>
         </Tabs.Root>
       </div>

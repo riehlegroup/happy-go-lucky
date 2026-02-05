@@ -19,6 +19,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
 import Card from "@/components/common/Card";
+import MessageBanner from "@/components/common/MessageBanner";
 import AuthStorage from "@/services/storage/auth";
 import coursesApi from "@/services/api/courses";
 import projectsApi from "@/services/api/projects";
@@ -32,7 +33,7 @@ const CourseParticipation: React.FC = () => {
   };
 
   const [role, setRole] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
 
   const [user, setUser] = useState<{
@@ -164,7 +165,7 @@ const CourseParticipation: React.FC = () => {
 
   const handleJoin = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -179,21 +180,22 @@ const CourseParticipation: React.FC = () => {
         }
       );
 
-      setMessage(data.message || "Successfully joined the project!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Successfully joined the project!";
+      setMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         window.location.reload();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       }
     }
   };
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage({ text: "User data not available. Please log in again.", type: "error" });
       return;
     }
 
@@ -202,14 +204,15 @@ const CourseParticipation: React.FC = () => {
         `/user/project?projectName=${projectName}&memberEmail=${user.email}`
       );
 
-      setMessage(data.message || "Successfully left the project!");
-      if (data.message.includes("successfully")) {
+      const responseMessage = data.message || "Successfully left the project!";
+      setMessage({ text: responseMessage, type: "success" });
+      if (responseMessage.toLowerCase().includes("successfully")) {
         window.location.reload();
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error.message);
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       }
     }
   };
@@ -259,17 +262,13 @@ const CourseParticipation: React.FC = () => {
                             <p className="text-sm">
                               Are you sure you want to leave {project.projectName}?
                             </p>
-                            {message && (
-                              <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                                {message}
-                              </div>
-                            )}
+                            {message && <MessageBanner message={message} />}
                           </div>
                           <DialogFooter>
                             <Button
                               variant="secondary"
                               onClick={() => {
-                                setMessage("");
+                                setMessage(null);
                               }}
                             >
                               Cancel
@@ -336,18 +335,14 @@ const CourseParticipation: React.FC = () => {
                               value={role}
                               onChange={(e) => setRole(e.target.value)}
                             />
-                            {message && (
-                              <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                                {message}
-                              </div>
-                            )}
+                            {message && <MessageBanner message={message} />}
                           </div>
                           <DialogFooter>
                             <Button
                               variant="secondary"
                               onClick={() => {
                                 setRole("");
-                                setMessage("");
+                                setMessage(null);
                               }}
                             >
                               Cancel

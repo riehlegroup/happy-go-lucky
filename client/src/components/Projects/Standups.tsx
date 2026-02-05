@@ -4,6 +4,7 @@ import TopNavBar from "../common/TopNavBar";
 import Button from "@/components/common/Button";
 import Textarea from "@/components/common/Textarea";
 import SectionCard from "@/components/common/SectionCard";
+import MessageBanner from "@/components/common/MessageBanner";
 import AuthStorage from "@/services/storage/auth";
 import projectsApi from "@/services/api/projects";
 
@@ -27,13 +28,13 @@ const Standups: React.FC = () => {
   const [doneText, setDoneText] = useState("");
   const [plansText, setPlansText] = useState("");
   const [challengesText, setChallengesText] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const handleSendStandups = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!projectName || !userName) {
-      setMessage("Missing project or user information");
+      setMessage({ text: "Missing project or user information", type: "error" });
       return;
     }
 
@@ -46,15 +47,15 @@ const Standups: React.FC = () => {
         challengesText,
       });
 
-      setMessage("Standup email sent successfully");
+      setMessage({ text: "Standup email sent successfully", type: "success" });
       setDoneText("");
       setPlansText("");
       setChallengesText("");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -106,11 +107,7 @@ const Standups: React.FC = () => {
               </Button>
             </div>
 
-            {message && (
-              <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">
-                {message}
-              </div>
-            )}
+            {message && <MessageBanner message={message} />}
           </form>
         </SectionCard>
       </div>

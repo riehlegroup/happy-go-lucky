@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import authApi from "@/services/api/auth";
+import MessageBanner from "@/components/common/MessageBanner";
 import "./AuthScreens.css";
 
 const useQuery = () => {
@@ -11,7 +12,7 @@ const ResetPassword = () => {
   const query = useQuery();
   const token = query.get("token");
   const [newPassword, setNewPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     console.log("Token from URL:", token);
@@ -21,18 +22,18 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage("Invalid or missing reset token");
+      setMessage({ text: "Invalid or missing reset token", type: "error" });
       return;
     }
 
     try {
       await authApi.resetPassword(token, newPassword);
-      setMessage("Password has been reset successfully!");
+      setMessage({ text: "Password has been reset successfully!", type: "success" });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -62,7 +63,7 @@ const ResetPassword = () => {
           </button>
         </div>
       </form>
-      {message && <div className="message">{message}</div>}
+      {message && <MessageBanner message={message} className="mt-4" />}
     </div>
   );
 };

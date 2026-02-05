@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authApi from "@/services/api/auth";
+import MessageBanner from "@/components/common/MessageBanner";
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search); // search: '?query=string'
 };
 
 const ConfirmedEmail = () => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const navigate = useNavigate();
   const query = useQuery();
   const token = query.get("token");
@@ -22,19 +23,19 @@ const ConfirmedEmail = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage("Invalid or missing confirmation token");
+      setMessage({ text: "Invalid or missing confirmation token", type: "error" });
       return;
     }
 
     try {
       await authApi.confirmEmail(token);
-      setMessage("Email has been confirmed successfully!");
+      setMessage({ text: "Email has been confirmed successfully!", type: "success" });
       setTimeout(() => navigate("/login"), 2000);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setMessage(error.message);
+        setMessage({ text: error.message, type: "error" });
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage({ text: "An unexpected error occurred", type: "error" });
       }
     }
   };
@@ -57,7 +58,7 @@ const ConfirmedEmail = () => {
           </button>
         </div>
 
-        {message && <div className="message">{message}</div>}
+        {message && <MessageBanner message={message} className="mt-4" />}
       </div>
     </>
   );

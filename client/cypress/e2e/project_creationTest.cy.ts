@@ -30,7 +30,7 @@ beforeEach(() => {
         expect(interception.response?.statusCode).to.eq(201); 
       });
   
-      cy.get('.message').should('contain.text', 'Success');
+      cy.get('[data-testid="message-banner"]').should('contain.text', 'Success');
     });
   
     it('should create a new project', () => {
@@ -44,7 +44,7 @@ beforeEach(() => {
         expect(interception.response?.statusCode).to.eq(201); 
       });
   
-      cy.get('.message').should('contain.text', 'Success');
+      cy.get('[data-testid="message-banner"]').should('contain.text', 'Success');
     });
   });
   

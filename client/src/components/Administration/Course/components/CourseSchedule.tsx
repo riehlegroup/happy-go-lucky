@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Course } from "../types";
 import Button from "@/components/common/Button";
+import MessageBanner from "@/components/common/MessageBanner";
 import { DateInput } from "./CourseForm";
 import courseApi from "../api";
 
@@ -242,17 +243,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
           </div>
         </div>
 
-        {message && (
-          <div
-            className={`mb-4 w-full rounded p-3 ${
-              message.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+        {message && <MessageBanner message={message} className="mb-4 w-full" />}
 
         <div className="flex justify-center gap-2">
           <Button
