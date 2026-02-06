@@ -42,7 +42,7 @@
 - **Example:** README.md, NAMING_GUIDELINE.md
 
 ## 10. General guidelines
-- **Avoid Abbreviations or use a uniform system** (e.g. „config“ instead of „cfg“)
+- **Avoid Abbreviations or use a uniform system** (e.g. "config" instead of "cfg")
 - **Currently used Abbreviations:** 
   - "db" (Database)
   - "oh" (ObjectHandler)
