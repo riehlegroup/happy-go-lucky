@@ -43,5 +43,10 @@
 
 ## 10. General Guidelines
 - **Avoid Abbreviations or use a uniform system** (e.g. „config“ instead of „cfg“)
+- **Currently used Abbreviations:** 
+  - "db" (Database)
+  - "oh" (ObjectHandler)
+  - "dbsf" (DatabaseSerializableFactory)
+  - "cm", "pm", "tm" (CourseManager, ProjectManager, TermManager)
 - **No special characters**
 - **English vocabulary**
