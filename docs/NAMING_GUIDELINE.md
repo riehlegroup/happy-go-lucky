@@ -34,7 +34,7 @@
 - **Example:** UserRole, ProjectStatus
 
 ## 8. Enum-Names (TypeScript)
-- **Rule:** PascalCase für Enum, UPPER_SNAKE_CASE for Values
+- **Rule:** PascalCase for enum, UPPER_SNAKE_CASE for values
 - **Example:** UserRole.ADMIN, UserRole.STUDENT
 
 ## 9. Documentation files
