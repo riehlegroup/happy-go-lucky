@@ -1,6 +1,8 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import dotenv from 'dotenv';
 import { hashPassword } from '../Utils/hash';
+import { initializeDB } from '../databaseInitializer';
+
+dotenv.config();
 
 /**
  * Generates mock data for development.
@@ -8,13 +10,13 @@ import { hashPassword } from '../Utils/hash';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/myDatabase.db', deleteOnly: boolean = false) {
+async function generateMockData(
+  dbPath: string = process.env.DB_PATH || './myDatabase.db',
+  deleteOnly: boolean = false
+) {
   console.log(`Connecting to database at: ${dbPath}`);
 
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
+  const db = await initializeDB(dbPath, !deleteOnly);
 
   try {
     console.log('Starting mock data generation...\n');
@@ -239,7 +241,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
 
 const args = process.argv.slice(2);
 const deleteOnly = args.includes('--delete-only');
-const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
+const dbPath = args.find(arg => !arg.startsWith('--')) || process.env.DB_PATH || './myDatabase.db';
 
 generateMockData(dbPath, deleteOnly)
   .then(() => {

@@ -41,6 +41,7 @@ dist
 # User files
 /server/database.sqlite
 /server/myDatabase.db
+/myDatabase.db
 
 # AI agents
 CLAUDE.md
