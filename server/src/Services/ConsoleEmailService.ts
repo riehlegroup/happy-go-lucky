@@ -1,10 +1,10 @@
-import { IEmailService } from "./IEmailService";
+import { EmailService } from "./EmailService";
 
 /**
  * Development email service that logs emails to console instead of sending them.
  * Used in non-production environments to avoid sending real emails during development/testing.
  */
-export class ConsoleEmailService implements IEmailService {
+export class ConsoleEmailService implements EmailService {
   private senderName: string;
   private senderAddress: string;
 

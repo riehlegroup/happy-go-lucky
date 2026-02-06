@@ -4,7 +4,7 @@ import { Course } from "@/components/Administration/Course/types";
 import termApi from "@/components/Administration/Term/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
 
-const DEFAULT: Term = {
+const defaultTerm: Term = {
   id: 0,
   termName: "",
   displayName: "",
@@ -158,7 +158,7 @@ export const useTerm = () => {
   return {
     message,
     clearMessage,
-    DEFAULT,
+    defaultTerm,
     terms,
     setTerms,
     getTerms,

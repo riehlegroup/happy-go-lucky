@@ -4,7 +4,7 @@ import { CourseManager } from "../Managers/CourseManager";
 import { Course } from "../Models/Course";
 import { Exception } from "../Exceptions/Exception";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
-import { IAppController } from "./IAppController";
+import { AppController } from "./AppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
 
@@ -13,7 +13,7 @@ import { checkAdmin } from "../Middleware/checkAdmin";
  * Connects API routes to the CourseManager, which interacts with the database.
  * Each method processing HTTP requests and returning JSON responses.
  */
-export class CourseController implements IAppController {
+export class CourseController implements AppController {
   private cm: CourseManager;
 
   constructor(private db: Database) {

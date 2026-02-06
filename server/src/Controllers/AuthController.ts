@@ -12,8 +12,8 @@ import { DatabaseWriter } from "../Serializer/DatabaseWriter";
 import { DatabaseResultSetReader } from "../Serializer/DatabaseResultSetReader";
 import { User } from "../Models/User";
 import { Email } from "../ValueTypes/Email";
-import { IAppController } from "./IAppController";
-import { IEmailService } from "../Services/IEmailService";
+import { AppController } from "./AppController";
+import { EmailService } from "../Services/EmailService";
 
 dotenv.config();
 
@@ -21,8 +21,8 @@ dotenv.config();
  * Controller for handling authentication-related HTTP requests.
  * Manages user registration, login, password reset, and email confirmation.
  */
-export class AuthController implements IAppController {
-  constructor(private db: Database, private emailService: IEmailService) {}
+export class AuthController implements AppController {
+  constructor(private db: Database, private emailService: EmailService) {}
 
   /**
    * Initializes API routes for authentication.
@@ -154,17 +154,17 @@ export class AuthController implements IAppController {
 
       let st: string = user.getStatus();
       let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
-      if (userStatus.getStatus() == UserStatusEnum.unconfirmed) {
+      if (userStatus.getStatus() == UserStatusEnum.UNCONFIRMED) {
         res
           .status(400)
           .json({ message: "Email not confirmed. Please contact system admin." });
         return;
-      } else if (userStatus.getStatus() == UserStatusEnum.suspended) {
+      } else if (userStatus.getStatus() == UserStatusEnum.SUSPENDED) {
         res.status(400).json({
           message: "User account is suspended. Please contact system admin.",
         });
         return;
-      } else if (userStatus.getStatus() == UserStatusEnum.removed) {
+      } else if (userStatus.getStatus() == UserStatusEnum.REMOVED) {
         res.status(400).json({
           message: "User account is removed. Please contact system admin.",
         });
@@ -355,7 +355,7 @@ export class AuthController implements IAppController {
       }
       let st: string = user.getStatus();
       let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
-      if (userStatus.getStatus() != UserStatusEnum.unconfirmed) {
+      if (userStatus.getStatus() != UserStatusEnum.UNCONFIRMED) {
         res
           .status(400)
           .json({ message: "User not found or not unconfirmed" });

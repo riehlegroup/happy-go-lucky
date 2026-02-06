@@ -1,9 +1,9 @@
 export enum PasswordStrength {
-  VeryWeak = 1,
-  Weak = 2,
-  Medium = 3,
-  Strong = 4,
-  VeryStrong = 5,
+  VERY_WEAK = 1,
+  WEAK = 2,
+  MEDIUM = 3,
+  STRONG = 4,
+  VERY_STRONG = 5,
 }
 
 export class Password {
@@ -37,7 +37,7 @@ export class Password {
   private static calculatePasswordStrength(value: string): PasswordStrength {
     // password needs to be at least 8 characters long
     if (value.length < 8) {
-      return PasswordStrength.VeryWeak;
+      return PasswordStrength.VERY_WEAK;
     }
 
     // mixed case, special characters, numbers and length > 12 contribute to password strength

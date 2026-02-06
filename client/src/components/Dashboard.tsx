@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/Select";
 import TopNavBar from "@/components/common/TopNavBar";
 import Button from "@/components/common/Button";
 import SectionCard from "@/components/common/SectionCard";

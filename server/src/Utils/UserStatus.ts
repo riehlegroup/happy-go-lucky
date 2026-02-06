@@ -1,8 +1,8 @@
 export enum UserStatusEnum {
-    confirmed = "confirmed",
-    unconfirmed = "unconfirmed",
-    suspended = "suspended",
-    removed = "removed",
+    CONFIRMED = "confirmed",
+    UNCONFIRMED = "unconfirmed",
+    SUSPENDED = "suspended",
+    REMOVED = "removed",
 }
 
 export class UserStatus {
@@ -10,13 +10,13 @@ export class UserStatus {
 
     // Define valid transitions between states
     private static validTransitions: Record<UserStatusEnum, UserStatusEnum[]> = {
-        [UserStatusEnum.confirmed]: [UserStatusEnum.suspended],
-        [UserStatusEnum.unconfirmed]: [UserStatusEnum.confirmed, UserStatusEnum.suspended, UserStatusEnum.removed],
-        [UserStatusEnum.suspended]: [UserStatusEnum.confirmed, UserStatusEnum.removed],
-        [UserStatusEnum.removed]: [],
+        [UserStatusEnum.CONFIRMED]: [UserStatusEnum.SUSPENDED],
+        [UserStatusEnum.UNCONFIRMED]: [UserStatusEnum.CONFIRMED, UserStatusEnum.SUSPENDED, UserStatusEnum.REMOVED],
+        [UserStatusEnum.SUSPENDED]: [UserStatusEnum.CONFIRMED, UserStatusEnum.REMOVED],
+        [UserStatusEnum.REMOVED]: [],
     };
 
-    constructor(initialStatus: UserStatusEnum = UserStatusEnum.unconfirmed) {
+    constructor(initialStatus: UserStatusEnum = UserStatusEnum.UNCONFIRMED) {
         if (!(initialStatus in UserStatusEnum)) {
             throw new Error(`Invalid initial status: ${initialStatus}`);
         }

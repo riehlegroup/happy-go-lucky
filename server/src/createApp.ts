@@ -8,7 +8,7 @@ import { AuthController } from './Controllers/AuthController';
 import { UserController } from './Controllers/UserController';
 import { ProjectController } from './Controllers/ProjectController';
 import { LegacyController } from './Controllers/LegacyController';
-import { IEmailService } from './Services/IEmailService';
+import { EmailService } from './Services/EmailService';
 import { ConsoleEmailService } from './Services/ConsoleEmailService';
 import { SmtpEmailService } from './Services/SmtpEmailService';
 import { LocalMtaEmailService } from './Services/LocalMtaEmailService';
@@ -30,7 +30,7 @@ export function createApp(db: Database): Application {
   });
 
   // Initialize email service based on environment
-  let emailService: IEmailService;
+  let emailService: EmailService;
 
   if (process.env.NODE_ENV === 'production') {
     // Production: use SMTP if credentials available, otherwise fallback to local MTA

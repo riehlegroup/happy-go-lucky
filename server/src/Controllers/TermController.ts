@@ -4,14 +4,14 @@ import { TermManager } from "../Managers/TermManager";
 import { Term } from "../Models/Term";
 import { Exception } from "../Exceptions/Exception";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
-import { IAppController } from "./IAppController";
+import { AppController } from "./AppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
 
 /**
  * Controller for handling term-related HTTP requests.
  */
-export class TermController implements IAppController {
+export class TermController implements AppController {
   private tm: TermManager;
 
   constructor(private db: Database) {

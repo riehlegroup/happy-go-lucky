@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import CourseMessage, { Message } from "./CourseMessage";
 
 interface CourseDialogProps {

@@ -2,7 +2,7 @@
  * Interface for email sending services.
  * Provides abstraction over email delivery mechanism.
  */
-export interface IEmailService {
+export interface EmailService {
   /**
    * Sends an email to one or more recipients.
    *

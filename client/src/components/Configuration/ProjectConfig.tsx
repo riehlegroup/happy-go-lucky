@@ -7,7 +7,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/Select";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import SectionCard from "@/components/common/SectionCard";
@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";

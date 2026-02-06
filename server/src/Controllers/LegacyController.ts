@@ -1,13 +1,13 @@
 import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
-import { IAppController } from "./IAppController";
+import { AppController } from "./AppController";
 
 /**
  * Controller for handling legacy HTTP endpoints.
  * Maps old API routes to new functionality for backward compatibility.
  */
-export class LegacyController implements IAppController {
+export class LegacyController implements AppController {
   constructor(private db: Database) {}
 
   /**

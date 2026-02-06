@@ -8,13 +8,13 @@ import { MethodFailedException } from "../Exceptions/MethodFailedException";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 import { ProjectManager } from "./ProjectManager";
 import { CourseSchedule, SubmissionDate } from "../Models/CourseSchedule";
-import { IManager } from "./IManager";
+import { Manager } from "./Manager";
 
 /**
  * Manages Course operations and writes them persistent.
  * This implementation handles a database schema where courseName/projectName is defined as UNIQUE.
  */
-export class CourseManager implements IManager {
+export class CourseManager implements Manager {
   protected db: Database;
   protected oh: ObjectHandler;
   private factory: DatabaseSerializableFactory;

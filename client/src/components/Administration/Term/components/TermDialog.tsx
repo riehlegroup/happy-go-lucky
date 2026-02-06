@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import TermMessage, { Message } from "./TermMessage";
 
 interface TermDialogProps {

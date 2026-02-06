@@ -3,15 +3,15 @@ import { Database } from "sqlite";
 import { hashPassword } from "../Utils/hash";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { checkOwnership } from "../Middleware/checkOwnership";
-import { IAppController } from "./IAppController";
-import { IEmailService } from "../Services/IEmailService";
+import { AppController } from "./AppController";
+import { EmailService } from "../Services/EmailService";
 
 /**
  * Controller for handling user-related HTTP requests.
  * Manages user administration, status, and configuration (email, password, GitHub, URLs, roles).
  */
-export class UserController implements IAppController {
-  constructor(private db: Database, private emailService: IEmailService) {}
+export class UserController implements AppController {
+  constructor(private db: Database, private emailService: EmailService) {}
 
   /**
    * Initializes API routes for user management.

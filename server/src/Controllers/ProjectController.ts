@@ -2,16 +2,16 @@ import { Application, Request, Response } from "express";
 import { Database } from "sqlite";
 import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { Email } from "../ValueTypes/Email";
-import { IAppController } from "./IAppController";
-import { IEmailService } from "../Services/IEmailService";
+import { AppController } from "./AppController";
+import { EmailService } from "../Services/EmailService";
 
 /**
  * Controller for handling project-related HTTP requests.
  * Manages project CRUD, user-project relationships, and project features
  * (happiness metrics, sprints, standups).
  */
-export class ProjectController implements IAppController {
-  constructor(private db: Database, private emailService: IEmailService) {}
+export class ProjectController implements AppController {
+  constructor(private db: Database, private emailService: EmailService) {}
 
   /**
    * Initializes API routes for project management.

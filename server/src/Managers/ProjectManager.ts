@@ -5,7 +5,7 @@ import { ObjectHandler } from "../ObjectHandler";
 import { ProjectParticipation } from "../Models/ProjectParticipation";
 import { ProjectMember } from "../Models/ProjectMember";
 import { DatabaseSerializableFactory } from "../Serializer/DatabaseSerializableFactory";
-import { IManager } from "./IManager";
+import { Manager } from "./Manager";
 
 
 /**
@@ -14,7 +14,7 @@ import { IManager } from "./IManager";
  * Please treat all outputs of this classes methods as readonly immutables.
  * Only use the setter and command methods to change the relation!
  */
-export class ProjectManager implements IManager {
+export class ProjectManager implements Manager {
     protected db: Database;
     protected oh: ObjectHandler;
 

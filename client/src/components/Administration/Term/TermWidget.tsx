@@ -6,7 +6,7 @@ import { TermForm } from "./components/TermForm";
 import { TermAction } from "./components/TermAction";
 import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 
 interface TermWidgetProps {
   label?: string;
@@ -25,10 +25,10 @@ const TermWidget: React.FC<TermWidgetProps> = ({
   onFetch,
   onDeleteTerm,
 }: TermWidgetProps) => {
-  const { message, DEFAULT, createTerm, addCourse, deleteTerm: deleteTermFromHook } = useTerm();
+  const { message, defaultTerm, createTerm, addCourse, deleteTerm: deleteTermFromHook } = useTerm();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false };
+  const defaultData = type === "term" ? defaultTerm : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false };
 
   const {
     dialogState,

@@ -3,7 +3,7 @@ import { Course, Project } from "@/components/Administration/Course/types";
 import courseApi from "@/components/Administration/Course/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
 
-const DEFAULT: Course = {
+const defaultCourse: Course = {
   id: 0,
   termId: 0,
   courseName: "",
@@ -226,7 +226,7 @@ export const useCourse = () => {
   return {
     message,
     clearMessage,
-    DEFAULT,
+    defaultCourse,
     courses,
     setCourses,
     getCourses,
