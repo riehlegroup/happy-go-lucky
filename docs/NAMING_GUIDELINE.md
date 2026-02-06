@@ -1,6 +1,6 @@
 # Naming Guideline
 
-## 1. Filenames
+## 1. File names
 - **React-Components:** PascalCase (e.g. UserProfile.tsx, Dashboard.tsx)
 - **TypeScript modules/classes (server):** PascalCase (e.g. UserController.ts, CourseManager.ts)
 - **Utility/config files:** camelCase or kebab-case (e.g. utils.ts, api.ts, vite.config.ts)
@@ -9,15 +9,15 @@
 - **Tests:** camelCase with `.test` or `.spec` (e.g. useCourse.test.ts)
 - **Folders:** PascalCase for feature modules (e.g. Administration, Projects), kebab-case for utility folders (e.g. hooks, services)
 
-## 2. Classnames
+## 2. Class names
 - **Rule:** PascalCase 
 - **Example:** UserService, ProjectManager, AuthController
 
-## 3. Function- and methodnames
+## 3. Function and method names
 - **Rule:** camelCase 
 - **Example:** getUserById, createProject, sendEmail
 
-## 4. Variablennames
+## 4. Variable names
 - **Rule:** camelCase
 - **Example:** userName, projectList, isAdmin
 
@@ -33,7 +33,7 @@
 - **Rule:** PascalCase
 - **Example:** UserRole, ProjectStatus
 
-## 8. Enum-Names (TypeScript)
+## 8. Enum names (TypeScript)
 - **Rule:** PascalCase for enum, UPPER_SNAKE_CASE for values
 - **Example:** UserRole.ADMIN, UserRole.STUDENT
 
@@ -41,7 +41,7 @@
 - **Rule:** UPPER_SNAKE_CASE
 - **Example:** README.md, NAMING_GUIDELINE.md
 
-## 10. General Guidelines
+## 10. General guidelines
 - **Avoid Abbreviations or use a uniform system** (e.g. „config“ instead of „cfg“)
 - **Currently used Abbreviations:** 
   - "db" (Database)
