@@ -17,7 +17,8 @@ export class UserStatus {
     };
 
     constructor(initialStatus: UserStatusEnum = UserStatusEnum.UNCONFIRMED) {
-        if (!(initialStatus in UserStatusEnum)) {
+        const validValues = Object.values(UserStatusEnum);
+        if (!validValues.includes(initialStatus as UserStatusEnum)) {
             throw new Error(`Invalid initial status: ${initialStatus}`);
         }
         this.status = initialStatus;
