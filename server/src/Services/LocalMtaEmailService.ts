@@ -1,10 +1,10 @@
 import nodemailer from "nodemailer";
-import { IEmailService } from "./IEmailService";
+import { EmailService } from "./EmailService";
 
 /**
  * Production email service that uses local Mail Transfer Agent (sendmail/postfix).
  */
-export class LocalMtaEmailService implements IEmailService {
+export class LocalMtaEmailService implements EmailService {
   private senderName: string;
   private senderAddress: string;
 

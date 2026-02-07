@@ -10,13 +10,13 @@ import { ObjectHandler } from "../ObjectHandler";
  * without forcing unrelated methods across different domains.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IManager {
+export interface Manager {
   // Interface is intentionally minimal - managers have domain-specific methods
 }
 
 /**
  * Constructor signature for all managers.
  */
-export interface IManagerConstructor {
-  new (db: Database, oh: ObjectHandler): IManager;
+export interface ManagerConstructor {
+  new (db: Database, oh: ObjectHandler): Manager;
 }

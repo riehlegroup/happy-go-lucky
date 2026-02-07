@@ -24,7 +24,7 @@ export const validProject = () => ({
   courseId: 1,
 });
 
-export const weakPasswords = [
+export const WEAK_PASSWORDS = [
   'short',        // Too short
   'alllowercase', // No uppercase, no numbers
   'ALLUPPERCASE', // No lowercase, no numbers
@@ -32,7 +32,7 @@ export const weakPasswords = [
   '12345678',     // No letters
 ];
 
-export const invalidEmails = [
+export const INVALID_EMAILS = [
   'notanemail',
   'missing@domain',
   '@nodomain.com',

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 
 import Edit from "./../../assets/Edit.png";
 import EmailIcon from "./../../assets/EmailIcon.png";

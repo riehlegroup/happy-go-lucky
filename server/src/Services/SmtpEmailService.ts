@@ -1,11 +1,11 @@
 import nodemailer from "nodemailer";
-import { IEmailService } from "./IEmailService";
+import { EmailService } from "./EmailService";
 
 /**
  * Production email service that sends real emails via SMTP.
  * Requires SMTP configuration and authentication credentials from environment variables.
  */
-export class SmtpEmailService implements IEmailService {
+export class SmtpEmailService implements EmailService {
   private senderName: string;
   private senderAddress: string;
   private smtpHost: string;

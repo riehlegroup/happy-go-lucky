@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { Database } from 'sqlite';
 import { createTestDb, seedDatabase, getUserByEmail } from './helpers/testDb';
-import { validUser, invalidEmails } from './helpers/fixtures';
+import { validUser, INVALID_EMAILS } from './helpers/fixtures';
 import { Application } from 'express';
 import { createApp } from '../../createApp';
 
@@ -77,7 +77,7 @@ describe('Authentication API', () => {
       expect(response.body.message).toContain('Password must be at least 8 characters');
     });
 
-    invalidEmails.forEach((email) => {
+    INVALID_EMAILS.forEach((email) => {
       it(`should reject invalid email: "${email}"`, async () => {
         const response = await request(app)
           .post('/user')

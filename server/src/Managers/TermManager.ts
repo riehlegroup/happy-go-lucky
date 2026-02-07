@@ -6,12 +6,12 @@ import { Course } from "../Models/Course";
 import { DatabaseWriter } from "../Serializer/DatabaseWriter";
 import { MethodFailedException } from "../Exceptions/MethodFailedException";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
-import { IManager } from "./IManager";
+import { Manager } from "./Manager";
 
 /**
  * Manages Term operations and writes them persistently.
  */
-export class TermManager implements IManager {
+export class TermManager implements Manager {
   protected db: Database;
   protected oh: ObjectHandler;
   private factory: DatabaseSerializableFactory;

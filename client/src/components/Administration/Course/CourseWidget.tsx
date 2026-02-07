@@ -7,7 +7,7 @@ import { useCourse } from "@/hooks/useCourse";
 import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import CourseSchedule from "./components/CourseSchedule";
-import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 
 interface CourseProps {
   label?: string;
@@ -34,7 +34,7 @@ const CourseWidget: React.FC<CourseProps> = ({
   onFetch,
   onDeleteCourse,
 }: CourseProps) => {
-  const { message, DEFAULT, createCourse, updateCourse, addProject, updateProject, deleteProject, deleteCourse: deleteCourseFromHook } = useCourse();
+  const { message, defaultCourse, createCourse, updateCourse, addProject, updateProject, deleteProject, deleteCourse: deleteCourseFromHook } = useCourse();
   const { terms, getTerms } = useTerm();
   const [showSchedule, setShowSchedule] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -44,7 +44,7 @@ const CourseWidget: React.FC<CourseProps> = ({
     openEditDialog,
     closeDialog,
     updateDialogData,
-  } = useDialog<Course | Project>(DEFAULT);
+  } = useDialog<Course | Project>(defaultCourse);
 
   useEffect(() => {
     getTerms();

@@ -2,9 +2,9 @@ import { Database } from "sqlite";
 import { ObjectHandler } from "../ObjectHandler";
 import { DatabaseSerializableFactory } from "../Serializer/DatabaseSerializableFactory";
 import { User } from "../Models/User";
-import { IManager } from "./IManager";
+import { Manager } from "./Manager";
 
-export class UserManager implements IManager {
+export class UserManager implements Manager {
     protected db: Database;
     protected oh: ObjectHandler;
 
