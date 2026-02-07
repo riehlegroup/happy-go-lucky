@@ -1,5 +1,9 @@
 import { IllegalArgumentException } from '../Exceptions/IllegalArgumentException';
 
+export type TermNameParseResult =
+  | { ok: true; value: TermName; wasLegacy: boolean }
+  | { ok: false; reason: 'invalid' };
+
 /**
  * TermName value type.
  *
@@ -25,10 +29,63 @@ export class TermName {
 
   private readonly value: string;
 
-  constructor(input: string) {
+  /**
+   * Creates a TermName.
+   *
+   * By default this enforces the current strict validation rules.
+   *
+   * The `allowLegacy` option exists for reading old persisted data that may
+   * not conform to newer rules (e.g. older versions accepted illogical year
+   * ranges like "WS2025/24"). Avoid using this for user input.
+   */
+  constructor(input: string, options?: { allowLegacy?: boolean }) {
     const canonical = TermName.toCanonical(input);
-    IllegalArgumentException.assert(Boolean(canonical), 'Invalid term name');
-    this.value = canonical;
+    if (canonical) {
+      this.value = canonical;
+      return;
+    }
+
+    if (options?.allowLegacy) {
+      const legacyCanonical = TermName.toCanonicalLegacy(input);
+      IllegalArgumentException.assert(Boolean(legacyCanonical), 'Invalid term name');
+      this.value = legacyCanonical;
+      return;
+    }
+
+    IllegalArgumentException.assert(false, 'Invalid term name');
+    this.value = '';
+  }
+
+  /**
+   * Non-throwing parsing helper.
+   *
+   * Prefer this at deserialization boundaries (e.g. reading from the DB)
+   * where invalid/legacy persisted data should not crash the request.
+   *
+   * Parsing behavior:
+   * - First tries strict canonicalization.
+   * - If that fails, tries legacy canonicalization (range chronology not enforced).
+   */
+  static tryParse(input: string): TermNameParseResult {
+    const strictCanonical = TermName.toCanonical(input);
+    if (strictCanonical) {
+      return {
+        ok: true,
+        value: new TermName(strictCanonical),
+        wasLegacy: false,
+      };
+    }
+
+    const legacyCanonical = TermName.toCanonicalLegacy(input);
+    if (legacyCanonical) {
+      return {
+        ok: true,
+        value: new TermName(legacyCanonical, { allowLegacy: true }),
+        wasLegacy: true,
+      };
+    }
+
+    return { ok: false, reason: 'invalid' };
   }
 
   static toCanonical(input: string): string {
@@ -62,6 +119,43 @@ export class TermName {
     // Canonically, the second year must be the year immediately after the first.
     const expectedYear2 = TermName.expectedNextYear2(year1);
     if (!expectedYear2 || year2 !== expectedYear2) {
+      return '';
+    }
+
+    return `${prefix}${year1}/${year2}`;
+  }
+
+  /**
+   * Legacy canonicalization: matches the same input formats as `toCanonical`
+   * but does NOT enforce that year ranges are chronological.
+   *
+   * This is only intended as a compatibility layer when reading existing
+   * persisted data created before stricter validation was enforced.
+   */
+  private static toCanonicalLegacy(input: string): string {
+    const trimmed = input.trim();
+    const match = trimmed.match(TermName.TERM_REGEX);
+    if (!match) {
+      return '';
+    }
+
+    const rawPrefix = match[1].toLowerCase();
+    const rawYear1 = match[2];
+    const rawYear2 = match[3];
+
+    const prefix = rawPrefix === 'ws' || rawPrefix === 'winter' ? 'WS' : 'SS';
+
+    const year1 = TermName.normalizeYear4(rawYear1);
+    if (!year1) {
+      return '';
+    }
+
+    if (!rawYear2) {
+      return `${prefix}${year1}`;
+    }
+
+    const year2 = TermName.normalizeYear2(rawYear2);
+    if (!year2) {
       return '';
     }
 

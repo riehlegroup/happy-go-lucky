@@ -35,4 +35,34 @@ describe('TermName', () => {
     // Should be 2099/00, not 2099/01
     expect(() => new TermName('WS2099/01')).toThrow();
   });
+
+  it('should allow legacy non-chronological ranges when explicitly requested', () => {
+    expect(new TermName('WS2025/24', { allowLegacy: true }).toString()).toBe('WS2025/24');
+  });
+
+  it('tryParse should return strict parses without legacy flag', () => {
+    const parsed = TermName.tryParse('WS24/25');
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.wasLegacy).toBe(false);
+      expect(parsed.value.toString()).toBe('WS2024/25');
+    }
+  });
+
+  it('tryParse should fall back to legacy parsing for non-chronological ranges', () => {
+    const parsed = TermName.tryParse('WS2025/24');
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.wasLegacy).toBe(true);
+      expect(parsed.value.toString()).toBe('WS2025/24');
+    }
+  });
+
+  it('tryParse should fail for completely invalid inputs', () => {
+    const parsed = TermName.tryParse('Term To Delete');
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) {
+      expect(parsed.reason).toBe('invalid');
+    }
+  });
 });
