@@ -7,6 +7,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { TermName } from "../ValueTypes/TermName";
 
 /**
  * Controller for handling term-related HTTP requests.
@@ -39,7 +40,7 @@ export class TermController implements IAppController {
         success: true,
         data: terms.map((term) => ({
           id: term.getId(),
-          termName: term.getTermName(),
+          termName: term.getTermName()?.toString(),
           displayName: term.getDisplayName(),
         })),
       });
@@ -60,7 +61,19 @@ export class TermController implements IAppController {
         return;
       }
 
-      const term = await this.tm.createTerm(termName, displayName);
+      let parsedTermName: TermName;
+      try {
+        parsedTermName = TermName.fromString(termName);
+      } catch {
+        res.status(400).json({
+          success: false,
+          message:
+            "Invalid term name. Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025",
+        });
+        return;
+      }
+
+      const term = await this.tm.createTerm(parsedTermName, displayName);
 
       res.status(201).json({
         success: true,

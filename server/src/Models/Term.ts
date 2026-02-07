@@ -2,10 +2,11 @@ import { Reader } from "../Serializer/Reader";
 import { Serializable } from "../Serializer/Serializable";
 import { Writer } from "../Serializer/Writer";
 import { Course } from "./Course";
+import { TermName } from "../ValueTypes/TermName";
 
 export class Term implements Serializable {
   protected id: number;
-  protected termName: string | null = null;
+  protected termName: TermName | null = null;
   protected displayName: string | null = null;
   protected courses: Course[] = []; // 1:N relationship
 
@@ -15,14 +16,41 @@ export class Term implements Serializable {
 
   async readFrom(reader: Reader): Promise<void> {
     this.id = reader.readNumber("id") as number;
-    this.termName = reader.readString("termName");
+    const termNameStr = reader.readString("termName");
+
+    // Legacy/compat handling:
+    // Older persisted data may contain term names that fail newer validation
+    // rules (e.g. illogical ranges like "WS2025/24"). Reading such rows should
+    // not crash the server; instead we try a legacy-tolerant parse and fall
+    // back to null if it still cannot be interpreted.
+    if (!termNameStr) {
+      this.termName = null;
+    } else {
+      const parsed = TermName.tryFromString(termNameStr);
+      if (parsed.ok) {
+        this.termName = parsed.value;
+        if (parsed.wasLegacy) {
+          // Intentionally warn (not throw): this signals a migration candidate.
+          console.warn(
+            `[legacy-data] Term ${this.id} has non-conforming termName "${termNameStr}". ` +
+              `Loaded using legacy parsing; consider migrating this value.`
+          );
+        }
+      } else {
+        this.termName = null;
+        console.warn(
+          `[legacy-data] Term ${this.id} has invalid termName "${termNameStr}". ` +
+            `Loaded with termName=null; consider migrating/fixing this row.`
+        );
+      }
+    }
     this.displayName = reader.readString("displayName");
     this.courses = (await reader.readObjects("termId", "courses")) as Course[];
   }
 
   writeTo(writer: Writer): void {
     writer.writeNumber("id", this.id);
-    writer.writeString("termName", this.termName);
+    writer.writeString("termName", this.termName ? this.termName.toString() : null);
     writer.writeString("displayName", this.displayName);
   }
 
@@ -31,7 +59,7 @@ export class Term implements Serializable {
     return this.id;
   }
 
-  public getTermName(): string | null {
+  public getTermName(): TermName | null {
     return this.termName;
   }
 
@@ -44,7 +72,7 @@ export class Term implements Serializable {
   }
 
   // Setters
-  public setTermName(termName: string | null) {
+  public setTermName(termName: TermName | null) {
     this.termName = termName;
   }
 

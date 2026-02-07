@@ -1,6 +1,7 @@
 import { Term } from "./types";
 import { Course } from "../Course/types";
 import ApiClient from "@/services/api/client";
+import { TermName } from "@/valueTypes/TermName";
 
 const termApi = {
   getTerms: async (): Promise<Term[]> => {
@@ -44,7 +45,7 @@ const termApi = {
   },
 
   createTerm: (body: {
-    termName: string;
+    termName: TermName;
     displayName: string;
   }): Promise<Response> => {
     return ApiClient.getInstance().post<Response>("/term", body, true);

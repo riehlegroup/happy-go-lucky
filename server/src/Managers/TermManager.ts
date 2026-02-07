@@ -7,6 +7,7 @@ import { DatabaseWriter } from "../Serializer/DatabaseWriter";
 import { MethodFailedException } from "../Exceptions/MethodFailedException";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 import { IManager } from "./IManager";
+import { TermName } from "../ValueTypes/TermName";
 
 /**
  * Manages Term operations and writes them persistently.
@@ -26,13 +27,14 @@ export class TermManager implements IManager {
    * Creates a new term if it does not already exist.
    * @returns Newly created or existing term
    */
-  async createTerm(termName: string, displayName?: string): Promise<Term> {
+  async createTerm(termName: TermName, displayName?: string): Promise<Term> {
     let term: Term | null = null;
+    const canonicalTermName = termName.toString();
 
     try {
       const existingRow = await this.db.get(
         "SELECT * FROM terms WHERE terms.termName = ?",
-        [termName]
+        [canonicalTermName]
       );
 
       if (existingRow) {
@@ -51,7 +53,7 @@ export class TermManager implements IManager {
         }
 
         term.setTermName(termName);
-        term.setDisplayName(displayName || termName);
+        term.setDisplayName(displayName || canonicalTermName);
 
         // Write Root-Object Term
         const writer = new DatabaseWriter(this.db);

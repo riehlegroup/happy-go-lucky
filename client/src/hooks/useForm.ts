@@ -1,9 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
+import { parseTermName } from "@/valueTypes/TermName";
 
 type ValidationResult = string | boolean;
 
+// Form field values can temporarily be null/undefined while the user is typing
+// or while the form is initializing.
+type FieldValue = string | boolean | number | null | undefined;
+
 type ValidationRule = {
-  validate: (value: string | boolean | number) => ValidationResult;
+  validate: (value: FieldValue) => ValidationResult;
 };
 
 type ValidationSchema<T> = {
@@ -17,15 +22,28 @@ type FormErrors<T> = {
 // Predefined validation rules
 const rules = {
   required: (fieldName: string): ValidationRule => ({
-    validate: (value: string | boolean | number) =>
-      !value ? `${fieldName} is required` : "",
+    // Only enforces presence; does not enforce type beyond string trimming.
+    // - For strings: empty/whitespace-only is considered missing.
+    // - For numbers/booleans: 0/false are valid values (not missing).
+    validate: (value: FieldValue) => {
+      if (value === null || value === undefined) return `${fieldName} is required`;
+      if (typeof value === "string" && !value.trim()) return `${fieldName} is required`;
+      return "";
+    },
   }),
 
   pattern: (pattern: RegExp, message: string): ValidationRule => ({
-    validate: (value: string | boolean | number) =>
-      typeof value === "string" && !pattern.test(value.toLowerCase())
-        ? message
-        : "",
+    // Pattern validation is intentionally skipped for empty values (null/undefined/empty-string).
+    // Combine with `required()` if the field must be non-empty.
+    validate: (value: FieldValue) => {
+      if (value === null || value === undefined) return "";
+      if (typeof value !== "string") return message;
+
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+
+      return pattern.test(trimmed) ? "" : message;
+    },
   }),
 
   boolean: (fieldName: string): ValidationRule => ({
@@ -37,7 +55,7 @@ const rules = {
 export const createCourseValidation = () => ({
   termId: [
     {
-      validate: (value: string | boolean | number) =>
+      validate: (value: FieldValue) =>
         !value || value === 0 ? "Term is required" : "",
     },
   ],
@@ -64,10 +82,20 @@ export const createProjectValidation = () => ({
 export const createTermValidation = () => ({
   termName: [
     rules.required("Term Name"),
-    rules.pattern(
-      /^(ws|winter|ss|summer)\s*(?:(\d{2}|\d{4})(?:\/(\d{2}))?)$/,
-      "Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025"
-    ),
+    // Keep term validation consistent with the canonical TermName parsing rules.
+    // This also enforces logical year ranges (e.g. rejects "WS2025/24").
+    {
+      validate: (value: FieldValue) => {
+        if (value === null || value === undefined) return "";
+        if (typeof value !== "string") {
+          return "Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025";
+        }
+
+        if (!value.trim()) return "";
+        const parsed = parseTermName(value);
+        return parsed.ok ? "" : parsed.error;
+      },
+    },
   ],
   displayName: [
     rules.required("Display Name"),
@@ -98,7 +126,7 @@ export const useForm = <T extends object>(
 
   // Validate a single field
   const validateField = useCallback(
-    (field: keyof T, value: string | boolean | number): string => {
+    (field: keyof T, value: FieldValue): string => {
       const fieldRules = validationSchema[field];
       if (!fieldRules) return "";
 
@@ -113,7 +141,7 @@ export const useForm = <T extends object>(
   );
 
   const handleChanges = useCallback(
-    (field: keyof T, value: string | boolean | number) => {
+    (field: keyof T, value: FieldValue) => {
       setData((prevData) => ({ ...prevData, [field]: value }));
       setErrors((prevErrors) => ({
         ...prevErrors,
