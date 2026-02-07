@@ -40,6 +40,8 @@ Authorization: Bearer <jwt>
 ```
 
 The JWT secret is `JWT_SECRET`.
+If `JWT_SECRET` is not set, the middleware falls back to the default
+`"your_jwt_secret"` (see `checkAdmin.ts` / `checkOwnership.ts`).
 
 ### Middlewares
 
