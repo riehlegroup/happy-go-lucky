@@ -47,6 +47,11 @@ Run automated tests:
 npm run test
 ```
 
+## API Documentation
+
+- API reference: [docs/API.md](docs/API.md)
+- API development guide: [docs/API_DEVELOPMENT.md](docs/API_DEVELOPMENT.md)
+
 
 ## Deployment
 
