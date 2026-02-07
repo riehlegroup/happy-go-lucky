@@ -335,11 +335,13 @@ These endpoints are implemented in `ProjectController` and are mostly **not** wr
 
 ### `POST /user/mail` — Change email
 
+- **Auth:** Authenticated user (must own the account whose email is changed, e.g. via JWT/session `checkOwnership`)
 - **Body**: `{ oldEmail: string, newEmail: string }`
 - **Response:** `200 { "message": "Email updated successfully" }`
 
 ### `POST /user/password/change` — Change password
 
+- **Auth:** Authenticated user (must own the account whose password is changed, or be an authorized admin)
 - **Body**: `{ userEmail: string, password: string }`
 - **Response:** `200 { "message": "Password updated successfully" }`
 
