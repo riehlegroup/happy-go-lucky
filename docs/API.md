@@ -29,7 +29,7 @@ Authentication is based on **JWT**.
 Authorization: Bearer <jwt>
 ```
 
-The JWT secret is read from `JWT_SECRET` (falls back to `"your_jwt_secret"` if unset).
+The JWT secret is read from the `JWT_SECRET` environment variable. In all non-test environments, you must configure a strong, unpredictable secret; deployments without `JWT_SECRET` are considered misconfigured and should be fixed before exposing the server.
 
 ### Authorization rules
 
