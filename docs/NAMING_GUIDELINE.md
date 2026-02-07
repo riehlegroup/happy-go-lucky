@@ -38,7 +38,7 @@
 - **Example:** UserRole.ADMIN, UserRole.STUDENT
 
 ## 9. Documentation files
-- **Rule:** UPPER_SNAKE_CASE
+- **Rule:** UPPERCASE; use underscores for multi-word filenames (UPPER_SNAKE_CASE)
 - **Example:** README.md, NAMING_GUIDELINE.md
 
 ## 10. General guidelines
