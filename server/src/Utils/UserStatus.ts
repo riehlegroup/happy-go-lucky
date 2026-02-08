@@ -23,7 +23,11 @@ export class UserStatus {
         this.status = initialStatus;
     }
 
-    getStatus(): UserStatusEnum {
+    getStatusString(): string {
+        return this.status;
+    }
+
+    getStatusEnum(): UserStatusEnum {
         return this.status;
     }
 
@@ -33,6 +37,9 @@ export class UserStatus {
     }
 
     transitionTo(newStatus: UserStatusEnum): UserStatus {
+        if(this.status === newStatus) {
+            return this; // No transition needed
+        }
         if (this.canTransitionTo(newStatus)) {
             return new UserStatus(newStatus); // Return a new instance since UserStatus is a value object
         } else {
