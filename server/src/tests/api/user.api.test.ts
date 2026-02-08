@@ -302,7 +302,7 @@ describe('User Management API', () => {
         .expect(200);
 
       expect(response.body).toBeDefined();
-      expect(response.body.userRole).toBe(UserRoleEnum.admin);
+      expect(response.body.userRole).toBe(UserRoleEnum.ADMIN);
     });
 
     it('should return 404 for non-existent user', async () => {
@@ -320,7 +320,7 @@ describe('User Management API', () => {
         .query({ userEmail: 'test@test.com' })
         .expect(200);
 
-      expect(response.body.userRole).toBe(UserRoleEnum.user);
+      expect(response.body.userRole).toBe(UserRoleEnum.USER);
     });
   });
 
@@ -332,19 +332,19 @@ describe('User Management API', () => {
     it('should update user role with valid data', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ email: 'test@test.com', role: UserRoleEnum.admin })
+        .send({ email: 'test@test.com', role: UserRoleEnum.ADMIN })
         .expect(200);
 
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'test@test.com');
-      expect(user.userRole).toBe(UserRoleEnum.admin);
+      expect(user.userRole).toBe(UserRoleEnum.ADMIN);
     });
 
     it('should reject missing email', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ role: UserRoleEnum.admin })
+        .send({ role: UserRoleEnum.ADMIN })
         .expect(400);
 
       expect(response.body.message).toBe('Please provide email and role');
@@ -362,13 +362,13 @@ describe('User Management API', () => {
     it('should update role to USER', async () => {
       const response = await request(app)
         .post('/user/role')
-        .send({ email: 'admin@test.com', role: UserRoleEnum.user })
+        .send({ email: 'admin@test.com', role: UserRoleEnum.USER })
         .expect(200);
 
       expect(response.body.message).toBe('User role updated successfully');
 
       const user = await getUserByEmail(db, 'admin@test.com');
-      expect(user.userRole).toBe(UserRoleEnum.user);
+      expect(user.userRole).toBe(UserRoleEnum.USER);
     });
   });
 });

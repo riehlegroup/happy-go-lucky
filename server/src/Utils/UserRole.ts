@@ -1,6 +1,6 @@
 export enum UserRoleEnum {
-    user = "USER",
-    admin = "ADMIN",
+    USER = "USER",
+    ADMIN = "ADMIN",
 }
 
 export class UserRole {
@@ -8,18 +8,22 @@ export class UserRole {
 
     // Define valid transitions between states
     private static validTransitions: Record<UserRoleEnum, UserRoleEnum[]> = {
-        [UserRoleEnum.user]: [UserRoleEnum.admin],
-        [UserRoleEnum.admin]: [UserRoleEnum.user],
+        [UserRoleEnum.USER]: [UserRoleEnum.ADMIN],
+        [UserRoleEnum.ADMIN]: [UserRoleEnum.USER],
     };
 
-    constructor(initialRole: UserRoleEnum = UserRoleEnum.user) {
+    constructor(initialRole: UserRoleEnum = UserRoleEnum.USER) {
         if (!Object.values(UserRoleEnum).includes(initialRole)) {
             throw new Error(`Invalid initial role: ${initialRole}`);
         }
         this.role = initialRole;
     }
 
-    getRole(): UserRoleEnum {
+    getRoleEnum(): UserRoleEnum {
+        return this.role;
+    }
+
+    getRoleString(): string {
         return this.role;
     }
 

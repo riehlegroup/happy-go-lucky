@@ -32,7 +32,7 @@ export function checkOwnership(db: Database) {
         return;
       }
       if (
-        userFromTokenId?.getRole().getRole() !== UserRoleEnum.admin &&
+        userFromTokenId?.getRole() !== UserRoleEnum.ADMIN &&
         userFromParamsId?.getName() !== userFromTokenId?.getName()
       ) {
         res.status(403).json({ message: "Forbidden: You can only edit your own data" });

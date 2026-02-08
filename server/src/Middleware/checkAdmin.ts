@@ -32,7 +32,7 @@ export function checkAdmin(db: Database) {
       }
 
       // Check if user is admin
-      if (user.getRole().getRole() !== UserRoleEnum.admin) {
+      if (user.getRole() !== UserRoleEnum.ADMIN) {
         res.status(403).json({ success: false, message: "Forbidden: Admin access required" });
         return;
       }

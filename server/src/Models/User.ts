@@ -40,7 +40,7 @@ export class User extends Visitor implements Serializable {
       this.email = null;
     }
     this.status = reader.readString("status") as string;
-    this.role = this.role.transitionTo(reader.readString("userRole") as UserRoleEnum);
+    this.role = new UserRole(reader.readString("userRole") as UserRoleEnum);
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -58,7 +58,7 @@ export class User extends Visitor implements Serializable {
       writer.writeString("email", this.email.toString());
     }
     writer.writeString("status", this.status);
-    writer.writeString("userRole", this.role.getRole());
+    writer.writeString("userRole", this.role.getRoleEnum());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
     writer.writeNumber("resetPasswordExpire", this.resetPasswordExpire);
@@ -94,8 +94,8 @@ export class User extends Visitor implements Serializable {
     return this.status;
   }
 
-  public getRole(): UserRole {
-    return this.role;
+  public getRole(): UserRoleEnum {
+    return this.role.getRoleEnum();
   }
 
   public getPassword(): string | null{
