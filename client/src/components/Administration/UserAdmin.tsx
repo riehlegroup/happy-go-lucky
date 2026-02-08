@@ -19,6 +19,7 @@ import { isValidEmail } from "@/utils/emailValidation";
 import usersApi from "@/services/api/users";
 
 const userStatus = ["unconfirmed", "confirmed", "suspended", "removed"];
+const userRoles = ["ADMIN", "USER"];
 
 interface User {
     id: number;
@@ -125,12 +126,20 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
                             ))}
                         </select>
                     </div>
-                    <Input
-                        type="text"
-                        label="UserRole"
-                        value={userRole}
-                        onChange={(e) => setUserRole(e.target.value)}
-                    />
+                    <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">User Role</label>
+                        <select
+                            value={userRole}
+                            onChange={(e) => setUserRole(e.target.value)}
+                            className="block w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm text-slate-900"
+                        >
+                            {userRoles.map((role) => (
+                                <option key={role} value={role}>
+                                    {role}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <Input
                         type="password"
                         label="New Password"

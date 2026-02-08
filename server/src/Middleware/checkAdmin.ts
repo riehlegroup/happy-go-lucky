@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import { ObjectHandler } from "../ObjectHandler";
+import { UserRoleEnum } from "../Utils/UserRole";
 
 const secret = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -31,7 +32,7 @@ export function checkAdmin(db: Database) {
       }
 
       // Check if user is admin
-      if (user.getRole() !== "ADMIN") {
+      if (user.getRole() !== UserRoleEnum.ADMIN) {
         res.status(403).json({ success: false, message: "Forbidden: Admin access required" });
         return;
       }

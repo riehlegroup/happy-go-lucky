@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import { ObjectHandler } from "../ObjectHandler";
+import { UserRoleEnum } from "../Utils/UserRole";
 
 const secret = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -30,9 +31,8 @@ export function checkOwnership(db: Database) {
         res.status(404).json({ message: "User not found" });
         return;
       }
-
       if (
-        userFromTokenId?.getRole() !== "ADMIN" &&
+        userFromTokenId?.getRole() !== UserRoleEnum.ADMIN &&
         userFromParamsId?.getName() !== userFromTokenId?.getName()
       ) {
         res.status(403).json({ message: "Forbidden: You can only edit your own data" });
