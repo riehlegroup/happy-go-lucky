@@ -70,4 +70,25 @@ describe("UserStatus", () => {
         const userStatus = UserStatus.suspended();
         expect(userStatus.getStatus()).toBe(UserStatusEnum.suspended);
     });
+
+    it("should return the status string confirmed when using getStatusString()", () => {
+        const userStatus = new UserStatus(UserStatusEnum.confirmed);
+        expect(userStatus.getStatusString()).toBe("confirmed");
+    });
+
+    it("should return the status string unconfirmed when using getStatusString()", () => {
+        const userStatus = new UserStatus(UserStatusEnum.unconfirmed);
+        expect(userStatus.getStatusString()).toBe("unconfirmed");
+    });
+
+    it("should return the status string suspended when using getStatusString()", () => {
+        const userStatus = new UserStatus(UserStatusEnum.suspended);
+        expect(userStatus.getStatusString()).toBe("suspended");
+    });
+
+    it("should return the status string removed when using getStatusString()", () => {
+        const userStatus = new UserStatus(UserStatusEnum.removed);
+        expect(userStatus.getStatusString()).toBe("removed");
+    });
+      
 });
