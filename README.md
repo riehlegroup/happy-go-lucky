@@ -12,6 +12,25 @@ The architecture is modular. Functionality is provided as panels (the visual par
 
 HGL is developed as part of teaching software engineering at the Professorship for Open-Source Software at FAU Erlangen.
 
+## Prerequisites
+
+- Node.js (recommended: current LTS version)
+- npm
+
+You can verify your Node.js version with:
+
+```bash
+node -v
+npm -v
+
+✅ This:
+- reflects real issues students face (you *just* faced them)
+- matches ADAP teaching goals
+- is neutral, factual, and helpful
+
+---
+
+
 ## Getting Started
 
 1. Install dependencies:
