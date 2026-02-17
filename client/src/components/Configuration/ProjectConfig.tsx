@@ -24,6 +24,12 @@ import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
 
+const ROLE_OWNER = "owner" as const;
+
+const ROLE_LABELS: Record<string, string> = {
+  [ROLE_OWNER]: "Owner",
+};
+
 const ProjectConfig: React.FC = () => {
   const navigate = useNavigate();
 
@@ -268,7 +274,7 @@ const ProjectConfig: React.FC = () => {
 
   const handleCreateAndJoin = async (projectName: string) => {
     await handleCreate(projectName);
-    await handleJoin(projectName, "owner");
+    await handleJoin(projectName, ROLE_OWNER);
   };
 
   return (
@@ -304,12 +310,12 @@ const ProjectConfig: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{project}</p>
-                          {projectRoles[project] === "owner" && (
-                            <p className="text-xs text-slate-500">Owner</p>
+                          {projectRoles[project] === ROLE_OWNER && (
+                            <p className="text-xs text-slate-500">{ROLE_LABELS[ROLE_OWNER]}</p>
                           )}
                         </div>
                         <div className="flex gap-2">
-                          {projectRoles[project] === "owner" ? (
+                          {projectRoles[project] === ROLE_OWNER ? (
                             <Dialog onOpenChange={(open) => {
                               if (open) {
                                 handleProjectChange(project);
