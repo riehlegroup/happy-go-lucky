@@ -1,3 +1,6 @@
+import { M } from "../../resources/messages.en";
+
+
 import React, { useState, useEffect } from "react";
 import {
   Select,
@@ -61,7 +64,7 @@ const CourseParticipation: React.FC = () => {
           email: userEmail,
         });
       } else {
-        console.warn("User data not found in storage");
+        console.warn(M.debug.userDataNotFoundInStorage);
       }
     };
 
@@ -164,7 +167,7 @@ const CourseParticipation: React.FC = () => {
 
   const handleJoin = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(M.messages.userDataNotAvailableLoginAgain);
       return;
     }
 
@@ -179,7 +182,8 @@ const CourseParticipation: React.FC = () => {
         }
       );
 
-      setMessage(data.message || "Successfully joined the project!");
+      setMessage(data.message || M.messages.successfullyJoinedProjectFallback);
+
       if (data.message.includes("successfully")) {
         window.location.reload();
       }
@@ -193,7 +197,7 @@ const CourseParticipation: React.FC = () => {
 
   const handleLeave = async (projectName: string) => {
     if (!user) {
-      setMessage("User data not available. Please log in again.");
+      setMessage(M.messages.userDataNotAvailableLoginAgain);
       return;
     }
 
@@ -216,11 +220,11 @@ const CourseParticipation: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Course Participation" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title={M.configuration.courseParticipationTitle} showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
         {/* Enrolled Courses Section */}
-        <SectionCard title="Projects you are enrolled in">
+        <SectionCard title={M.configuration.enrolledProjectsTitle}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -293,7 +297,7 @@ const CourseParticipation: React.FC = () => {
         </SectionCard>
 
         {/* Available Courses Section */}
-        <SectionCard title="Available Projects">
+        <SectionCard title={M.configuration.availableProjectsTitle}>
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
