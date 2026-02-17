@@ -1,6 +1,88 @@
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { open, type Database } from 'sqlite';
+
+
+async function ensureSchema(db: Database) {
+  const row = (await db.get(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='happiness';`
+  )) as { name?: string } | undefined;
+
+
+  if (row?.name) return;
+
+  console.log('Schema not found. Initializing database schema (first run)...');
+
+  await db.exec(`
+    PRAGMA foreign_keys = ON;
+
+    CREATE TABLE IF NOT EXISTS terms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      termName TEXT NOT NULL UNIQUE,
+      displayName TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS courses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      courseName TEXT NOT NULL,
+      termId INTEGER NOT NULL,
+      FOREIGN KEY (termId) REFERENCES terms(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projectName TEXT NOT NULL,
+      courseId INTEGER NOT NULL,
+      FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      status TEXT NOT NULL,
+      userRole TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS user_projects (
+      userId INTEGER NOT NULL,
+      projectId INTEGER NOT NULL,
+      role TEXT NOT NULL,
+      PRIMARY KEY (userId, projectId),
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS schedules (
+      id INTEGER PRIMARY KEY,
+      startDate INTEGER NOT NULL,
+      endDate INTEGER NOT NULL,
+      FOREIGN KEY (id) REFERENCES courses(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      scheduleId INTEGER NOT NULL,
+      submissionDate INTEGER NOT NULL,
+      FOREIGN KEY (scheduleId) REFERENCES schedules(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS happiness (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projectId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      happiness INTEGER NOT NULL,
+      submissionDateId INTEGER NOT NULL,
+      timestamp INTEGER NOT NULL,
+      FOREIGN KEY (projectId) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (submissionDateId) REFERENCES submissions(id) ON DELETE CASCADE
+    );
+  `);
+
+  console.log('  ✓ Schema initialization complete\n');
+}
 
 /**
  * Generates mock data for development.
@@ -18,6 +100,7 @@ async function generateMockData(dbPath: string = './server/myDatabase.db', delet
 
   try {
     console.log('Starting mock data generation...\n');
+    await ensureSchema(db);
 
     console.log('Cleaning up any existing mock data...');
     await db.run(`DELETE FROM happiness WHERE projectId IN (
