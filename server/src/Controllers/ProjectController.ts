@@ -4,6 +4,9 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { Email } from "../ValueTypes/Email";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { Messages } from "../Resources/Messages";
+
+
 
 /**
  * Controller for handling project-related HTTP requests.
@@ -43,7 +46,7 @@ export class ProjectController implements IAppController {
     const { courseName } = req.query;
 
     if (!courseName) {
-      res.status(400).json({ message: "Course id is required" });
+      res.status(400).json({ message: Messages.project.courseIdRequired });
       return;
     }
 
@@ -53,7 +56,7 @@ export class ProjectController implements IAppController {
         courseId = await DatabaseHelpers.getCourseIdFromName(this.db, courseName.toString());
       } catch (error) {
         if (error instanceof Error && error.message.includes("Unknown Course Name!")) {
-          res.status(404).json({ message: "Course not found" });
+          res.status(404).json({ message: Messages.course.courseNotFound });
           return;
         }
         throw error;
@@ -65,7 +68,7 @@ export class ProjectController implements IAppController {
       console.error("Error during project retrieval:", error);
       res
         .status(500)
-        .json({ message: `Failed to retrieve projects for course ${courseName}`, error });
+        .json({ message: Messages.project.failedToRetrieveProjectsForCourse(courseName.toString()), error });
     }
   }
 
@@ -73,7 +76,7 @@ export class ProjectController implements IAppController {
     const { newCourseName, projectName, newProjectName } = req.body;
 
     if (!newCourseName || !newProjectName) {
-      res.status(400).json({ message: "Please fill in project group name and project name" });
+      res.status(400).json({ message:  Messages.project.projectEditMissingFields });
       return;
     }
 
@@ -85,10 +88,10 @@ export class ProjectController implements IAppController {
         newCourseId,
         projectId,
       ]);
-      res.status(201).json({ message: "Project edited successfully" });
+      res.status(201).json({ message: Messages.project.projectEditedSuccessfully });
     } catch (error) {
       console.error("Error during project edition:", error);
-      res.status(500).json({ message: "Project edition failed", error });
+      res.status(500).json({ message: Messages.project.projectEditionFailed, error });
     }
   }
 
@@ -96,7 +99,7 @@ export class ProjectController implements IAppController {
     const { projectName } = req.query;
 
     if (!projectName) {
-      res.status(400).json({ message: "Project name is required" });
+      res.status(400).json({ message: Messages.project.projectNameRequired });
       return;
     }
 
@@ -111,11 +114,11 @@ export class ProjectController implements IAppController {
       if (course) {
         res.json(course);
       } else {
-        res.status(404).json({ message: "Course not found for this project" });
+        res.status(404).json({ message: Messages.project.courseNotFoundForProject });
       }
     } catch (error) {
       console.error("Error fetching course for project:", error);
-      res.status(500).json({ message: "Failed to fetch course", error });
+      res.status(500).json({ message: Messages.project.failedToFetchCourse, error });
     }
   }
 
@@ -124,18 +127,18 @@ export class ProjectController implements IAppController {
 
     let userEmail: Email;
     if (!req.query.email || typeof req.query.email !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message: Messages.auth.userEmailRequired });
       return;
     }
     try {
       userEmail = new Email(req.query.email as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress});
       return;
     }
 
     if (!projectName) {
-      res.status(400).json({ message: "Project name and user email are required" });
+      res.status(400).json({ message: Messages.project.projectNameAndUserEmailRequired });
       return;
     }
 
@@ -150,13 +153,13 @@ export class ProjectController implements IAppController {
       );
 
       if (!role) {
-        res.status(404).json({ message: "Role not found" });
+        res.status(404).json({ message: Messages.project.roleNotFound });
         return;
       }
       res.json({ role: role.role });
     } catch (error) {
       console.error("Error retrieving project role", error);
-      res.status(500).json({ message: "Failed to retrieve project role", error });
+      res.status(500).json({ message: Messages.project.failedToRetrieveProjectRole, error });
     }
   }
 
@@ -165,18 +168,18 @@ export class ProjectController implements IAppController {
 
     let memberEmail: Email;
     if (!memberEmailStr || typeof memberEmailStr !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message: Messages.auth.userEmailRequired });
       return;
     }
     try {
       memberEmail = new Email(memberEmailStr);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress});
       return;
     }
 
     if (!memberRole) {
-      res.status(400).json({ message: "Please fill in your role" });
+      res.status(400).json({ message: Messages.project.roleRequired });
       return;
     }
 
@@ -186,7 +189,7 @@ export class ProjectController implements IAppController {
         projectId = await DatabaseHelpers.getProjectIdFromName(this.db, projectName);
       } catch (error) {
         if (error instanceof Error && error.message.includes("Unknown Project Name!")) {
-          res.status(404).json({ message: "Project not found" });
+          res.status(404).json({ message: Messages.project.projectNotFound });
           return;
         }
         throw error;
@@ -198,7 +201,7 @@ export class ProjectController implements IAppController {
         [userId, projectId]
       );
       if (isMember) {
-        res.status(400).json({ message: "You have already joined this project" });
+        res.status(400).json({ message: Messages.project.alreadyJoinedProject });
         return;
       }
 
@@ -207,10 +210,10 @@ export class ProjectController implements IAppController {
         projectId,
         memberRole,
       ]);
-      res.status(201).json({ message: "Joined project successfully" });
+      res.status(201).json({ message: Messages.project.joinedProjectSuccessfully });
     } catch (error) {
       console.error("Error during joining project:", error);
-      res.status(500).json({ message: "Failed to join project", error });
+      res.status(500).json({ message: Messages.project.failedToJoinProject, error });
     }
   }
 
@@ -223,7 +226,7 @@ export class ProjectController implements IAppController {
         projectId = await DatabaseHelpers.getProjectIdFromName(this.db, projectName);
       } catch (error) {
         if (error instanceof Error && error.message.includes("Unknown Project Name!")) {
-          res.status(404).json({ message: "Project not found" });
+          res.status(404).json({ message: Messages.project.projectNotFound });
           return;
         }
         throw error;
@@ -235,7 +238,7 @@ export class ProjectController implements IAppController {
         [userId, projectId]
       );
       if (!isMember) {
-        res.status(400).json({ message: "You are not a member of this project" });
+        res.status(400).json({ message: Messages.legacy.notMemberOfProject });
         return;
       }
       await this.db.run("DELETE FROM user_projects WHERE userId = ? AND projectId = ?", [
@@ -243,23 +246,23 @@ export class ProjectController implements IAppController {
         projectId,
       ]);
 
-      res.status(200).json({ message: "Left project successfully" });
+      res.status(200).json({ message: Messages.project.leftProjectSuccessfully });
     } catch (error) {
       console.error("Error during leaving project:", error);
-      res.status(500).json({ message: "Failed to leave project", error });
+      res.status(500).json({ message: Messages.project.failedToLeaveProject, error });
     }
   }
 
   async getUserProjects(req: Request, res: Response): Promise<void> {
     let userEmail: Email;
     if (!req.query.userEmail || typeof req.query.userEmail !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message: Messages.auth.userEmailRequired });
       return;
     }
     try {
       userEmail = new Email(req.query.userEmail as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress });
       return;
     }
 
@@ -275,20 +278,20 @@ export class ProjectController implements IAppController {
       res.json(projects);
     } catch (error) {
       console.error("Error during retrieving user projects:", error);
-      res.status(500).json({ message: "Failed to retrieve user projects", error });
+      res.status(500).json({ message: Messages.project.failedToRetrieveUserProjects, error });
     }
   }
 
   async getEnrolledCourses(req: Request, res: Response): Promise<void> {
     let userEmail: Email;
     if (!req.query.userEmail || typeof req.query.userEmail !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message: Messages.auth.userEmailRequired });
       return;
     }
     try {
       userEmail = new Email(req.query.userEmail as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress });
       return;
     }
 
@@ -305,7 +308,7 @@ export class ProjectController implements IAppController {
       res.json(courses);
     } catch (error) {
       console.error("Error during retrieving courses of user:", error);
-      res.status(500).json({ message: "Failed to retrieve courses of user", error });
+      res.status(500).json({ message: Messages.project.failedToRetrieveCoursesOfUser, error });
     }
   }
 
@@ -314,7 +317,7 @@ export class ProjectController implements IAppController {
     const timestamp = new Date().toISOString();
 
     if (!submissionDateId || typeof submissionDateId !== 'number') {
-      res.status(400).json({ message: "Submission date ID is required and must be a number" });
+      res.status(400).json({ message: Messages.project.submissionDateIdRequiredNumber });
       return;
     }
 
@@ -325,7 +328,7 @@ export class ProjectController implements IAppController {
         [submissionDateId]
       );
       if (!submission) {
-        res.status(404).json({ message: "Submission date not found" });
+        res.status(404).json({ message: Messages.project.submissionDateNotFound });
         return;
       }
 
@@ -340,7 +343,7 @@ export class ProjectController implements IAppController {
       );
 
       if (!projectId || !userId) {
-        res.status(404).json({ message: "Project or user not found" });
+        res.status(404).json({ message: Messages.project.projectOrUserNotFound });
         return;
       }
 
@@ -358,10 +361,10 @@ export class ProjectController implements IAppController {
         [projectId.id, userId.id, happiness, submissionDateId, timestamp]
       );
 
-      res.status(200).json({ message: "Happiness updated successfully" });
+      res.status(200).json({ message: Messages.project.happinessUpdatedSuccessfully });
     } catch (error) {
       console.error("Error updating happiness:", error);
-      res.status(500).json({ message: "Failed to update happiness", error });
+      res.status(500).json({ message: Messages.project.failedToUpdateHappiness, error });
     }
   }
 
@@ -380,7 +383,7 @@ export class ProjectController implements IAppController {
       res.json(happinessData);
     } catch (error) {
       console.error("Error fetching happiness data:", error);
-      res.status(500).json({ message: "Failed to fetch happiness data", error });
+      res.status(500).json({ message: Messages.project.failedToFetchHappinessData, error });
     }
   }
 
@@ -388,7 +391,7 @@ export class ProjectController implements IAppController {
     const { projectName } = req.query;
 
     if (!projectName || typeof projectName !== 'string') {
-      res.status(400).json({ message: "Project name is required" });
+      res.status(400).json({ message: Messages.project.projectNameRequired });
       return;
     }
 
@@ -400,7 +403,7 @@ export class ProjectController implements IAppController {
       );
 
       if (!project) {
-        res.status(404).json({ message: "Project not found" });
+        res.status(404).json({ message: Messages.project.projectNotFound });
         return;
       }
 
@@ -413,7 +416,7 @@ export class ProjectController implements IAppController {
       );
 
       if (!schedule) {
-        res.status(404).json({ message: "No schedule found for this course" });
+        res.status(404).json({ message: Messages.project.noScheduleFoundForCourse });
         return;
       }
 
@@ -429,7 +432,7 @@ export class ProjectController implements IAppController {
       );
 
       if (!nextSubmission) {
-        res.status(404).json({ message: "No future submission dates available" });
+        res.status(404).json({ message: Messages.project.noFutureSubmissionDatesAvailable });
         return;
       }
 
@@ -440,7 +443,7 @@ export class ProjectController implements IAppController {
       });
     } catch (error) {
       console.error("Error fetching available submissions:", error);
-      res.status(500).json({ message: "Failed to fetch available submissions", error });
+      res.status(500).json({ message: Messages.project.failedToFetchAvailableSubmissions, error });
     }
   }
 
@@ -459,7 +462,7 @@ export class ProjectController implements IAppController {
       console.log(`Found ${members.length} members for project "${projectName}":`, members);
 
       if (members.length === 0) {
-        res.status(400).json({ message: "No members in the project group" });
+        res.status(400).json({ message: Messages.project.noMembersInProjectGroup});
         return;
       }
 
@@ -467,14 +470,14 @@ export class ProjectController implements IAppController {
 
       await this.emailService.sendEmail(
         recipientEmails,
-        `Standup Update for ${projectName}`,
-        `Standup report from ${userName}\n\nDone: ${doneText}\nPlans: ${plansText}\nChallenges: ${challengesText}`
+        Messages.email.standupEmailSubject(projectName),
+        Messages.email.standupEmailBody(userName, doneText, plansText, challengesText)
       );
 
-      res.status(200).json({ message: "Standup email sent successfully" });
+      res.status(200).json({ message: Messages.project.standupEmailSentSuccessfully });
     } catch (error) {
       console.error("Error sending standup email:", error);
-      res.status(500).json({ message: "Failed to send standup email", error });
+      res.status(500).json({ message: Messages.project.failedToSendStandupEmail, error });
     }
   }
 }

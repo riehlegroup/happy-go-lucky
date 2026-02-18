@@ -7,6 +7,9 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { Messages } from "../Resources/Messages";
+
+
 
 /**
  * Controller for handling term-related HTTP requests.
@@ -55,7 +58,7 @@ export class TermController implements IAppController {
       if (!termName || typeof termName !== "string") {
         res.status(400).json({
           success: false,
-          message: "Term name is required and must be a string",
+          message: Messages.term.termNameRequiredString,
         });
         return;
       }
@@ -64,7 +67,7 @@ export class TermController implements IAppController {
 
       res.status(201).json({
         success: true,
-        message: "Term created successfully",
+        message: Messages.term.termCreatedSuccessfully,
         data: term,
       });
     } catch (error) {
@@ -79,7 +82,7 @@ export class TermController implements IAppController {
       if (isNaN(termId)) {
         res.status(400).json({
           success: false,
-          message: "Term ID must be a valid number"
+          message: Messages.term.termIdMustBeNumber
         });
         return;
       }
@@ -89,14 +92,14 @@ export class TermController implements IAppController {
       if (!deleted) {
         res.status(404).json({
           success: false,
-          message: "Term not found"
+          message: Messages.term.termNotFound
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        message: "Term deleted successfully",
+        message: Messages.term.termDeletedSuccessfully,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -110,7 +113,7 @@ export class TermController implements IAppController {
       if (termId === undefined || termId === null) {
         res.status(400).json({
           success: false,
-          message: "Term ID is required",
+          message: Messages.term.termIdRequired,
         });
         return;
       }
@@ -119,7 +122,7 @@ export class TermController implements IAppController {
       if (isNaN(id)) {
         res.status(400).json({
           success: false,
-          message: "Invalid term ID format",
+          message: Messages.term.invalidTermIdFormat,
         });
         return;
       }
@@ -128,7 +131,7 @@ export class TermController implements IAppController {
 
       res.status(201).json({
         success: true,
-        message: "Course added successfully",
+        message: Messages.term.courseAddedSuccessfully,
         data: {
           id: course.getId(),
           courseName: course.getName(),
@@ -145,19 +148,19 @@ export class TermController implements IAppController {
       const { termId } = req.query;
 
       if (!termId || typeof termId !== 'string') {
-        res.status(400).json({ success: false, message: "Term ID is required" });
+        res.status(400).json({ success: false, message: Messages.term.termIdRequired });
         return;
       }
 
       const id = parseInt(termId);
       if (isNaN(id)) {
-        res.status(400).json({ success: false, message: "Invalid term ID" });
+        res.status(400).json({ success: false, message: Messages.term.invalidTermId});
         return;
       }
 
       const term = await this.tm.readTerm(id);
       if (!term) {
-        res.status(404).json({ success: false, message: "Term not found" });
+        res.status(404).json({ success: false, message: Messages.term.termNotFound });
         return;
       }
 
@@ -196,13 +199,13 @@ export class TermController implements IAppController {
     } else if (error.name === "MethodFailedException") {
       res.status(500).json({
         success: false,
-        message: "An error occurred while processing your request",
+        message: Messages.common.requestProcessingError,
       });
       return;
     } else {
       res.status(500).json({
         success: false,
-        message: "Internal server error",
+        message: Messages.common.internalServerError,
       });
     }
   }
