@@ -14,6 +14,7 @@ import { User } from "../Models/User";
 import { Email } from "../ValueTypes/Email";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { Messages } from "../Resources/Messages";
 
 dotenv.config();
 
@@ -44,27 +45,27 @@ export class AuthController implements IAppController {
     if (!name || !email || !passwordObj) {
       res
         .status(400)
-        .json({ message: "Please fill in username, email and password!" });
+        .json({ message: Messages.auth.missingRegisterFields});
       return;
     }
 
     if (passwordObj.getStrength() < 3) {
       res.status(400).json({
         message:
-          "Password must be at least 8 characters long and should contain upper and lower case letters as well as numbers or special characters",
+            Messages.auth.passwordTooWeak,
       });
       return;
     }
 
     if (typeof email !== "string") {
-      res.status(400).json({ message: "email has not the right format" });
+      res.status(400).json({ message: Messages.auth.invalidEmailFormat });
       return;
     }
 
     if (name.length < 3) {
       res
         .status(400)
-        .json({ message: "Name must be at least 3 characters long" });
+        .json({ message: Messages.auth.nameTooShort });
       return;
     }
 
@@ -72,7 +73,7 @@ export class AuthController implements IAppController {
     try {
       validatedEmail = new Email(email as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress });
       return;
     }
 
@@ -88,7 +89,7 @@ export class AuthController implements IAppController {
       u.setEmail(new Email(email));
       u.setPassword(hashedPassword);
       await writer.writeRoot(u);
-      res.status(201).json({ message: "User registered successfully" });
+      res.status(201).json({ message: Messages.auth.registerSuccess });
 
       // Generate confirm email TOKEN
       const registeredUser = await oh.getUserByMail(email, this.db);
@@ -118,14 +119,14 @@ export class AuthController implements IAppController {
     const { email, password } = req.body;
     const passwordObj = Password.create(password);
     if (!email || !passwordObj || typeof email !== "string") {
-      res.status(400).json({ message: "Email and password are required" });
+      res.status(400).json({ message:  Messages.auth.missingLoginFields });
       return;
     }
 
     try {
       new Email(email as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message:  Messages.auth.invalidEmailAddress });
       return;
     }
 
@@ -133,13 +134,13 @@ export class AuthController implements IAppController {
       const oh = new ObjectHandler();
       const user = await oh.getUserByMail(email, this.db);
       if (!user) {
-        res.status(400).json({ message: "Invalid email" });
+        res.status(400).json({ message: Messages.auth.invalidEmail });
         return;
       }
 
       const userPassword = user.getPassword();
       if (userPassword === null) {
-        res.status(400).json({ message: "No password set for user" });
+        res.status(400).json({ message: Messages.auth.noPasswordSet  });
         return;
       } else {
         const isValidPassword = await comparePassword(
@@ -147,7 +148,7 @@ export class AuthController implements IAppController {
           userPassword
         );
         if (!isValidPassword) {
-          res.status(400).json({ message: "Invalid password" });
+          res.status(400).json({ message: Messages.auth.invalidPassword  });
           return;
         }
       }
@@ -157,16 +158,16 @@ export class AuthController implements IAppController {
       if (userStatus.getStatus() == UserStatusEnum.unconfirmed) {
         res
           .status(400)
-          .json({ message: "Email not confirmed. Please contact system admin." });
+          .json({ message: Messages.auth.emailNotConfirmed  });
         return;
       } else if (userStatus.getStatus() == UserStatusEnum.suspended) {
         res.status(400).json({
-          message: "User account is suspended. Please contact system admin.",
+          message: Messages.auth.accountSuspended
         });
         return;
       } else if (userStatus.getStatus() == UserStatusEnum.removed) {
         res.status(400).json({
-          message: "User account is removed. Please contact system admin.",
+          message:  Messages.auth.accountRemoved,
         });
         return;
       }
@@ -182,20 +183,20 @@ export class AuthController implements IAppController {
       });
     } catch (error) {
       console.error("Error during login:", error);
-      res.status(500).json({ message: "Login failed" });
+      res.status(500).json({ message:  Messages.auth.loginFailed  });
     }
   }
 
   async forgotPassword(req: Request, res: Response): Promise<void> {
     let email: Email;
     if (!req.body.email || typeof req.body.email !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message: Messages.auth.userEmailRequired  });
       return;
     }
     try {
       email = new Email(req.body.email as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress});
       return;
     }
 
@@ -204,7 +205,7 @@ export class AuthController implements IAppController {
       const writer = new DatabaseWriter(this.db);
       const user = await oh.getUserByMail(email.toString(), this.db);
       if (!user) {
-        res.status(404).json({ message: "Email not found" });
+        res.status(404).json({ message: Messages.auth.emailNotFound  });
         return;
       }
 
@@ -219,10 +220,10 @@ export class AuthController implements IAppController {
 
       await this.sendPasswordResetEmail(email, token);
 
-      res.status(200).json({ message: "Password reset email sent" });
+      res.status(200).json({ message:  Messages.auth.passwordResetEmailSent  });
     } catch (error) {
       console.error("Error in forgotPassword:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: Messages.common.serverError });
     }
   }
 
@@ -233,7 +234,7 @@ export class AuthController implements IAppController {
     if (!token || !newPassword) {
       res
         .status(400)
-        .json({ message: "Token and new password are required" });
+        .json({ message: Messages.auth.tokenAndNewPasswordRequired });
       return;
     }
 
@@ -247,7 +248,7 @@ export class AuthController implements IAppController {
       );
 
       if (!user) {
-        res.status(401).json({ message: "Invalid or expired reset token" });
+        res.status(401).json({ message:  Messages.auth.invalidOrExpiredResetToken});
         return;
       }
 
@@ -261,12 +262,12 @@ export class AuthController implements IAppController {
         u.getResetPasswordExpire() === null ||
         (u.getResetPasswordExpire() as number) < currentTime
       ) {
-        res.status(400).json({ message: "Invalid or expired token" });
+        res.status(400).json({ message: Messages.auth.invalidOrExpiredToken});
         return;
       } else if (newPasswordObj.getStrength() < 3) {
         res.status(400).json({
           message:
-            "Password must be at least 8 characters long and should contain upper and lower case letters as well as numbers or special characters",
+           Messages.auth.passwordTooWeak,
         });
         return;
       }
@@ -277,10 +278,10 @@ export class AuthController implements IAppController {
       u.setResetPasswordToken(null);
       await writer.writeRoot(u);
 
-      res.status(200).json({ message: "Password has been reset" });
+      res.status(200).json({ message: Messages.auth.passwordResetSuccess});
     } catch (error) {
       console.error("Error in resetPassword:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: Messages.common.serverError  });
     }
   }
 
@@ -288,7 +289,7 @@ export class AuthController implements IAppController {
     const { token } = req.body;
 
     if (!token) {
-      res.status(400).json({ message: "Token is required" });
+      res.status(400).json({ message: Messages.auth.tokenRequired });
       return;
     }
 
@@ -303,7 +304,7 @@ export class AuthController implements IAppController {
       );
 
       if (!user) {
-        res.status(401).json({ message: "Invalid or expired confirmation token" });
+        res.status(401).json({ message: Messages.auth.invalidOrExpiredConfirmationToken});
         return;
       }
 
@@ -313,7 +314,7 @@ export class AuthController implements IAppController {
       console.log("User retrieved from database:", user);
 
       if (user.confirmEmailExpire < currentTime) {
-        res.status(400).json({ message: "Invalid or expired token" });
+        res.status(400).json({ message: Messages.auth.invalidOrExpiredConfirmationToken  });
         return;
       }
 
@@ -326,23 +327,23 @@ export class AuthController implements IAppController {
       u.setConfirmEmailExpire(null);
       await writer.writeRoot(u);
 
-      res.status(200).json({ message: "Email has been confirmed" });
+      res.status(200).json({ message: Messages.auth.emailConfirmed });
     } catch (error) {
       console.error("Error in confirmEmail:", error);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: Messages.common.serverError});
     }
   }
 
   async sendConfirmationEmail(req: Request, res: Response): Promise<void> {
     let email: Email;
     if (!req.body.email || typeof req.body.email !== "string") {
-      res.status(400).json({ message: "User email is required" });
+      res.status(400).json({ message:  Messages.auth.userEmailRequired });
       return;
     }
     try {
       email = new Email(req.body.email as string);
     } catch {
-      res.status(400).json({ message: "Invalid email address" });
+      res.status(400).json({ message: Messages.auth.invalidEmailAddress});
       return;
     }
     try {
@@ -350,7 +351,7 @@ export class AuthController implements IAppController {
       const writer = new DatabaseWriter(this.db);
       const user = await oh.getUserByMail(email.toString(), this.db);
       if (!user) {
-        res.status(400).json({ message: "User not found" });
+        res.status(400).json({ message: Messages.auth.userNotFound});
         return;
       }
       let st: string = user.getStatus();
@@ -358,7 +359,7 @@ export class AuthController implements IAppController {
       if (userStatus.getStatus() != UserStatusEnum.unconfirmed) {
         res
           .status(400)
-          .json({ message: "User not found or not unconfirmed" });
+          .json({ message: Messages.auth.userNotFoundOrNotUnconfirmed});
         return;
       }
 
@@ -370,10 +371,10 @@ export class AuthController implements IAppController {
       await writer.writeRoot(user);
       await this.sendConfirmEmail(email, token);
 
-      res.status(200).json({ message: "Confirmation email sent" });
+      res.status(200).json({ message: Messages.auth.confirmationEmailSent });
     } catch (error) {
       console.error("Error sending confirmation email:", error);
-      res.status(500).json({ message: "Failed to send confirmation email" });
+      res.status(500).json({ message: Messages.auth.failedToSendConfirmationEmail  });
     }
   }
 
@@ -383,8 +384,8 @@ export class AuthController implements IAppController {
 
     await this.emailService.sendEmail(
       email.toString(),
-      "Confirm Email",
-      `You registered for Happy Go Lucky! Click the link to confirm your email: ${confirmedLink}`
+      Messages.email.confirmEmailSubject,
+      Messages.email.confirmEmailBody(confirmedLink)
     );
   }
 
@@ -394,8 +395,8 @@ export class AuthController implements IAppController {
 
     await this.emailService.sendEmail(
       email.toString(),
-      "Password Reset",
-      `You requested a password reset. Click the link to reset your password: ${resetLink}`
+      Messages.email.passwordResetSubject,
+      Messages.email.passwordResetBody(resetLink)
     );
   }
 }
