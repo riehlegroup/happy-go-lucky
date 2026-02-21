@@ -136,7 +136,7 @@ export class TermName {
   }
 
   /**
-   * Legacy canonicalization: matches the same input formats as `toCanonical`
+   * Legacy canonicalization: matches the same input formats as `canonicalize`
    * but does NOT enforce that year ranges are chronological.
    *
    * This is only intended as a compatibility layer when reading existing
