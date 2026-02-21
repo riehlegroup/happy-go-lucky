@@ -1,5 +1,11 @@
 import ApiClient from "./client";
 
+/**
+ * Administrative API methods.
+ *
+ * Provides access to system power controls (e.g., shutdown).
+ */
+
 type PowerStatus = {
   status: "shutdown" | "startup";
   isShuttingDown: boolean;
