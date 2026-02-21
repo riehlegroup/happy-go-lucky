@@ -1,26 +1,23 @@
 import ApiClient from "./client";
 
+type PowerStatus = {
+  status: "shutdown" | "startup";
+  isShuttingDown: boolean;
+  shutdownAt: number | null;
+  gracePeriodSeconds: number;
+};
+
 const adminApi = {
-  getShutdownStatus: (): Promise<{ isShuttingDown: boolean }> => {
-    return ApiClient.getInstance().get<{ isShuttingDown: boolean }>(
-      "/admin/shutdown/status",
-      undefined,
-      true
-    );
+  getPowerStatus: (): Promise<PowerStatus> => {
+    return ApiClient.getInstance().get<PowerStatus>("/admin/power", undefined, true);
   },
 
-  shutdown: (): Promise<{ success: boolean; message: string }> => {
+  setPowerStatus: (
+    status: "shutdown"
+  ): Promise<{ success: boolean; message: string }> => {
     return ApiClient.getInstance().post<{ success: boolean; message: string }>(
-      "/admin/shutdown",
-      {},
-      true
-    );
-  },
-
-  start: (): Promise<{ success: boolean; message: string }> => {
-    return ApiClient.getInstance().post<{ success: boolean; message: string }>(
-      "/admin/start",
-      {},
+      "/admin/power",
+      { status },
       true
     );
   },

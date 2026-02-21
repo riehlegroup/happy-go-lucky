@@ -17,9 +17,7 @@ import { EMAIL_CONFIG } from './Config/email';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const ALLOW_DURING_SHUTDOWN_PATHS = new Set([
-  '/admin/shutdown',
-  '/admin/start',
-  '/admin/shutdown/status',
+  '/admin/power',
   '/session',
 ]);
 
@@ -37,6 +35,8 @@ export function createApp(db: Database): Application {
   // Global shutdown flag. Once shutdown is initiated, reject write requests
   // so the DB stays in a consistent state (read-only mode).
   app.locals.isShuttingDown = false;
+  app.locals.shutdownAt = null;
+  app.locals.shutdownGraceSeconds = Number(process.env.SHUTDOWN_GRACE_SECONDS) || 10;
   app.use((req, res, next) => {
     if (!app.locals.isShuttingDown) {
       next();
@@ -104,6 +104,7 @@ export function createApp(db: Database): Application {
   projectController.init(app);
   legacyController.init(app);
   adminController.init(app);
+  app.locals.adminController = adminController;
 
   return app;
 }

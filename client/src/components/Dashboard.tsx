@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
 
     const load = async () => {
       try {
-        const status = await adminApi.getShutdownStatus();
+        const status = await adminApi.getPowerStatus();
         setShutdownInProgress(Boolean(status.isShuttingDown));
       } catch {
         // ignore (e.g., server down)
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
     setShutdownError(null);
 
     try {
-      await adminApi.shutdown();
+      await adminApi.setPowerStatus("shutdown");
       setShutdownInProgress(true);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Shutdown failed";
@@ -143,20 +143,6 @@ const Dashboard: React.FC = () => {
     } finally {
       setShutdownPending(false);
     }
-  }
-
-  function startSystem() {
-    setShutdownPending(true);
-    setShutdownError(null);
-
-    adminApi
-      .start()
-      .then(() => setShutdownInProgress(false))
-      .catch((error) => {
-        const message = error instanceof Error ? error.message : "Start failed";
-        setShutdownError(message);
-      })
-      .finally(() => setShutdownPending(false));
   }
 
   return (
@@ -236,13 +222,8 @@ const Dashboard: React.FC = () => {
               </Button>
 
               {shutdownInProgress ? (
-                <Button
-                  variant="success"
-                  className="w-48"
-                  onClick={startSystem}
-                  disabled={shutdownPending}
-                >
-                  Start system
+                <Button variant="secondary" className="w-48" disabled>
+                  Shutting down…
                 </Button>
               ) : (
                 <Dialog open={shutdownDialogOpen} onOpenChange={setShutdownDialogOpen}>
@@ -257,9 +238,8 @@ const Dashboard: React.FC = () => {
                       <DialogDescription>
                         Do you really want to shut down the system?
                         <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900">
-                          After shutdown, the system enters read-only mode: all write
-                          operations will be rejected, but read requests will still
-                          work.
+                          After shutdown, the system enters read-only mode for a short
+                          grace period before the server stops completely.
                         </div>
                       </DialogDescription>
                     </DialogHeader>

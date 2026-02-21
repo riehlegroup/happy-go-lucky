@@ -17,6 +17,11 @@ initializeDB(dbPath).then((db) => {
     console.log(`Server running on http://localhost:${port}`);
   });
 
+  const adminController = app.locals.adminController as { setServer?: (srv: typeof server) => void } | undefined;
+  if (adminController?.setServer) {
+    adminController.setServer(server);
+  }
+
   const gracefulShutdown = async (reason: string) => {
     if (shutdownInProgress) {
       return;

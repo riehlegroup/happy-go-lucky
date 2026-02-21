@@ -18,7 +18,7 @@ describe('System shutdown API', () => {
 
   it('should require authentication', async () => {
     const response = await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .send({})
       .expect(401);
 
@@ -28,7 +28,7 @@ describe('System shutdown API', () => {
   it('should require admin role', async () => {
     const userToken = generateUserToken();
     const response = await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(userToken))
       .send({})
       .expect(403);
@@ -40,9 +40,9 @@ describe('System shutdown API', () => {
     const adminToken = generateAdminToken();
 
     const shutdownResponse = await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'shutdown' })
       .expect(202);
 
     expect(shutdownResponse.body.success).toBe(true);
@@ -64,15 +64,15 @@ describe('System shutdown API', () => {
     const adminToken = generateAdminToken();
 
     await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'shutdown' })
       .expect(202);
 
     const second = await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'shutdown' })
       .expect(200);
 
     expect(second.body.success).toBe(true);
@@ -83,9 +83,9 @@ describe('System shutdown API', () => {
     const adminToken = generateAdminToken();
 
     await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'shutdown' })
       .expect(202);
 
     const loginResponse = await request(app)
@@ -100,15 +100,15 @@ describe('System shutdown API', () => {
     const adminToken = generateAdminToken();
 
     await request(app)
-      .post('/admin/shutdown')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'shutdown' })
       .expect(202);
 
     await request(app)
-      .post('/admin/start')
+      .post('/admin/power')
       .set('Authorization', createAuthHeader(adminToken))
-      .send({})
+      .send({ status: 'startup' })
       .expect(200);
 
     // Writes should work again.
@@ -119,5 +119,30 @@ describe('System shutdown API', () => {
       .expect(201);
 
     expect(created.body.success).toBe(true);
+  });
+
+  it('should expose power status via GET', async () => {
+    const adminToken = generateAdminToken();
+
+    const statusResponse = await request(app)
+      .get('/admin/power')
+      .set('Authorization', createAuthHeader(adminToken))
+      .expect(200);
+
+    expect(statusResponse.body.status).toBe('startup');
+
+    await request(app)
+      .post('/admin/power')
+      .set('Authorization', createAuthHeader(adminToken))
+      .send({ status: 'shutdown' })
+      .expect(202);
+
+    const shutdownStatus = await request(app)
+      .get('/admin/power')
+      .set('Authorization', createAuthHeader(adminToken))
+      .expect(200);
+
+    expect(shutdownStatus.body.status).toBe('shutdown');
+    expect(shutdownStatus.body.isShuttingDown).toBe(true);
   });
 });
