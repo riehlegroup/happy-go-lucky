@@ -116,6 +116,8 @@ export class UserController implements IAppController {
               message: `Invalid transition from ${currentStatus.getStatus()} to ${desiredStatus}`,
             });
           return;
+        default:
+          throw new Error(`Invalid user status: ${desiredStatus}`);
       }
 
       await this.db.run("UPDATE users SET status = ? WHERE email = ?", [
