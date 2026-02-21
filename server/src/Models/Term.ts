@@ -17,31 +17,13 @@ export class Term implements Serializable {
   async readFrom(reader: Reader): Promise<void> {
     this.id = reader.readNumber("id") as number;
     const termNameStr = reader.readString("termName");
-
-    // Legacy/compat handling:
-    // Older persisted data may contain term names that fail newer validation
-    // rules (e.g. illogical ranges like "WS2025/24"). Reading such rows should
-    // not crash the server; instead we try a legacy-tolerant parse and fall
-    // back to null if it still cannot be interpreted.
     if (!termNameStr) {
       this.termName = null;
     } else {
-      const parsed = TermName.tryFromString(termNameStr);
-      if (parsed.ok) {
-        this.termName = parsed.value;
-        if (parsed.wasLegacy) {
-          // Intentionally warn (not throw): this signals a migration candidate.
-          console.warn(
-            `[legacy-data] Term ${this.id} has non-conforming termName "${termNameStr}". ` +
-              `Loaded using legacy parsing; consider migrating this value.`
-          );
-        }
-      } else {
+      try {
+        this.termName = TermName.fromString(termNameStr);
+      } catch {
         this.termName = null;
-        console.warn(
-          `[legacy-data] Term ${this.id} has invalid termName "${termNameStr}". ` +
-            `Loaded with termName=null; consider migrating/fixing this row.`
-        );
       }
     }
     this.displayName = reader.readString("displayName");
