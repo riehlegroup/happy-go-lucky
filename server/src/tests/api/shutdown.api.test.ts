@@ -60,6 +60,41 @@ describe('System shutdown API', () => {
     expect(blockedWrite.body.message).toMatch(/writes are disabled/i);
   });
 
+  it('should block PUT and DELETE requests during shutdown', async () => {
+    const adminToken = generateAdminToken();
+
+    const created = await request(app)
+      .post('/term')
+      .set('Authorization', createAuthHeader(adminToken))
+      .send({ termName: 'SS2098', displayName: 'Summer 2098' })
+      .expect(201);
+
+    const termId = created.body?.termId ?? created.body?.id;
+
+    await request(app)
+      .post('/admin/power')
+      .set('Authorization', createAuthHeader(adminToken))
+      .send({ status: 'shutdown' })
+      .expect(202);
+
+    const blockedPut = await request(app)
+      .put('/courseProject')
+      .set('Authorization', createAuthHeader(adminToken))
+      .send({ projectName: 'Blocked Project' })
+      .expect(503);
+
+    expect(blockedPut.body.success).toBe(false);
+    expect(blockedPut.body.message).toMatch(/writes are disabled/i);
+
+    const blockedDelete = await request(app)
+      .delete(`/term/${termId}`)
+      .set('Authorization', createAuthHeader(adminToken))
+      .expect(503);
+
+    expect(blockedDelete.body.success).toBe(false);
+    expect(blockedDelete.body.message).toMatch(/writes are disabled/i);
+  });
+
   it('should be idempotent when called multiple times', async () => {
     const adminToken = generateAdminToken();
 

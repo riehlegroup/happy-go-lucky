@@ -21,6 +21,13 @@ const ALLOW_DURING_SHUTDOWN_PATHS = new Set([
   '/session',
 ]);
 
+const normalizePath = (path: string): string => {
+  if (path.length > 1 && path.endsWith('/')) {
+    return path.replace(/\/+$/, '');
+  }
+  return path;
+};
+
 /**
  * Creates and configures an Express application with all routes
  * @param db Database instance to use for all endpoints
@@ -43,8 +50,9 @@ export function createApp(db: Database): Application {
       return;
     }
 
+    const normalizedPath = normalizePath(req.path);
     if (
-      ALLOW_DURING_SHUTDOWN_PATHS.has(req.path) ||
+      ALLOW_DURING_SHUTDOWN_PATHS.has(normalizedPath) ||
       SAFE_METHODS.has(req.method.toUpperCase())
     ) {
       next();
