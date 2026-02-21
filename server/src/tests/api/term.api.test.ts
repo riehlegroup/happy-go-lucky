@@ -93,6 +93,22 @@ describe('Term API', () => {
       expect(response.body.success).toBe(false);
     });
 
+    it('should reject invalid termName format', async () => {
+      await seedDatabase(db);
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/term')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({ termName: 'WS2024/', displayName: 'Invalid' })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe(
+        'Invalid term name. Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025'
+      );
+    });
+
     it('should allow creating term without displayName', async () => {
       await seedDatabase(db);
       const adminToken = generateAdminToken();
