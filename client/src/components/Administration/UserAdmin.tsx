@@ -38,7 +38,7 @@ interface UserEditProps {
 
 function UserEdit({ user, open, onClose }: UserEditProps) {
     const [email, setEmail] = useState<string>(user.email);
-    const [githubUsername, setGitHubUsername] = useState<string>(user.githubUsername || "");
+    const [githubUsername, setGithubUsername] = useState<string>(user.githubUsername || "");
     const [status, setStatus] = useState<string>(user.status);
     const [password, setPassword] = useState<string>("");
     const [userRole, setUserRole] = useState<string>(user.userRole);
@@ -109,7 +109,7 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
                         type="text"
                         label="GitHub Username"
                         value={githubUsername}
-                        onChange={(e) => setGitHubUsername(e.target.value)}
+                        onChange={(e) => setGithubUsername(e.target.value)}
                     />
                     <div>
                         <label className="mb-2 block text-sm font-medium text-slate-900">Status</label>
