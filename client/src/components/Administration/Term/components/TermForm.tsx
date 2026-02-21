@@ -24,7 +24,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   onChange,
   error,
 }: FormFieldProps) => (
-  <div className="flex-col items-center justify-between">
+  <div className="flex flex-col items-center justify-between">
     <h4>{label}: </h4>
     <input
       className={cn(

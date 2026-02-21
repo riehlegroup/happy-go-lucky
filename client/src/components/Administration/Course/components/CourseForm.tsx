@@ -22,7 +22,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   onChange,
   error,
 }: FormFieldProps) => (
-  <div className="flex-col items-center justify-between">
+  <div className="flex flex-col items-center justify-between">
     <h4>{label}: </h4>
     <input
       // className={`h-10 w-full border bg-gray-50 text-black ${
@@ -183,7 +183,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
     <div className="space-y-4">
       {isCourse ? (
         <>
-          <div className="flex-col items-center justify-between">
+          <div className="flex flex-col items-center justify-between">
             <h4>{label[0]}: </h4>
             <select
               className={cn(

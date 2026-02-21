@@ -41,7 +41,7 @@ export const TermNameInput: React.FC<TermNameInputProps> = ({
   }, [touched, text, parsed]);
 
   return (
-    <div className="flex-col items-center justify-between">
+    <div className="flex flex-col items-center justify-between">
       <h4>{label}: </h4>
       <input
         className={cn(
