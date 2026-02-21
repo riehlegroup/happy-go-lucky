@@ -53,7 +53,7 @@ export function createApp(db: Database): Application {
 
     res
       .status(503)
-      .json({ message: 'Writes are disabled while server is shutting down' });
+      .json({ success: false, message: 'Writes are disabled while server is shutting down' });
   });
 
   app.get('/', (req, res) => {
