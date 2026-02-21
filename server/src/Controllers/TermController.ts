@@ -40,7 +40,7 @@ export class TermController implements IAppController {
         success: true,
         data: terms.map((term) => ({
           id: term.getId(),
-          termName: term.getTermName()?.toString(),
+          termName: term.getTermName()?.toString() ?? null,
           displayName: term.getDisplayName(),
         })),
       });
