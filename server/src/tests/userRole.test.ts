@@ -21,4 +21,9 @@ describe("UserRole", () => {
   it("exposes enum values", () => {
     expect(UserRole.fromString(UserRoleEnum.ADMIN).isAdmin()).toBe(true);
   });
+
+  it("throws on invalid role input", () => {
+    expect(() => UserRole.fromString("INVALID")).toThrow(/Invalid user role/);
+    expect(() => UserRole.fromString(null)).toThrow(/Invalid user role/);
+  });
 });
