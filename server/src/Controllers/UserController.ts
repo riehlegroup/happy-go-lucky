@@ -207,8 +207,8 @@ export class UserController implements IAppController {
   }
 
   async setUserGitHubUsername(req: Request, res: Response): Promise<void> {
-    const { userEmail, newGitHubUsername, newGithubUsername: newGitHubUsernameLegacy } = req.body;
-    const githubUsername = newGitHubUsername ?? newGitHubUsernameLegacy;
+    const { userEmail, newGitHubUsername, newGithubUsername: newGithubUsernameLegacy } = req.body;
+    const githubUsername = newGitHubUsername ?? newGithubUsernameLegacy;
 
     if (!userEmail) {
       res.status(400).json({ message: "User email is required!" });
