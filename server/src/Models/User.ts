@@ -74,7 +74,7 @@ export class User extends Visitor implements Serializable {
     return this.name;
   }
 
-  public getGithubUsername(): string | null {
+  public getGitHubUsername(): string | null {
     return this.githubUsername;
   }
 
@@ -122,7 +122,7 @@ export class User extends Visitor implements Serializable {
     this.name = name;
   }
 
-  public setGithubUsername(githubUsername: string | null){
+  public setGitHubUsername(githubUsername: string | null){
     this.githubUsername = githubUsername;
   }
 

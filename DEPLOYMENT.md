@@ -105,7 +105,7 @@ dig your-domain.com
    # Run: openssl rand -base64 32
    JWT_SECRET=your_secure_random_jwt_secret_here
 
-   # Your FAU email credentials for sending emails
+   # Your FAU Email credentials for sending emails
    EMAIL_USER_FAU=your.email@fau.de
    EMAIL_PASS_FAU=your_secure_password
 
@@ -128,7 +128,7 @@ Caddy handles HTTPS automatically using Let's Encrypt. The process:
 - Valid domain name in `DOMAIN` variable
 - Domain DNS A record points to server IP
 - Ports 80 and 443 are accessible from internet
-- Valid email in `ACME_EMAIL` for notifications
+- Valid Email address in `ACME_EMAIL` for notifications
 
 ### Starting the Application
 
@@ -232,7 +232,7 @@ For local testing without a domain or HTTPS:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS and email links |
+| `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS and Email links |
 | `VITE_API_URL` | No | `http://localhost:3000` | Backend API base URL (should be `https://domain.com/api` in production) |
 
 **Important**: The backend receives requests WITHOUT the `/api` prefix. Caddy strips it during reverse proxying.
@@ -250,8 +250,8 @@ For local testing without a domain or HTTPS:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `EMAIL_USER_FAU` | Production | - | FAU email username for sending emails |
-| `EMAIL_PASS_FAU` | Production | - | FAU email password |
+| `EMAIL_USER_FAU` | Production | - | FAU Email username for sending emails |
+| `EMAIL_PASS_FAU` | Production | - | FAU Email password |
 
 **Email Behavior:**
 - **Development** (`NODE_ENV !== 'production'`): Emails logged to console, not sent
@@ -665,7 +665,7 @@ docker compose restart server
    docker compose logs server | grep -i "email\|smtp"
    ```
 
-**Test email credentials:**
+**Test Email Credentials:**
 ```bash
 # From inside server container
 docker compose exec server sh

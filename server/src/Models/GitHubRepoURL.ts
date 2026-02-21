@@ -17,7 +17,7 @@ export class GitHubRepoURL {
             throw new IllegalArgumentException("Invalid URL");
         this.url = url;
 
-        if (!this.isGithubUrl())
+        if (!this.isGitHubUrl())
             throw new IllegalArgumentException("Not a GitHub URL");
 
         if (!this.isValidProtocol())
@@ -38,7 +38,7 @@ export class GitHubRepoURL {
      * Checks if the URL hostname is github.com
      * @returns True if the check succeeds, else false
      */
-    private isGithubUrl() {
+    private isGitHubUrl() {
         return this.url.hostname === "github.com" ||
             this.url.hostname === "www.github.com";
     }

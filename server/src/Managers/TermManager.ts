@@ -69,7 +69,7 @@ export class TermManager implements IManager {
    */
   async readTerm(id: number): Promise<Term> {
     const term = await this.oh.getTerm(id, this.db);
-    if (!term) throw new IllegalArgumentException("TermID not found.");
+    if (!term) throw new IllegalArgumentException("Term ID not found.");
 
     const courses = await this.getCoursesForTerm(term);
     for (const course of courses) {

@@ -225,7 +225,7 @@ describe('User Configuration API', () => {
         .query({ projectName: 'Test Project' })
         .expect(400);
 
-      expect(response.body.message).toBe('User Email and Project Name are mandatory!');
+      expect(response.body.message).toBe('User email and project name are mandatory!');
     });
 
     it('should reject missing projectName', async () => {
@@ -234,7 +234,7 @@ describe('User Configuration API', () => {
         .query({ userEmail: 'test@test.com' })
         .expect(400);
 
-      expect(response.body.message).toBe('User Email and Project Name are mandatory!');
+      expect(response.body.message).toBe('User email and project name are mandatory!');
     });
 
     it('should return null for user with no URL set', async () => {
@@ -255,7 +255,7 @@ describe('User Configuration API', () => {
     it('should set GitHub username with valid data', async () => {
       const response = await request(app)
         .post('/user/githubUsername')
-        .send({ userEmail: 'test@test.com', newGithubUsername: 'testgithubuser' })
+        .send({ userEmail: 'test@test.com', newGitHubUsername: 'testgithubuser' })
         .expect(200);
 
       expect(response.body.message).toBe('GitHub username added successfully');
@@ -267,13 +267,13 @@ describe('User Configuration API', () => {
     it('should reject missing userEmail', async () => {
       const response = await request(app)
         .post('/user/githubUsername')
-        .send({ newGithubUsername: 'testgithubuser' })
+        .send({ newGitHubUsername: 'testgithubuser' })
         .expect(400);
 
       expect(response.body.message).toBe('User email is required!');
     });
 
-    it('should reject missing newGithubUsername', async () => {
+    it('should reject missing newGitHubUsername', async () => {
       const response = await request(app)
         .post('/user/githubUsername')
         .send({ userEmail: 'test@test.com' })
@@ -285,7 +285,7 @@ describe('User Configuration API', () => {
     it('should return 404 for non-existent user', async () => {
       const response = await request(app)
         .post('/user/githubUsername')
-        .send({ userEmail: 'nonexistent@test.com', newGithubUsername: 'testuser' })
+        .send({ userEmail: 'nonexistent@test.com', newGitHubUsername: 'testuser' })
         .expect(404);
 
       expect(response.body.message).toBe('User not found');
@@ -294,12 +294,12 @@ describe('User Configuration API', () => {
     it('should update existing GitHub username', async () => {
       await request(app)
         .post('/user/githubUsername')
-        .send({ userEmail: 'test@test.com', newGithubUsername: 'firstusername' })
+        .send({ userEmail: 'test@test.com', newGitHubUsername: 'firstusername' })
         .expect(200);
 
       await request(app)
         .post('/user/githubUsername')
-        .send({ userEmail: 'test@test.com', newGithubUsername: 'updatedusername' })
+        .send({ userEmail: 'test@test.com', newGitHubUsername: 'updatedusername' })
         .expect(200);
 
       const user = await getUserByEmail(db, 'test@test.com');
@@ -316,7 +316,7 @@ describe('User Configuration API', () => {
       // First set a username
       await request(app)
         .post('/user/githubUsername')
-        .send({ userEmail: 'test@test.com', newGithubUsername: 'testgithubuser' })
+        .send({ userEmail: 'test@test.com', newGitHubUsername: 'testgithubuser' })
         .expect(200);
 
       const response = await request(app)
@@ -332,7 +332,7 @@ describe('User Configuration API', () => {
         .get('/user/githubUsername')
         .expect(400);
 
-      expect(response.body.message).toBe('User Email is mandatory!');
+      expect(response.body.message).toBe('User email is mandatory!');
     });
 
     it('should return empty string for user with no username', async () => {

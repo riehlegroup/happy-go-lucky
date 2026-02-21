@@ -76,7 +76,7 @@ export class DatabaseResultSetReader implements Reader {
         // Assuming Object to be id-referenced:
         const id = this.attributes[attributeName];
         if (typeof id !== 'number') {
-            throw new Error("Error during Serialization: Id " + attributeName + " is not a number!");
+            throw new Error("Error during Serialization: ID " + attributeName + " is not a number!");
         }
         // Check if Object was read already:
         if (this.wasHandled.has({className: className, id: id})) {
