@@ -1,14 +1,14 @@
-import { Term } from "./types";
+import { TermDto } from "./types";
 import { Course } from "../Course/types";
 import ApiClient from "@/services/api/client";
 import { TermName } from "@/valueTypes/TermName";
 
 const termApi = {
-  getTerms: async (): Promise<Term[]> => {
+  getTerms: async (): Promise<TermDto[]> => {
     try {
       const response = await ApiClient.getInstance().get<{
         success: boolean;
-        data: Term[];
+        data: TermDto[];
       }>("/term");
 
       if (!response || !response.success || !Array.isArray(response.data)) {

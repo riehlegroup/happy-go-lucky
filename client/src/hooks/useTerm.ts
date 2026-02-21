@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Term } from "@/components/Administration/Term/types";
+import { Term, TermDto } from "@/components/Administration/Term/types";
 import { Course } from "@/components/Administration/Course/types";
 import termApi from "@/components/Administration/Term/api";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
@@ -38,7 +38,7 @@ export const useTerm = () => {
       const response = await termApi.getTerms();
       if (!response) return [];
 
-      const validTerms = response.map((term) => ({
+      const validTerms = response.map((term: TermDto) => ({
         id: term.id ?? 0,
         termName:
           typeof term.termName === "string"
