@@ -146,6 +146,13 @@ describe('System shutdown API', () => {
       .send({ status: 'startup' })
       .expect(200);
 
+    const status = await request(app)
+      .get('/admin/power')
+      .set('Authorization', createAuthHeader(adminToken))
+      .expect(200);
+
+    expect(status.body.isShuttingDown).toBe(false);
+
     // Writes should work again.
     const created = await request(app)
       .post('/term')
