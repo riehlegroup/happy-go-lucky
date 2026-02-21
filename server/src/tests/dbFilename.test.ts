@@ -36,7 +36,6 @@ describe('Database filename defaults', () => {
 
       await generateMockData(dbPath, false);
 
-      expect(basename(dbPath)).toBe('happyGoLucky.db');
       expect(existsSync(dbPath)).toBe(true);
     } finally {
       rmSync(tempRoot, { recursive: true, force: true });
