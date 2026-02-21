@@ -2,6 +2,8 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
 
+export const DEFAULT_DB_PATH = './server/happyGoLucky.db';
+
 /**
  * Generates mock data for development.
  *
@@ -9,7 +11,7 @@ import { hashPassword } from '../Utils/hash';
  * and happiness ratings for past sprints.
  */
 export async function generateMockData(
-  dbPath: string = './server/happyGoLucky.db',
+  dbPath: string = DEFAULT_DB_PATH,
   deleteOnly: boolean = false
 ) {
   console.log(`Connecting to database at: ${dbPath}`);
