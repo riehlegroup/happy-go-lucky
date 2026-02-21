@@ -55,7 +55,7 @@ You can still call the generic tools:
 
 ### Generated tools (current)
 
-Each OpenAPI operation becomeVs a tool named by `operationId`. Current tools include:
+Each OpenAPI operation becomes a tool named by `operationId`. Current tools include:
 
 - Auth: `registerUser`, `login`, `sendPasswordResetEmail`, `resetPassword`, `confirmEmail`, `resendConfirmationEmail`
 - Terms: `createTerm`, `listTerms`, `deleteTerm`, `addCourseToTerm`, `listTermCourses`

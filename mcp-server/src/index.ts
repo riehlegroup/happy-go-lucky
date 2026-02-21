@@ -328,9 +328,18 @@ async function main() {
   const mcpJsonPath = resolveMcpJsonPath();
   const useRuntimeGeneration = process.env.MCP_REGENERATE_TOOLS === 'true';
 
-  const toolsFile = useRuntimeGeneration
-    ? buildMcpToolsFromOpenApi(openapiPath)
-    : loadMcpTools(mcpJsonPath);
+  let toolsFile: McpToolsFile;
+  if (useRuntimeGeneration) {
+    toolsFile = buildMcpToolsFromOpenApi(openapiPath);
+  } else if (!existsSync(mcpJsonPath)) {
+    console.warn(
+      `MCP tools file not found at ${mcpJsonPath}. Regenerating from OpenAPI spec. ` +
+        `Set MCP_REGENERATE_TOOLS=true to silence this warning.`
+    );
+    toolsFile = buildMcpToolsFromOpenApi(openapiPath);
+  } else {
+    toolsFile = loadMcpTools(mcpJsonPath);
+  }
 
   const generatedTools = toolsFile.tools || [];
   const generatedToolMap = new Map(generatedTools.map((tool) => [tool.name, tool]));
