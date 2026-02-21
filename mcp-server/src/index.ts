@@ -10,14 +10,17 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
+// Default API base URL used when API_BASE_URL is not provided.
 const DEFAULT_BASE_URL = 'http://localhost:3000';
 
+// Minimal OpenAPI shape used by this server. Keep small to avoid over-typing.
 type OpenApiSpec = {
   info?: { title?: string; version?: string };
   security?: unknown[];
   paths?: Record<string, Record<string, any>>;
 };
 
+// Tool definition derived from OpenAPI operations.
 type GeneratedTool = {
   name: string;
   method: string;
@@ -31,6 +34,7 @@ type GeneratedTool = {
   security?: unknown[];
 };
 
+// JSON file persisted from OpenAPI generation.
 type McpToolsFile = {
   name?: string;
   version?: string;
@@ -39,6 +43,15 @@ type McpToolsFile = {
   source?: { openapiPath?: string; sha256?: string; generatedAt?: string };
 };
 
+type ToolCallArgs = Record<string, any>;
+
+type ApiCallResult = {
+  ok: boolean;
+  status: number;
+  data: any;
+};
+
+// Build a stable tool name from method/path unless operationId exists.
 function toToolName(method: string, path: string, operationId?: string) {
   if (operationId && operationId.trim().length > 0) return operationId;
   const normalized = path
@@ -48,16 +61,19 @@ function toToolName(method: string, path: string, operationId?: string) {
   return `${method.toLowerCase()}_${normalized || 'root'}`;
 }
 
+// Extract required params for a given parameter location (path/query).
 function getRequiredParams(params: any[], location: string) {
   if (!Array.isArray(params)) return [];
   return params.filter((p) => p?.in === location && p?.required).map((p) => p?.name).filter(Boolean);
 }
 
+// Ensure schema carries the parameter/body description (if any).
 function schemaWithDescription(schema: any, description?: string | null) {
   if (!schema || typeof schema !== 'object' || !description) return schema;
   return { ...schema, description };
 }
 
+// Build JSON schema for a parameter location.
 function buildParamsSchema(params: any[], location: string) {
   if (!Array.isArray(params)) return null;
   const filtered = params.filter((p) => p?.in === location);
@@ -82,6 +98,7 @@ function buildParamsSchema(params: any[], location: string) {
   };
 }
 
+// Pull JSON request body schema from an OpenAPI operation.
 function getRequestBodySchema(operation: any) {
   const requestBody = operation?.requestBody;
   const content = requestBody?.content || {};
@@ -93,6 +110,7 @@ function getRequestBodySchema(operation: any) {
   };
 }
 
+// Build tool input schema from OpenAPI operation parameters/body.
 function buildInputSchema(operation: any) {
   const params = Array.isArray(operation?.parameters) ? operation.parameters : [];
   const pathParamsSchema = buildParamsSchema(params, 'path');
@@ -123,6 +141,7 @@ function buildInputSchema(operation: any) {
   };
 }
 
+// Convert OpenAPI paths/operations to MCP tool definitions.
 function buildToolsFromOpenApi(spec: OpenApiSpec): GeneratedTool[] {
   const tools: GeneratedTool[] = [];
   const paths = spec.paths || {};
@@ -158,11 +177,13 @@ function buildToolsFromOpenApi(spec: OpenApiSpec): GeneratedTool[] {
   return tools;
 }
 
+// Load OpenAPI YAML as JS object.
 function loadOpenApi(openapiPath: string): OpenApiSpec {
   const raw = readFileSync(openapiPath, 'utf8');
   return parse(raw);
 }
 
+// Resolve OpenAPI path with env override and sane defaults.
 function resolveOpenApiPath(): string {
   const cwdOpenApi = resolve(process.cwd(), 'docs', 'openapi.yaml');
   const parentOpenApi = resolve(process.cwd(), '..', 'docs', 'openapi.yaml');
@@ -170,6 +191,7 @@ function resolveOpenApiPath(): string {
   return process.env.OPENAPI_PATH || defaultPath;
 }
 
+// Resolve MCP tools JSON path with env override and sane defaults.
 function resolveMcpJsonPath(): string {
   const inMcpServerDir = basename(process.cwd()) === 'mcp-server';
   const defaultOutPath = inMcpServerDir
@@ -178,11 +200,13 @@ function resolveMcpJsonPath(): string {
   return process.env.MCP_JSON_PATH || defaultOutPath;
 }
 
+// Load generated MCP tools file from disk.
 function loadMcpTools(mcpJsonPath: string): McpToolsFile {
   const raw = readFileSync(mcpJsonPath, 'utf8');
   return JSON.parse(raw);
 }
 
+// Build MCP tools JSON from OpenAPI spec and include metadata.
 function buildMcpToolsFromOpenApi(openapiPath: string): McpToolsFile {
   const raw = readFileSync(openapiPath, 'utf8');
   const spec = parse(raw) as OpenApiSpec;
@@ -204,6 +228,7 @@ function buildMcpToolsFromOpenApi(openapiPath: string): McpToolsFile {
   };
 }
 
+// Build a small index to expose available paths/methods.
 function buildPathsIndex(spec: OpenApiSpec) {
   const paths = spec.paths || {};
   return Object.entries(paths).map(([path, methods]) => ({
@@ -212,6 +237,7 @@ function buildPathsIndex(spec: OpenApiSpec) {
   }));
 }
 
+// Match a request path to an OpenAPI template path.
 function matchOpenApiPath(requestPath: string, specPaths: Record<string, any>) {
   if (specPaths[requestPath]) return { specPath: requestPath };
 
@@ -224,7 +250,13 @@ function matchOpenApiPath(requestPath: string, specPaths: Record<string, any>) {
   return null;
 }
 
-function buildUrl(baseUrl: string, pathTemplate: string, pathParams?: Record<string, any>, query?: Record<string, any>) {
+// Build a full URL with path params and query params.
+function buildUrl(
+  baseUrl: string,
+  pathTemplate: string,
+  pathParams?: Record<string, any>,
+  query?: Record<string, any>
+) {
   let path = pathTemplate;
   if (pathParams) {
     for (const [key, value] of Object.entries(pathParams)) {
@@ -243,6 +275,7 @@ function buildUrl(baseUrl: string, pathTemplate: string, pathParams?: Record<str
   return url.toString();
 }
 
+// Allow query params to be passed either via `query` or aliased at top-level.
 function buildToolInputSchema(tool: GeneratedTool) {
   const baseSchema = tool.inputSchema || {
     type: 'object',
@@ -273,6 +306,7 @@ function buildToolInputSchema(tool: GeneratedTool) {
   return schema;
 }
 
+// Call upstream API and normalize response.
 async function callApi(options: {
   method: string;
   path: string;
@@ -281,7 +315,7 @@ async function callApi(options: {
   query?: Record<string, any>;
   body?: any;
   bearerToken?: string;
-}) {
+}): Promise<ApiCallResult> {
   const { method, path, baseUrl, pathParams, query, body, bearerToken } = options;
   const url = buildUrl(baseUrl, path, pathParams, query);
 
@@ -388,7 +422,7 @@ async function main() {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const name = request.params.name;
-    const args = (request.params.arguments || {}) as Record<string, any>;
+    const args = (request.params.arguments || {}) as ToolCallArgs;
 
     if (name === 'list_openapi_paths') {
       return {
@@ -447,6 +481,7 @@ async function main() {
       };
     }
 
+    // Support query params passed either in `query` or at top level.
     const queryFromArgs = args.query ?? {};
     const queryParams: Record<string, any> = { ...queryFromArgs };
     if (!args.query && tool.inputSchema?.properties?.query?.properties) {
