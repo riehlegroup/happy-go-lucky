@@ -10,7 +10,7 @@ const UserPanel: React.FC = () => {
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [githubUsername, setGitHubUsername] = useState("");
+  const [githubUsername, setGithubUsername] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [githubMessage, setGitHubMessage] = useState("");
@@ -34,7 +34,7 @@ const UserPanel: React.FC = () => {
 
       try {
         const githubUser = await usersApi.getGitHubUsername(userEmail);
-        setGitHubUsername(githubUser);
+        setGithubUsername(githubUser);
         setUser((prev) => (prev ? { ...prev, githubUsername: githubUser } : null));
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -179,7 +179,7 @@ const UserPanel: React.FC = () => {
               label="GitHub Username"
               placeholder="Enter your GitHub username"
               value={githubUsername}
-              onChange={(e) => setGitHubUsername(e.target.value)}
+              onChange={(e) => setGithubUsername(e.target.value)}
             />
             {githubMessage && (
               <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
@@ -194,7 +194,7 @@ const UserPanel: React.FC = () => {
                 onClick={() => {
                   setNewEmail("");
                   setNewPassword("");
-                  setGitHubUsername("");
+                  setGithubUsername("");
                   setEmailMessage("");
                   setPasswordMessage("");
                   setGitHubMessage("");

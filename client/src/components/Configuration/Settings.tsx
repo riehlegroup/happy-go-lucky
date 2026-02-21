@@ -22,7 +22,7 @@ const Settings: React.FC = () => {
   const [emailMessage, setEmailMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [githubMessage, setGitHubMessage] = useState("");
-  const [githubUsername, setGitHubUsername] = useState("");
+  const [githubUsername, setGithubUsername] = useState("");
 
   const [user, setUser] = useState<{
     name: string;
@@ -45,7 +45,7 @@ const Settings: React.FC = () => {
 
         try {
           const githubUser = await usersApi.getGitHubUsername(userEmail);
-          setGitHubUsername(githubUser);
+          setGithubUsername(githubUser);
           setUser((prev) => (prev ? { ...prev, githubUsername: githubUser } : null));
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -243,7 +243,7 @@ const Settings: React.FC = () => {
                         label="GitHub Username"
                         placeholder="Enter your GitHub username"
                         value={githubUsername}
-                        onChange={(e) => setGitHubUsername(e.target.value)}
+                        onChange={(e) => setGithubUsername(e.target.value)}
                       />
                       {githubMessage && (
                         <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
