@@ -10,6 +10,8 @@ import { Course, Project } from "./Course/types";
 import CourseMessage from "./Course/components/CourseMessage";
 import TermMessage from "./Term/components/TermMessage";
 import { msgKey, translate } from "@/Resources/i18n";
+import { sortTermsChronologically, TermSortDirection } from "@/utils/termSorting";
+import { TermAction } from "./Term/components/TermAction";
 
 /**
  * Course Admin panel for managing courses and their projects.
@@ -20,6 +22,7 @@ const CourseAdmin: React.FC = () => {
   const { terms, getTerms, message: termMessage, clearMessage: clearTermMessage, deleteTerm } = useTerm();
   const [isLoading, setLoading] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [termSortDirection, setTermSortDirection] = useState<TermSortDirection>(TermSortDirection.NEW_TO_OLD)
 
   const fetchCourseProjects = useCallback(
     async (courses: Course[]) => {
@@ -65,7 +68,8 @@ const CourseAdmin: React.FC = () => {
   }, [getCourses, fetchCourseProjects]);
 
   const tableTerms = useMemo(() => {
-    return terms.map((term) => [
+    return sortTermsChronologically(terms, termSortDirection)
+    .map((term) => [
       term.id,
       term.termName,
       term.displayName,
@@ -87,7 +91,7 @@ const CourseAdmin: React.FC = () => {
         />
       </div>,
     ]);
-  }, [terms, fetchCourse, fetchTerms, deleteTerm]);
+  }, [terms, fetchCourse, fetchTerms, deleteTerm, termSortDirection]);
 
   const tableCourse = useMemo(() => {
     return courses.map((course) => {
@@ -151,6 +155,17 @@ const CourseAdmin: React.FC = () => {
       ];
     });
   }, [projects, courses, fetchCourse]);
+
+  /**
+   * Toggles the term sorting direction upon button click.
+   */
+  const toggleTermSortDirection = () => {
+    setTermSortDirection(prev => 
+      prev === TermSortDirection.OLD_TO_NEW
+      ? TermSortDirection.NEW_TO_OLD
+      : TermSortDirection.OLD_TO_NEW
+    );
+  };
 
   useEffect(() => {
     fetchTerms();
@@ -230,11 +245,21 @@ const CourseAdmin: React.FC = () => {
             data={tableTerms}
             rowsPerPage={9}
           >
-            <TermWidget
-              label={translate(msgKey.admin.courseAdmin.actions.create)}
-              action="add"
-              onFetch={fetchTerms}
-            />
+            
+            {/* div for side-by-side view */}
+            <div className="flex flex-wrap gap-3 mb-2">
+              <TermWidget
+                label={translate(msgKey.admin.courseAdmin.actions.create)}
+                action="add"
+                onFetch={fetchTerms}
+              />
+              {/* Button to toggle sorting of terms */}
+              <TermAction 
+                onClick={toggleTermSortDirection} 
+                label={termSortDirection === TermSortDirection.OLD_TO_NEW ? "Sorting: Old ➔ New" : "Sorting: New ➔ Old"}
+                action="edit"   // just for stylizing, no associated dialogue or action here
+              />
+            </div>
           </Table>
         </SectionCard>
 
