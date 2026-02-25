@@ -8,14 +8,7 @@ import { initializeDB } from '../databaseInitializer';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/happyGoLucky.db', deleteOnly: boolean = false) {
-  console.log(`Connecting to database at: ${dbPath}`);
-
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
-
+async function generateMockData(db: Database, deleteOnly: boolean = false) {
   try {
     console.log('Starting mock data generation...\n');
 
@@ -79,62 +72,61 @@ async function generateMockData(dbPath: string = './server/happyGoLucky.db', del
     console.log('Creating projects...');
     const amosProjectResult = await db.run(
       `INSERT INTO projects (projectName, courseId) VALUES (?, ?)`,
-      ['AMOS – Smart Campus App', amosCourseId]
+      ['AMOS Project 1', amosCourseId]
     );
     const amosProjectId = amosProjectResult.lastID;
-    console.log(`  ✓ AMOS – Smart Campus App created with ID: ${amosProjectId}`);
-
+    console.log(`  ✓ AMOS Project 1 created with ID: ${amosProjectId}`);
 
     const adapProjectResult = await db.run(
       `INSERT INTO projects (projectName, courseId) VALUES (?, ?)`,
-      ['ADAP – Personal Learning Tracker', adapCourseId]
+      ['ADAP Project 1', adapCourseId]
     );
     const adapProjectId = adapProjectResult.lastID;
-    console.log(`  ✓ ADAP – Personal Learning Tracker created with ID: ${adapProjectId}`);
+    console.log(`  ✓ ADAP Project 1 created with ID: ${adapProjectId}\n`);
 
     console.log('Creating users...');
     const amosStudent1Password = await hashPassword('amos-student-1-password');
     const amosStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['Elias Zimmermann', 'elias.zimmermann@fau.de', amosStudent1Password, 'confirmed', 'USER']
+      ['AMOS Student 1', 'amos-student-1@fau.de', amosStudent1Password, 'confirmed', 'USER']
     );
     const amosStudent1Id = amosStudent1Result.lastID;
-    console.log(`  ✓ Elias Zimmermann (elias.zimmermann@fau.de) created with ID: ${amosStudent1Id}`);
+    console.log(`  ✓ AMOS Student 1 (amos-student-1@fau.de) created with ID: ${amosStudent1Id}`);
 
     const amosStudent2Password = await hashPassword('amos-student-2-password');
     const amosStudent2Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['Clara Hartmann', 'clara.hartmann@fau.de', amosStudent2Password, 'confirmed', 'USER']
+      ['AMOS Student 2', 'amos-student-2@fau.de', amosStudent2Password, 'confirmed', 'USER']
     );
     const amosStudent2Id = amosStudent2Result.lastID;
-    console.log(`  ✓ Clara Hartmann (clara.hartmann@fau.de) created with ID: ${amosStudent2Id}`);
+    console.log(`  ✓ AMOS Student 2 (amos-student-2@fau.de) created with ID: ${amosStudent2Id}`);
 
     const adapStudent1Password = await hashPassword('adap-student-1-password');
     const adapStudent1Result = await db.run(
       `INSERT INTO users (name, email, password, status, userRole) VALUES (?, ?, ?, ?, ?)`,
-      ['Marie Schmidt', 'marie.schmidt@fau.de', adapStudent1Password, 'confirmed', 'USER']
+      ['ADAP Student 1', 'adap-student-1@fau.de', adapStudent1Password, 'confirmed', 'USER']
     );
     const adapStudent1Id = adapStudent1Result.lastID;
-    console.log(`  ✓ Marie Schmidt (marie.schmidt@fau.de) created with ID: ${adapStudent1Id}\n`);
+    console.log(`  ✓ ADAP Student 1 (adap-student-1@fau.de) created with ID: ${adapStudent1Id}\n`);
 
     console.log('Creating project memberships...');
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
       [amosStudent1Id, amosProjectId, 'Owner']
     );
-    console.log(`  ✓ Elias Zimmermann → AMOS – Smart Campus App (Owner)`);
+    console.log(`  ✓ AMOS Student 1 → AMOS Project 1 (Owner)`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
       [amosStudent2Id, amosProjectId, 'Developer']
     );
-    console.log(`  ✓ Clara Hartmann → AMOS – Smart Campus App (Developer)`);
+    console.log(`  ✓ AMOS Student 2 → AMOS Project 1 (Developer)`);
 
     await db.run(
       `INSERT INTO user_projects (userId, projectId, role) VALUES (?, ?, ?)`,
       [adapStudent1Id, adapProjectId, 'Owner']
     );
-    console.log(`  ✓ Marie Schmidt → ADAP – Personal Learning Tracker (Owner)\n`);
+    console.log(`  ✓ ADAP Student 1 → ADAP Project 1 (Owner)\n`);
 
     console.log('Creating course schedules (15 weeks, started 3 weeks ago)...');
     await db.run(
@@ -183,21 +175,21 @@ async function generateMockData(dbPath: string = './server/happyGoLucky.db', del
       const submissionTimestamp = Math.floor(submissionTime / 1000);
 
       if (submissionTimestamp <= currentTime) {
-        const happiness1 = Math.floor(Math.random() * 3) + 1; // +1 to +3
+        const happiness1 = Math.floor(Math.random() * 7) - 3;
         await db.run(
           `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
           [amosProjectId, amosStudent1Id, happiness1, amosSubmissionIds[i], submissionTimestamp]
         );
         amosStudent1Ratings++;
 
-        const happiness2 = Math.floor(Math.random() * 5) - 2; // -2 to +2
+        const happiness2 = Math.floor(Math.random() * 7) - 3;
         await db.run(
           `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
           [amosProjectId, amosStudent2Id, happiness2, amosSubmissionIds[i], submissionTimestamp]
         );
         amosStudent2Ratings++;
 
-        const happiness3 = Math.floor(Math.random() * 3) + 1; // +1 to +3
+        const happiness3 = Math.floor(Math.random() * 7) - 3;
         await db.run(
           `INSERT INTO happiness (projectId, userId, happiness, submissionDateId, timestamp) VALUES (?, ?, ?, ?, ?)`,
           [adapProjectId, adapStudent1Id, happiness3, adapSubmissionIds[i], submissionTimestamp]
@@ -215,19 +207,17 @@ async function generateMockData(dbPath: string = './server/happyGoLucky.db', del
     console.log('='.repeat(60));
     console.log('\nSummary:');
     console.log(`  Terms: 1`);
-    console.log(`  Term: Winter Semester 2025/2026 (WS25/26)`);
     console.log(`  Courses: 2 (AMOS Course Mock, ADAP Course Mock)`);
-    console.log(`  Projects: 2 (AMOS – Smart Campus App, ADAP – Personal Learning Tracker)`);
-    console.log(`  Students: 3 (2 AMOS, 1 ADAP)`);
+    console.log(`  Projects: 2 (AMOS Project 1, ADAP Project 1)`);
+    console.log(`  Students: 3`);
     console.log(`  Project memberships: 3`);
     console.log(`  Schedules: 2 (15 weeks each, started 3 weeks ago)`);
     console.log(`  Submission dates: 30 (15 per course)`);
     console.log(`  Happiness ratings: ${amosStudent1Ratings + amosStudent2Ratings + adapStudent1Ratings}`);
     console.log('\nStudent Accounts:');
-    console.log('  Elias Zimmermann | elias.zimmermann@fau.de | Password: amos-student-1-password | AMOS – Smart Campus App (Owner)');
-    console.log('  Clara Hartmann   | clara.hartmann@fau.de   | Password: amos-student-2-password | AMOS – Smart Campus App (Developer)');
-    console.log('  Marie Schmidt    | marie.schmidt@fau.de    | Password: adap-student-1-password | ADAP – Personal Learning Tracker (Owner)');
-
+    console.log('  Email: amos-student-1@fau.de | Password: amos-student-1-password | Project: AMOS (Owner)');
+    console.log('  Email: amos-student-2@fau.de | Password: amos-student-2-password | Project: AMOS (Developer)');
+    console.log('  Email: adap-student-1@fau.de | Password: adap-student-1-password | Project: ADAP (Owner)');
     console.log('='.repeat(60));
 
   } catch (error) {
@@ -239,7 +229,7 @@ async function generateMockData(dbPath: string = './server/happyGoLucky.db', del
 
 const args = process.argv.slice(2);
 const deleteOnly = args.includes('--delete-only');
-const dbPath = args.find(arg => !arg.startsWith('--')) || './server/happyGoLucky.db';
+const dbPath = args.find(arg => !arg.startsWith('--')) || './server/myDatabase.db';
 
 async function runMockDataGeneration() {
   const db = await initializeDB(dbPath);
