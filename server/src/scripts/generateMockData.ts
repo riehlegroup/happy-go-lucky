@@ -8,14 +8,7 @@ import { initializeDB } from '../databaseInitializer';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/happyGoLucky.db', deleteOnly: boolean = false) {
-  console.log(`Connecting to database at: ${dbPath}`);
-
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
-
+async function generateMockData(db: Database, deleteOnly: boolean = false) {
   try {
     console.log('Starting mock data generation...\n');
 
