@@ -1,6 +1,6 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import type { Database } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
+import { initializeDB } from '../databaseInitializer';
 
 /**
  * Generates mock data for development.
@@ -8,14 +8,7 @@ import { hashPassword } from '../Utils/hash';
  * Creates a semester with students, courses, projects,
  * and happiness ratings for past sprints.
  */
-async function generateMockData(dbPath: string = './server/happyGoLucky.db', deleteOnly: boolean = false) {
-  console.log(`Connecting to database at: ${dbPath}`);
-
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
-
+async function generateMockData(db: Database, deleteOnly: boolean = false) {
   try {
     console.log('Starting mock data generation...\n');
 
@@ -234,9 +227,6 @@ async function generateMockData(dbPath: string = './server/happyGoLucky.db', del
     console.error('\n❌ Error generating mock data:');
     console.error(error);
     throw error;
-  } finally {
-    await db.close();
-    console.log('\nDatabase connection closed.');
   }
 }
 
@@ -244,11 +234,17 @@ const args = process.argv.slice(2);
 const deleteOnly = args.includes('--delete-only');
 const dbPath = args.find(arg => !arg.startsWith('--')) || './server/happyGoLucky.db';
 
-generateMockData(dbPath, deleteOnly)
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Script failed:', error);
-    process.exit(1);
-  });
+async function runMockDataGeneration() {
+  const db = await initializeDB(dbPath);
+  try {
+    await generateMockData(db, deleteOnly);
+  } finally {
+    await db.close();
+  }
+  process.exit(0);
+}
+
+runMockDataGeneration().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
