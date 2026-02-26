@@ -33,8 +33,8 @@ export function checkOwnership(db: Database) {
       }
 
       if (
-        userFromTokenId?.getRole() !== "ADMIN" &&
-        userFromParamsId?.getName() !== userFromTokenId?.getName()
+        !userFromTokenId.getRole().isAdmin() &&
+        userFromParamsId.getName() !== userFromTokenId.getName()
       ) {
         res.status(403).json({ message: messages.middleware.forbiddenOnlyEditOwnData });
         return;
