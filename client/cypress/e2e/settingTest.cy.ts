@@ -30,21 +30,21 @@ describe('Settings Page End-to-End Test', () => {
       cy.get('.NewEmail-inputBox').clear();
       cy.get('.NewEmail-inputBox').type('newtestemail@fau.edu');
       cy.get('.create').contains('Change').click();
-      cy.get('.Message').should('contain.text', 'Email changed successfully!');
+      cy.get('.SettingsMessage').should('contain.text', 'Email changed successfully!');
   
       // Edit password
       cy.get('.DialogTrigger').eq(1).should('be.visible').click();
       cy.get('.NewEmail-inputBox').clear();
       cy.get('.NewEmail-inputBox').type('NewPassword123!');
       cy.get('.create').contains('Change').click();
-      cy.get('.Message').should('contain.text', 'Password changed successfully!');
+      cy.get('.SettingsMessage').should('contain.text', 'Password changed successfully!');
   
       // Add GitHub Username
       cy.get('.DialogTrigger').eq(2).should('be.visible').click();
       cy.get('.NewGitHubUsername-inputBox').clear();
       cy.get('.NewGitHubUsername-inputBox').type('newGitHubUsername');
       cy.get('.create').contains('Save').click();
-      cy.get('.Message').should('contain.text', 'GitHub Username added successfully!');
+      cy.get('.SettingsMessage').should('contain.text', 'GitHub Username added successfully!');
     });
   
     it('should select a project group, choose a project, and join it', () => {
@@ -60,7 +60,7 @@ describe('Settings Page End-to-End Test', () => {
         cy.contains('Join').click();
         
 
-        cy.get('.Message').should('contain.text', 'Successfully joined the project!');
+        cy.get('.SettingsMessage').should('contain.text', 'Successfully joined the project!');
     });
   
   });
