@@ -180,7 +180,7 @@ const UserAdmin = () => {
     return (
         <div className="min-h-screen">
             <TopNavBar title="User Admin" showBackButton={true} showUserInfo={true} />
-            <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+            <div className="mx-auto max-w-6xl space-y-4 p-4">
                 <Table
                     headings={["username", "email", "github username", "status", "userRole", "action"]}
                     loading={loading}
