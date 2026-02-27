@@ -1,0 +1,24 @@
+{
+  "name": "hgl-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Happy Go Lucky API",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc -w",
+    "generate:mcp": "node scripts/generate-mcp-json.mjs",
+    "test": "npm run build && vitest run --reporter=verbose"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
+  }
+}

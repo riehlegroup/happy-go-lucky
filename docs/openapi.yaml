@@ -1,0 +1,1583 @@
+openapi: 3.0.3
+info:
+  title: Happy Go Lucky API
+  version: 1.0.0
+  description: |
+    OpenAPI specification for the Happy Go Lucky backend.
+
+    This spec is designed for human developers and LLM agents. It provides
+    clear operation summaries, schemas, examples, and security metadata so
+    automated tools can safely call endpoints.
+  contact:
+    name: Happy Go Lucky Maintainers
+  x-ai:
+    audience: ["developers", "llm-agents"]
+    guidance:
+      - "Prefer operationId for tool naming."
+      - "Use explicit request/response schemas and examples."
+      - "Use bearerAuth where required."
+      - "Provide consistent error shapes and helpful descriptions."
+      - "Document required parameters and request bodies for tool correctness."
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+security: []
+
+tags:
+  - name: Health
+    description: Service health checks
+  - name: Auth
+    description: Authentication and account confirmation
+  - name: Users
+    description: User administration and profile configuration
+  - name: Terms
+    description: Academic term management
+  - name: Courses
+    description: Course management and schedules
+  - name: Projects
+    description: Project management and project features
+  - name: Legacy
+    description: Legacy endpoints for backward compatibility
+
+x-tagGroups:
+  - name: Core
+    tags: [Health, Auth, Users]
+  - name: Academic
+    tags: [Terms, Courses, Projects]
+  - name: Compatibility
+    tags: [Legacy]
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+      required: [success, message]
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+    AuthLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        githubUsername:
+          type: string
+          nullable: true
+      required: [token, name, email]
+    TermSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        termName:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+      required: [id, termName]
+    CourseSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        courseName:
+          type: string
+        termId:
+          type: integer
+          nullable: true
+      required: [id, courseName]
+    ProjectSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        projectName:
+          type: string
+        courseId:
+          type: integer
+          nullable: true
+      required: [id, projectName]
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        submissionDates:
+          type: array
+          items:
+            type: string
+            format: date-time
+      required: [id, startDate, endDate, submissionDates]
+    User:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+        userRole:
+          type: string
+        githubUsername:
+          type: string
+          nullable: true
+    HappinessMetric:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        userId:
+          type: integer
+        happiness:
+          type: number
+        submissionDateId:
+          type: integer
+        timestamp:
+          type: string
+        submissionDate:
+          type: string
+          nullable: true
+        userEmail:
+          type: string
+          nullable: true
+    AvailableSubmission:
+      type: object
+      properties:
+        id:
+          type: integer
+        submissionDate:
+          type: string
+          format: date-time
+        scheduleId:
+          type: integer
+      required: [id, submissionDate, scheduleId]
+
+paths:
+  /:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: getHealth
+      description: Returns a plain-text status message.
+      responses:
+        "200":
+          description: Server is running
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Server is running!
+
+  /user:
+    post:
+      tags: [Auth]
+      summary: Register user
+      operationId: registerUser
+      description: Creates a new user and sends a confirmation email.
+      x-llm-notes: |
+        Requires name, email, password. Returns a message and sends a confirmation email.
+        If the email is invalid or password is weak, returns 400 with a helpful message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+              required: [name, email, password]
+            example:
+              name: Jane Doe
+              email: jane@example.com
+              password: StrongPass123!
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+              example:
+                message: User registered successfully
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /session:
+    post:
+      tags: [Auth]
+      summary: Login
+      operationId: login
+      description: Authenticates a user and returns a JWT token.
+      x-llm-notes: |
+        Returns a JWT token. Store it as bearer token for endpoints that require authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required: [email, password]
+            example:
+              email: jane@example.com
+              password: StrongPass123!
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "400":
+          description: Invalid credentials or user state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "500":
+          description: Login failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/password/forgotMail:
+    post:
+      tags: [Auth]
+      summary: Send password reset email
+      operationId: sendPasswordResetEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required: [email]
+            example:
+              email: jane@example.com
+      responses:
+        "200":
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/password/reset:
+    post:
+      tags: [Auth]
+      summary: Reset password
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+              required: [token, newPassword]
+            example:
+              token: abc123
+              newPassword: NewStrongPass123!
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid password or token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/confirmation/email:
+    post:
+      tags: [Auth]
+      summary: Confirm email
+      operationId: confirmEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required: [token]
+            example:
+              token: abc123
+      responses:
+        "200":
+          description: Email confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Invalid or expired confirmation token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/confirmation/trigger:
+    post:
+      tags: [Auth]
+      summary: Resend confirmation email
+      operationId: resendConfirmationEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required: [email]
+            example:
+              email: jane@example.com
+      responses:
+        "200":
+          description: Confirmation email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: User not found or already confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /term:
+    post:
+      tags: [Terms]
+      summary: Create term
+      operationId: createTerm
+      security:
+        - bearerAuth: []
+      x-llm-notes: |
+        Admin-only. Requires a termName; displayName is optional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                termName:
+                  type: string
+                displayName:
+                  type: string
+              required: [termName]
+            example:
+              termName: WS25/26
+              displayName: Winter 2025/26
+      responses:
+        "201":
+          description: Term created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    get:
+      tags: [Terms]
+      summary: List terms
+      operationId: listTerms
+      x-llm-notes: "Returns array of terms with id, termName, displayName."
+      responses:
+        "200":
+          description: Terms list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TermSummary"
+                required: [success, data]
+
+  /term/{id}:
+    delete:
+      tags: [Terms]
+      summary: Delete term
+      operationId: deleteTerm
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Admin-only. Deletes term by numeric id."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Term deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Term not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /termCourse:
+    post:
+      tags: [Terms]
+      summary: Add course to term
+      operationId: addCourseToTerm
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                termId:
+                  type: integer
+                courseName:
+                  type: string
+              required: [termId, courseName]
+            example:
+              termId: 1
+              courseName: Agile Software Development
+      responses:
+        "201":
+          description: Course added to term
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /term/courses:
+    get:
+      tags: [Terms]
+      summary: List courses for a term
+      operationId: listTermCourses
+      parameters:
+        - name: termId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Courses for term
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CourseSummary"
+                required: [success, data]
+
+  /course:
+    post:
+      tags: [Courses]
+      summary: Create course
+      operationId: createCourse
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Requires courseName and termId (integer)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courseName:
+                  type: string
+                termId:
+                  type: integer
+              required: [courseName, termId]
+            example:
+              courseName: Agile Software Development
+              termId: 1
+      responses:
+        "201":
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    get:
+      tags: [Courses]
+      summary: List courses
+      operationId: listCourses
+      x-llm-notes: "Returns array of courses with id, courseName, termId."
+      responses:
+        "200":
+          description: Course list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CourseSummary"
+                required: [success, data]
+
+  /course/{id}:
+    delete:
+      tags: [Courses]
+      summary: Delete course
+      operationId: deleteCourse
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Admin-only. Deletes course by numeric id."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Course deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /courseProject:
+    post:
+      tags: [Courses]
+      summary: Add project to course
+      operationId: addProjectToCourse
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Creates a course project in a course by courseId and projectName."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courseId:
+                  type: integer
+                projectName:
+                  type: string
+              required: [courseId, projectName]
+            example:
+              courseId: 1
+              projectName: Project A
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    get:
+      tags: [Projects]
+      summary: List projects by course name
+      operationId: listProjectsByCourseName
+      x-llm-notes: "Requires query param courseName (string)."
+      parameters:
+        - name: courseName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectSummary"
+    put:
+      tags: [Projects]
+      summary: Edit project (legacy-style)
+      operationId: editProject
+      x-llm-notes: "Legacy update; use updateCourseProject where possible."
+      deprecated: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newCourseName:
+                  type: string
+                projectName:
+                  type: string
+                newProjectName:
+                  type: string
+              required: [newCourseName, projectName, newProjectName]
+            example:
+              newCourseName: Agile Software Development
+              projectName: Project A
+              newProjectName: Project A2
+      responses:
+        "201":
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /courseProject/{id}:
+    put:
+      tags: [Courses]
+      summary: Update course project
+      operationId: updateCourseProject
+      x-llm-notes: "Update a project by id."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectName:
+                  type: string
+                courseId:
+                  type: integer
+              required: [projectName]
+      responses:
+        "200":
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      tags: [Courses]
+      summary: Delete course project
+      operationId: deleteCourseProject
+      x-llm-notes: "Delete a project by id."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /course/courseProjects:
+    get:
+      tags: [Courses]
+      summary: List course projects
+      operationId: listCourseProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: courseId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: userEmail
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project list by course
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProjectSummary"
+                    required: [success, data]
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                      enrolledProjects:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProjectSummary"
+                      availableProjects:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProjectSummary"
+                    required: [success, enrolledProjects, availableProjects]
+
+  /course/{id}/schedule:
+    post:
+      tags: [Courses]
+      summary: Save course schedule
+      operationId: saveCourseSchedule
+      x-llm-notes: "Save course schedule (startDate, endDate, submissionDates)."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                submissionDates:
+                  type: array
+                  items:
+                    type: string
+                    format: date-time
+              required: [startDate, endDate]
+      responses:
+        "200":
+          description: Schedule saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Schedule"
+                required: [success, message, data]
+    get:
+      tags: [Courses]
+      summary: Get course schedule
+      operationId: getCourseSchedule
+      x-llm-notes: "Return schedule for course id."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Schedule
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Schedule"
+                required: [success, data]
+        "404":
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /courseProject/course:
+    get:
+      tags: [Projects]
+      summary: Get course for a project
+      operationId: getCourseForProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course for project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courseId:
+                    type: integer
+                  courseName:
+                    type: string
+                required: [courseId, courseName]
+        "404":
+          description: Course not found for project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /courseProject/user/role:
+    get:
+      tags: [Projects]
+      summary: Get user role in project
+      operationId: getRoleForProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectName
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: string
+                required: [role]
+        "404":
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/project:
+    post:
+      tags: [Projects]
+      summary: Join project
+      operationId: joinProject
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Requires projectName, memberRole, memberEmail."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectName:
+                  type: string
+                memberRole:
+                  type: string
+                memberEmail:
+                  type: string
+              required: [projectName, memberRole, memberEmail]
+      responses:
+        "201":
+          description: Joined project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      tags: [Projects]
+      summary: Leave project
+      operationId: leaveProject
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Requires userEmail and projectName in body."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                projectName:
+                  type: string
+              required: [userEmail, projectName]
+      responses:
+        "200":
+          description: Left project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/projects:
+    get:
+      tags: [Projects]
+      summary: List user projects
+      operationId: listUserProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userEmail
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    projectName:
+                      type: string
+                  required: [id, projectName]
+
+  /user/courses:
+    get:
+      tags: [Projects]
+      summary: List courses enrolled by user
+      operationId: listUserCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userEmail
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Courses for user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    courseName:
+                      type: string
+                  required: [id, courseName]
+
+  /courseProject/happiness:
+    post:
+      tags: [Projects]
+      summary: Save happiness metric
+      operationId: saveHappinessMetric
+      x-llm-notes: "Persists a happiness score for a project and submission date."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectName:
+                  type: string
+                userEmail:
+                  type: string
+                happiness:
+                  type: number
+                submissionDateId:
+                  type: integer
+              required: [projectName, userEmail, happiness, submissionDateId]
+      responses:
+        "200":
+          description: Happiness updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    get:
+      tags: [Projects]
+      summary: Get project happiness metrics
+      operationId: getProjectHappinessMetrics
+      x-llm-notes: "Returns array of metrics for a project."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Happiness metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HappinessMetric"
+
+  /courseProject/availableSubmissions:
+    get:
+      tags: [Projects]
+      summary: Get next available submission date
+      operationId: getAvailableSubmissions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Next available submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableSubmission"
+
+  /courseProject/standupsEmail:
+    post:
+      tags: [Projects]
+      summary: Send standup email to project members
+      operationId: sendStandupEmails
+      x-llm-notes: "Sends standup email (done/plans/challenges)."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectName:
+                  type: string
+                userName:
+                  type: string
+                doneText:
+                  type: string
+                plansText:
+                  type: string
+                challengesText:
+                  type: string
+              required: [projectName, userName, doneText, plansText, challengesText]
+      responses:
+        "200":
+          description: Standup email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /getUsers:
+    get:
+      tags: [Users]
+      summary: List all users
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /user/status:
+    get:
+      tags: [Users]
+      summary: List users by status
+      operationId: listUsersByStatus
+      x-llm-notes: "Requires status query param." 
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users with status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      tags: [Users]
+      summary: Update user status
+      operationId: updateUserStatus
+      security:
+        - bearerAuth: []
+      x-llm-notes: "Requires userEmail and status."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                status:
+                  type: string
+              required: [userEmail, status]
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/status/all:
+    post:
+      tags: [Users]
+      summary: Update all confirmed users status
+      operationId: updateAllConfirmedUsers
+      x-llm-notes: "Updates all users with status=confirmed to new status."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+              required: [status]
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/mail:
+    post:
+      tags: [Users]
+      summary: Change user email
+      operationId: changeUserEmail
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newEmail:
+                  type: string
+                oldEmail:
+                  type: string
+              required: [newEmail, oldEmail]
+      responses:
+        "200":
+          description: Email updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/password/change:
+    post:
+      tags: [Users]
+      summary: Change user password
+      operationId: changeUserPassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                password:
+                  type: string
+              required: [userEmail, password]
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /user/githubUsername:
+    post:
+      tags: [Users]
+      summary: Set GitHub username
+      operationId: setUserGitHubUsername
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                newGithubUsername:
+                  type: string
+              required: [userEmail, newGithubUsername]
+      responses:
+        "200":
+          description: GitHub username updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    get:
+      tags: [Users]
+      summary: Get GitHub username
+      operationId: getUserGitHubUsername
+      parameters:
+        - name: userEmail
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GitHub username
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  githubUsername:
+                    type: string
+                required: [githubUsername]
+
+  /user/project/url:
+    post:
+      tags: [Users]
+      summary: Set user project URL
+      operationId: setUserProjectUrl
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                URL:
+                  type: string
+                projectName:
+                  type: string
+              required: [userEmail, URL, projectName]
+      responses:
+        "200":
+          description: Project URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    get:
+      tags: [Users]
+      summary: Get user project URL
+      operationId: getUserProjectUrl
+      parameters:
+        - name: userEmail
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: projectName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    nullable: true
+                required: [url]
+
+  /user/role:
+    get:
+      tags: [Users]
+      summary: Get user role
+      operationId: getUserRole
+      parameters:
+        - name: userEmail
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userRole:
+                    type: string
+                required: [userRole]
+    post:
+      tags: [Users]
+      summary: Update user role
+      operationId: updateUserRole
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+              required: [email, role]
+      responses:
+        "200":
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /projConfig/changeURL:
+    post:
+      tags: [Legacy]
+      summary: Legacy set project URL
+      operationId: legacySetProjectUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                URL:
+                  type: string
+                projectName:
+                  type: string
+              required: [userEmail, URL, projectName]
+      responses:
+        "200":
+          description: URL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /projConfig/leaveProject:
+    post:
+      tags: [Legacy]
+      summary: Legacy leave project
+      operationId: legacyLeaveProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userEmail:
+                  type: string
+                projectName:
+                  type: string
+              required: [userEmail, projectName]
+      responses:
+        "200":
+          description: Left project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"

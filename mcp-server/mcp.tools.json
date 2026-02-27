@@ -1,0 +1,1950 @@
+{
+  "name": "Happy Go Lucky API",
+  "version": "1.0.0",
+  "apiBaseUrl": "${API_BASE_URL}",
+  "source": {
+    "openapiPath": "/run/media/redwanul/Storage/Study/WiSe-2025-26/ADAP/bonus-project/happy-go-lucky/docs/openapi.yaml",
+    "sha256": "65205f6f831c395f44069751da3a0c7e415d0c640e62bba82f6e820f7e5d56c5",
+    "generatedAt": "2026-02-21T08:47:59.976Z"
+  },
+  "tools": [
+    {
+      "name": "getHealth",
+      "method": "GET",
+      "path": "/",
+      "operationId": "getHealth",
+      "summary": "Health check",
+      "description": "Returns a plain-text status message.",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "registerUser",
+      "method": "POST",
+      "path": "/user",
+      "operationId": "registerUser",
+      "summary": "Register user",
+      "description": "Creates a new user and sends a confirmation email.",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "login",
+      "method": "POST",
+      "path": "/session",
+      "operationId": "login",
+      "summary": "Login",
+      "description": "Authenticates a user and returns a JWT token.",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "sendPasswordResetEmail",
+      "method": "POST",
+      "path": "/user/password/forgotMail",
+      "operationId": "sendPasswordResetEmail",
+      "summary": "Send password reset email",
+      "description": "Send password reset email",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "resetPassword",
+      "method": "POST",
+      "path": "/user/password/reset",
+      "operationId": "resetPassword",
+      "summary": "Reset password",
+      "description": "Reset password",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "newPassword": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token",
+              "newPassword"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "confirmEmail",
+      "method": "POST",
+      "path": "/user/confirmation/email",
+      "operationId": "confirmEmail",
+      "summary": "Confirm email",
+      "description": "Confirm email",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "resendConfirmationEmail",
+      "method": "POST",
+      "path": "/user/confirmation/trigger",
+      "operationId": "resendConfirmationEmail",
+      "summary": "Resend confirmation email",
+      "description": "Resend confirmation email",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "createTerm",
+      "method": "POST",
+      "path": "/term",
+      "operationId": "createTerm",
+      "summary": "Create term",
+      "description": "Create term",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "termName": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "termName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listTerms",
+      "method": "GET",
+      "path": "/term",
+      "operationId": "listTerms",
+      "summary": "List terms",
+      "description": "List terms",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "deleteTerm",
+      "method": "DELETE",
+      "path": "/term/{id}",
+      "operationId": "deleteTerm",
+      "summary": "Delete term",
+      "description": "Delete term",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "addCourseToTerm",
+      "method": "POST",
+      "path": "/termCourse",
+      "operationId": "addCourseToTerm",
+      "summary": "Add course to term",
+      "description": "Add course to term",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "termId": {
+                "type": "integer"
+              },
+              "courseName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "termId",
+              "courseName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listTermCourses",
+      "method": "GET",
+      "path": "/term/courses",
+      "operationId": "listTermCourses",
+      "summary": "List courses for a term",
+      "description": "List courses for a term",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "termId"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "termId": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "termId"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "createCourse",
+      "method": "POST",
+      "path": "/course",
+      "operationId": "createCourse",
+      "summary": "Create course",
+      "description": "Create course",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "courseName": {
+                "type": "string"
+              },
+              "termId": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "courseName",
+              "termId"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listCourses",
+      "method": "GET",
+      "path": "/course",
+      "operationId": "listCourses",
+      "summary": "List courses",
+      "description": "List courses",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "deleteCourse",
+      "method": "DELETE",
+      "path": "/course/{id}",
+      "operationId": "deleteCourse",
+      "summary": "Delete course",
+      "description": "Delete course",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "addProjectToCourse",
+      "method": "POST",
+      "path": "/courseProject",
+      "operationId": "addProjectToCourse",
+      "summary": "Add project to course",
+      "description": "Add project to course",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "courseId": {
+                "type": "integer"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "courseId",
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listProjectsByCourseName",
+      "method": "GET",
+      "path": "/courseProject",
+      "operationId": "listProjectsByCourseName",
+      "summary": "List projects by course name",
+      "description": "List projects by course name",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "courseName"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "courseName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "courseName"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "editProject",
+      "method": "PUT",
+      "path": "/courseProject",
+      "operationId": "editProject",
+      "summary": "Edit project (legacy-style)",
+      "description": "Edit project (legacy-style)",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "newCourseName": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              },
+              "newProjectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "newCourseName",
+              "projectName",
+              "newProjectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "updateCourseProject",
+      "method": "PUT",
+      "path": "/courseProject/{id}",
+      "operationId": "updateCourseProject",
+      "summary": "Update course project",
+      "description": "Update course project",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              },
+              "courseId": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams",
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "deleteCourseProject",
+      "method": "DELETE",
+      "path": "/courseProject/{id}",
+      "operationId": "deleteCourseProject",
+      "summary": "Delete course project",
+      "description": "Delete course project",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listCourseProjects",
+      "method": "GET",
+      "path": "/course/courseProjects",
+      "operationId": "listCourseProjects",
+      "summary": "List course projects",
+      "description": "List course projects",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "courseId"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "courseId": {
+                "type": "integer"
+              },
+              "userEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "courseId"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "saveCourseSchedule",
+      "method": "POST",
+      "path": "/course/{id}/schedule",
+      "operationId": "saveCourseSchedule",
+      "summary": "Save course schedule",
+      "description": "Save course schedule",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "startDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "submissionDates": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "required": [
+              "startDate",
+              "endDate"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams",
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getCourseSchedule",
+      "method": "GET",
+      "path": "/course/{id}/schedule",
+      "operationId": "getCourseSchedule",
+      "summary": "Get course schedule",
+      "description": "Get course schedule",
+      "requiredPathParams": [
+        "id"
+      ],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "pathParams"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getCourseForProject",
+      "method": "GET",
+      "path": "/courseProject/course",
+      "operationId": "getCourseForProject",
+      "summary": "Get course for a project",
+      "description": "Get course for a project",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "projectName"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getRoleForProject",
+      "method": "GET",
+      "path": "/courseProject/user/role",
+      "operationId": "getRoleForProject",
+      "summary": "Get user role in project",
+      "description": "Get user role in project",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "projectName",
+        "email"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName",
+              "email"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "joinProject",
+      "method": "POST",
+      "path": "/user/project",
+      "operationId": "joinProject",
+      "summary": "Join project",
+      "description": "Join project",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              },
+              "memberRole": {
+                "type": "string"
+              },
+              "memberEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName",
+              "memberRole",
+              "memberEmail"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "leaveProject",
+      "method": "DELETE",
+      "path": "/user/project",
+      "operationId": "leaveProject",
+      "summary": "Leave project",
+      "description": "Leave project",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listUserProjects",
+      "method": "GET",
+      "path": "/user/projects",
+      "operationId": "listUserProjects",
+      "summary": "List user projects",
+      "description": "List user projects",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "userEmail"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listUserCourses",
+      "method": "GET",
+      "path": "/user/courses",
+      "operationId": "listUserCourses",
+      "summary": "List courses enrolled by user",
+      "description": "List courses enrolled by user",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "userEmail"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "saveHappinessMetric",
+      "method": "POST",
+      "path": "/courseProject/happiness",
+      "operationId": "saveHappinessMetric",
+      "summary": "Save happiness metric",
+      "description": "Save happiness metric",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              },
+              "userEmail": {
+                "type": "string"
+              },
+              "happiness": {
+                "type": "number"
+              },
+              "submissionDateId": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "projectName",
+              "userEmail",
+              "happiness",
+              "submissionDateId"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getProjectHappinessMetrics",
+      "method": "GET",
+      "path": "/courseProject/happiness",
+      "operationId": "getProjectHappinessMetrics",
+      "summary": "Get project happiness metrics",
+      "description": "Get project happiness metrics",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "projectName"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getAvailableSubmissions",
+      "method": "GET",
+      "path": "/courseProject/availableSubmissions",
+      "operationId": "getAvailableSubmissions",
+      "summary": "Get next available submission date",
+      "description": "Get next available submission date",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "projectName"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "sendStandupEmails",
+      "method": "POST",
+      "path": "/courseProject/standupsEmail",
+      "operationId": "sendStandupEmails",
+      "summary": "Send standup email to project members",
+      "description": "Send standup email to project members",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "projectName": {
+                "type": "string"
+              },
+              "userName": {
+                "type": "string"
+              },
+              "doneText": {
+                "type": "string"
+              },
+              "plansText": {
+                "type": "string"
+              },
+              "challengesText": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "projectName",
+              "userName",
+              "doneText",
+              "plansText",
+              "challengesText"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listUsers",
+      "method": "GET",
+      "path": "/getUsers",
+      "operationId": "listUsers",
+      "summary": "List all users",
+      "description": "List all users",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "listUsersByStatus",
+      "method": "GET",
+      "path": "/user/status",
+      "operationId": "listUsersByStatus",
+      "summary": "List users by status",
+      "description": "List users by status",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "status"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "updateUserStatus",
+      "method": "POST",
+      "path": "/user/status",
+      "operationId": "updateUserStatus",
+      "summary": "Update user status",
+      "description": "Update user status",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "status"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "updateAllConfirmedUsers",
+      "method": "POST",
+      "path": "/user/status/all",
+      "operationId": "updateAllConfirmedUsers",
+      "summary": "Update all confirmed users status",
+      "description": "Update all confirmed users status",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "changeUserEmail",
+      "method": "POST",
+      "path": "/user/mail",
+      "operationId": "changeUserEmail",
+      "summary": "Change user email",
+      "description": "Change user email",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "newEmail": {
+                "type": "string"
+              },
+              "oldEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "newEmail",
+              "oldEmail"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "changeUserPassword",
+      "method": "POST",
+      "path": "/user/password/change",
+      "operationId": "changeUserPassword",
+      "summary": "Change user password",
+      "description": "Change user password",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "password"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "setUserGitHubUsername",
+      "method": "POST",
+      "path": "/user/githubUsername",
+      "operationId": "setUserGitHubUsername",
+      "summary": "Set GitHub username",
+      "description": "Set GitHub username",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "newGithubUsername": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "newGithubUsername"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getUserGitHubUsername",
+      "method": "GET",
+      "path": "/user/githubUsername",
+      "operationId": "getUserGitHubUsername",
+      "summary": "Get GitHub username",
+      "description": "Get GitHub username",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "userEmail"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "setUserProjectUrl",
+      "method": "POST",
+      "path": "/user/project/url",
+      "operationId": "setUserProjectUrl",
+      "summary": "Set user project URL",
+      "description": "Set user project URL",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "URL": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "URL",
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "getUserProjectUrl",
+      "method": "GET",
+      "path": "/user/project/url",
+      "operationId": "getUserProjectUrl",
+      "summary": "Get user project URL",
+      "description": "Get user project URL",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "userEmail",
+        "projectName"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "projectName"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "getUserRole",
+      "method": "GET",
+      "path": "/user/role",
+      "operationId": "getUserRole",
+      "summary": "Get user role",
+      "description": "Get user role",
+      "requiredPathParams": [],
+      "requiredQueryParams": [
+        "userEmail"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail"
+            ],
+            "additionalProperties": false
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "updateUserRole",
+      "method": "POST",
+      "path": "/user/role",
+      "operationId": "updateUserRole",
+      "summary": "Update user role",
+      "description": "Update user role",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "role"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ]
+    },
+    {
+      "name": "legacySetProjectUrl",
+      "method": "POST",
+      "path": "/projConfig/changeURL",
+      "operationId": "legacySetProjectUrl",
+      "summary": "Legacy set project URL",
+      "description": "Legacy set project URL",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "URL": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "URL",
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    },
+    {
+      "name": "legacyLeaveProject",
+      "method": "POST",
+      "path": "/projConfig/leaveProject",
+      "operationId": "legacyLeaveProject",
+      "summary": "Legacy leave project",
+      "description": "Legacy leave project",
+      "requiredPathParams": [],
+      "requiredQueryParams": [],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "object",
+            "properties": {
+              "userEmail": {
+                "type": "string"
+              },
+              "projectName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userEmail",
+              "projectName"
+            ]
+          },
+          "bearerToken": {
+            "type": "string",
+            "description": "JWT bearer token if the endpoint requires authentication."
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "security": []
+    }
+  ]
+}
