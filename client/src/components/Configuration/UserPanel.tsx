@@ -145,7 +145,7 @@ const UserPanel: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="User Profile" showBackButton={true} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         <SectionCard title="Update Profile">
           <div className="space-y-6">
             <Input

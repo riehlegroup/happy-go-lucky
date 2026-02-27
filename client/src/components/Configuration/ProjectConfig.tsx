@@ -275,7 +275,7 @@ const ProjectConfig: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Project Configuration" showBackButton={true} showUserInfo={true} />
 
-      <div className="mx-auto max-w-6xl space-y-4 p-4 pt-16">
+      <div className="mx-auto max-w-6xl space-y-4 p-4">
         <SectionCard title="Select Course">
           <div className="space-y-4">
             <Select onValueChange={handleCourseChange}>

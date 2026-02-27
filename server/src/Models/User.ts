@@ -3,15 +3,15 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
-import { UserStatus } from "../ValueTypes/UserStatus";
+import { UserRole } from "../ValueTypes/UserRole";
 
 export class User extends Visitor implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
-  protected status: UserStatus = UserStatus.unconfirmed();
-  protected role: string = "USER"; // @todo: remove and set UserRole
+  protected status: string = "unconfirmed";
+  protected role: UserRole = UserRole.user();
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
   protected resetPasswordExpire: number | null = null;
@@ -39,8 +39,8 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = UserStatus.fromString(reader.readString("status"));
-    this.role = reader.readString("userRole") as string;
+    this.status = reader.readString("status") as string;
+    this.role = UserRole.fromString(reader.readString("userRole"));
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -57,8 +57,8 @@ export class User extends Visitor implements Serializable {
     } else {
       writer.writeString("email", this.email.toString());
     }
-    writer.writeString("status", this.status.toString());
-    writer.writeString("userRole", this.role);
+    writer.writeString("status", this.status);
+    writer.writeString("userRole", this.role.toString());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
     writer.writeNumber("resetPasswordExpire", this.resetPasswordExpire);
@@ -94,7 +94,7 @@ export class User extends Visitor implements Serializable {
     return this.status;
   }
 
-  public getRole(): string {
+  public getRole(): UserRole {
     return this.role;
   }
 
@@ -143,8 +143,16 @@ export class User extends Visitor implements Serializable {
     this.status = this.status.remove();
   }
 
-  public setRole(role: string){
+  public setRole(role: UserRole){
     this.role = role;
+  }
+
+  public promoteToAdmin(): void {
+    this.role = this.role.promoteToAdmin();
+  }
+
+  public demoteToUser(): void {
+    this.role = this.role.demoteToUser();
   }
 
   public setPassword(password: string | null){

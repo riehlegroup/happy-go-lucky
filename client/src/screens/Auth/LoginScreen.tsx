@@ -15,6 +15,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState("");
 
   // Updates email based on the value from EmailWidget
@@ -42,7 +43,7 @@ const LoginScreen = () => {
         const data = await authApi.register(email, password, name);
         setMessage(data.message || "Registration successful! Please check your email to confirm your account.");
       } else {
-        const data = await authApi.login(email, password);
+        const data = await authApi.login(email, password, rememberMe);
         console.log("Response data:", data);
 
         authStorage.setToken(data.token);
@@ -165,13 +166,27 @@ const LoginScreen = () => {
                   />
                 </Form.Field>
 
-                <div className="text-sm text-slate-600">
-                  Forget Password?{" "}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="rememberMe"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="size-4 rounded border-gray-300 bg-gray-100 text-blue-600"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="ms-2 cursor-pointer text-sm font-medium text-gray-900"
+                    >
+                      Remember me
+                    </label>
+                  </div>
                   <a
                     href="/ForgotPassword"
-                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
                   >
-                    Click here
+                    Forgot Password?
                   </a>
                 </div>
 
