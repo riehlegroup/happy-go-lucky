@@ -13,6 +13,7 @@ import { ConsoleEmailService } from './Services/ConsoleEmailService';
 import { SmtpEmailService } from './Services/SmtpEmailService';
 import { LocalMtaEmailService } from './Services/LocalMtaEmailService';
 import { EMAIL_CONFIG } from './Config/email';
+import { messages } from './messages';
 
 /**
  * Creates and configures an Express application with all routes
@@ -26,7 +27,7 @@ export function createApp(db: Database): Application {
   app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 
   app.get('/', (req, res) => {
-    res.send('Server is running!');
+    res.send(messages.general.serverRunning);
   });
 
   // Initialize email service based on environment

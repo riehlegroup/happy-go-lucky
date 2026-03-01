@@ -16,6 +16,7 @@ import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
 import { Mail, Lock, User, Pencil } from "lucide-react";
 import { isValidEmail } from "@/utils/emailValidation";
+import { en as messages } from "@/messages";
 
 
 type SettingsMessageState = {
@@ -107,7 +108,7 @@ const Settings: React.FC = () => {
           console.error("Error fetching user data:", error);
         }
       } else {
-        console.warn("User data not found in storage");
+        console.warn(messages.settings.user.notFoundInStorageWarning);
       }
     };
 
@@ -116,18 +117,18 @@ const Settings: React.FC = () => {
 
   const handleEmailChange = async () => {
     if (!user) {
-      setEmailMessage({ text: "User data not available. Please log in again.", type: "error" });
+      setEmailMessage({ text: messages.settings.user.notAvailableWarning, type: "error" });
       return;
     }
 
     try {
       if (!newEmail || !newEmail.trim()) {
-        setEmailMessage({ text: "Email address cannot be empty.", type: "error" });
+        setEmailMessage({ text: messages.settings.email.emptyError, type: "error" });
         return;
       }
 
       if(isValidEmail(newEmail) === false) {
-        setEmailMessage({ text: "Invalid email address format.", type: "error" });
+        setEmailMessage({ text: messages.settings.email.invalidFormatError, type: "error" });
         return;
       }
       const data = await usersApi.changeEmail({
@@ -144,18 +145,18 @@ const Settings: React.FC = () => {
         setEmailMessage({ text: err.message, type: "error" });
         return;
       }
-      setEmailMessage({ text: "An unknown error occurred.", type: "error" });
+      setEmailMessage({ text: messages.settings.errors.unknown, type: "error" });
     }
   };
 
   const handlePasswordChange = async () => {
     if (!user) {
-      setPasswordMessage({ text: "User data not available. Please log in again.", type: "error" });
+      setPasswordMessage({ text: messages.settings.user.notAvailableWarning, type: "error" });
       return;
     }
 
     if (!newPassword || newPassword.trim() === "") {
-      setPasswordMessage({ text: "Password cannot be empty.", type: "error" });
+      setPasswordMessage({ text: messages.settings.password.emptyError, type: "error" });
       return;
     }
 
@@ -172,18 +173,18 @@ const Settings: React.FC = () => {
         setPasswordMessage({ text: error.message, type: "error" });
         return;
       }
-      setPasswordMessage({ text: "An error occurred.", type: "error" });
+      setPasswordMessage({ text: messages.settings.errors.generic, type: "error" });
     }
   };
 
   const handleGithubChange = async () => {
     if (!githubUsername || githubUsername.trim() === "") {
-      setGithubMessage({ text: "GitHub username cannot be empty.", type: "error" });
+      setGithubMessage({ text: messages.settings.github.emptyError, type: "error" });
       return;
     }
 
     if (!user?.email) {
-      setGithubMessage({ text: "User email not available.", type: "error" });
+      setGithubMessage({ text: messages.settings.github.emailMissingError, type: "error" });
       return;
     }
 
@@ -201,23 +202,23 @@ const Settings: React.FC = () => {
         setGithubMessage({ text: error.message, type: "error" });
         return;
       }
-      setGithubMessage({ text: "An error occurred.", type: "error" });
+      setGithubMessage({ text: messages.settings.errors.generic, type: "error" });
     }
   };
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Settings" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title={messages.settings.pageTitle} showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title="Account Settings">
+        <SectionCard title={messages.settings.sectionTitle}>
           <Card>
             <div className="divide-y divide-slate-200 text-left">
               {/* Email */}
               <SettingsRow
                 icon={<Mail className="h-5 w-5" />}
-                label="Email address"
-                value={user?.email || "Not available"}
+                label={messages.settings.email.label}
+                value={user?.email || messages.settings.email.notAvailableValue}
               >
                 <Dialog
                   open={emailOpen}
@@ -231,23 +232,23 @@ const Settings: React.FC = () => {
                 >
                   <DialogTrigger asChild>
                     <Button type="button" aria-label="Edit email address">
-                      <Pencil className="h-4 w-4 mr-2" /> Edit
+                      <Pencil className="h-4 w-4 mr-2" /> {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change Email Address</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">{messages.settings.email.dialogTitle}</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="email"
-                      label="New email"
+                      label={messages.settings.email.inputLabel}
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                     />
                     <SettingsMessage message={emailMessage} />
                     <DialogFooter>
                       <Button type="button" onClick={handleEmailChange}>
-                        Change Email
+                        {messages.settings.email.action}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -257,7 +258,7 @@ const Settings: React.FC = () => {
               {/* Password */}
               <SettingsRow
                 icon={<Lock className="h-5 w-5" />}
-                label="Password"
+                label={messages.settings.password.label}
                 value="••••••••"
               >
                 <Dialog
@@ -272,23 +273,23 @@ const Settings: React.FC = () => {
                 >
                   <DialogTrigger asChild>
                     <Button type="button" aria-label="Edit password">
-                      <Pencil className="h-4 w-4 mr-2" /> Edit
+                      <Pencil className="h-4 w-4 mr-2" /> {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change Password</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">{messages.settings.password.dialogTitle}</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="password"
-                      label="New password"
+                      label={messages.settings.password.inputLabel}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                     />
                     <SettingsMessage message={passwordMessage} />
                     <DialogFooter>
                       <Button type="button" aria-label="Change password" onClick={handlePasswordChange}>
-                        Change Password
+                        {messages.settings.password.action}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -298,8 +299,8 @@ const Settings: React.FC = () => {
               {/* GitHub */}
               <SettingsRow
                 icon={<User className="h-5 w-5" />}
-                label="GitHub username"
-                value={user?.UserGithubUsername || "Not set"}
+                label={messages.settings.github.label}
+                value={user?.UserGithubUsername || messages.settings.github.notSetValue}
               >
                 <Dialog
                   open={githubOpen}
@@ -313,23 +314,23 @@ const Settings: React.FC = () => {
                 >
                   <DialogTrigger asChild>
                     <Button type="button">
-                      <Pencil className="h-4 w-4 mr-2" /> Edit
+                      <Pencil className="h-4 w-4 mr-2" /> {messages.settings.edit}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">Change GitHub Username</DialogTitle>
+                      <DialogTitle className="text-lg font-medium leading-6 text-gray-900">{messages.settings.github.dialogTitle}</DialogTitle>
                     </DialogHeader>
                     <Input
                       type="text"
-                      label="GitHub username"
+                      label={messages.settings.github.inputLabel}
                       value={githubUsername}
                       onChange={(e) => setGithubUsername(e.target.value)}
                     />
                     <SettingsMessage message={githubMessage} />
                     <DialogFooter>
                       <Button type="button" aria-label="Change GitHub username" onClick={handleGithubChange}>
-                        Confirm
+                        {messages.settings.github.confirm}
                       </Button>
                     </DialogFooter>
                   </DialogContent>

@@ -17,6 +17,7 @@ import EmailIcon from "./../../assets/EmailIcon.png";
 
 import { isValidEmail } from "@/utils/emailValidation";
 import usersApi from "@/services/api/users";
+import { en as messages } from "@/messages";
 
 const userStatus = ["unconfirmed", "confirmed", "suspended", "removed"];
 
@@ -85,18 +86,18 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Edit user</DialogTitle>
+                    <DialogTitle>{messages.admin.userAdmin.editDialogTitle}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                     <Input
                         type="text"
-                        label="Username"
+                        label={messages.admin.userAdmin.fields.username}
                         value={user.name}
                         disabled={true}
                     />
                     <Input
                         type="email"
-                        label="Email"
+                        label={messages.admin.userAdmin.fields.email}
                         value={email}
                         onChange={(e) => {
                             const newEmail = e.target.value;
@@ -107,12 +108,12 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
                     />
                     <Input
                         type="text"
-                        label="GitHub Username"
+                        label={messages.admin.userAdmin.fields.githubUsername}
                         value={githubUsername}
                         onChange={(e) => setGithubUsername(e.target.value)}
                     />
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-900">Status</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">{messages.admin.userAdmin.fields.status}</label>
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
@@ -127,20 +128,20 @@ function UserEdit({ user, open, onClose }: UserEditProps) {
                     </div>
                     <Input
                         type="text"
-                        label="UserRole"
+                        label={messages.admin.userAdmin.fields.userRole}
                         value={userRole}
                         onChange={(e) => setUserRole(e.target.value)}
                     />
                     <Input
                         type="password"
-                        label="New Password"
+                        label={messages.admin.userAdmin.fields.newPassword}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </div>
                 <DialogFooter>
-                    <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-                    <Button onClick={onSave}>Save</Button>
+                    <Button variant="secondary" onClick={onCancel}>{messages.common.cancel}</Button>
+                    <Button onClick={onSave}>{messages.common.save}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -168,21 +169,21 @@ const UserAdmin = () => {
     const tableData = users.map(user => [
         user.name,
         user.email,
-        user.githubUsername ? user.githubUsername : "N/A",
+        user.githubUsername ? user.githubUsername : messages.admin.userAdmin.table.notAvailable,
         user.status,
         user.userRole,
         <div key={user.id} className="flex gap-3">
-            <img className="h-5 cursor-pointer" src={Edit} title="edit" onClick={() => setEditing(user)} />
-            {user.status === "unconfirmed" && <img className="h-5 cursor-pointer" src={EmailIcon} title="send confirmation email" onClick={() => sendConfirmationEmail(user)} />}
+            <img className="h-5 cursor-pointer" src={Edit} title={messages.admin.userAdmin.icons.editTitle} onClick={() => setEditing(user)} />
+            {user.status === "unconfirmed" && <img className="h-5 cursor-pointer" src={EmailIcon} title={messages.admin.userAdmin.icons.sendConfirmationEmailTitle} onClick={() => sendConfirmationEmail(user)} />}
         </div>
     ]);
 
     return (
         <div className="min-h-screen">
-            <TopNavBar title="User Admin" showBackButton={true} showUserInfo={true} />
+            <TopNavBar title={messages.admin.userAdmin.pageTitle} showBackButton={true} showUserInfo={true} />
             <div className="mx-auto max-w-6xl space-y-4 p-4">
                 <Table
-                    headings={["username", "email", "github username", "status", "userRole", "action"]}
+                    headings={[messages.admin.userAdmin.table.headings.username, messages.admin.userAdmin.table.headings.email, messages.admin.userAdmin.table.headings.githubUsername, messages.admin.userAdmin.table.headings.status, messages.admin.userAdmin.table.headings.userRole, messages.admin.userAdmin.table.headings.action]}
                     loading={loading}
                     loadData={fetchUsers}
                     data={tableData}

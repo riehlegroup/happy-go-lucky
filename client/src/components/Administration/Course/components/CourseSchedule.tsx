@@ -3,6 +3,7 @@ import { Course } from "../types";
 import Button from "@/components/common/Button";
 import { DateInput } from "./CourseForm";
 import courseApi from "../api";
+import { en as messages } from "@/messages";
 
 interface CourseScheduleProps {
   course: Course;
@@ -71,7 +72,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
   const handleRegenerateWeekly = () => {
     const weeklySubmissions = generateWeeklySubmission();
     setSubmission(weeklySubmissions);
-    setMessage({ text: "Weekly submissions regenerated", type: "success" });
+    setMessage({ text: messages.admin.courseAdmin.schedule.weeklyRegenerated, type: "success" });
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -89,10 +90,10 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
         submissionDates: validSubmissions.map(d => d.toISOString()),
       });
 
-      setMessage({ text: "Schedule saved successfully!", type: "success" });
+      setMessage({ text: messages.admin.courseAdmin.schedule.savedSuccess, type: "success" });
     } catch (error) {
       console.error("Error saving schedule:", error);
-      setMessage({ text: "Failed to save schedule. Please try again.", type: "error" });
+      setMessage({ text: messages.admin.courseAdmin.schedule.savedFailure, type: "error" });
     } finally {
       setSaving(false);
     }
@@ -138,7 +139,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
     // Check if date is within range
     if (d < start || d > end) {
       setMessage({
-        text: "Submission date must be between course start and end dates",
+        text: messages.admin.courseAdmin.schedule.submissionDateOutOfRange,
         type: "error"
       });
       setTimeout(() => setMessage(null), 3000);
@@ -181,21 +182,21 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex size-full items-center justify-center bg-gray-900/50">
       <div className="mt-4 flex max-h-[90vh] w-auto max-w-2xl flex-col items-center overflow-y-auto rounded bg-white p-6 text-gray-500 shadow">
-        <h2 className="text-2xl font-bold text-black">Course Scheduler</h2>
+        <h2 className="text-2xl font-bold text-black">{messages.admin.courseAdmin.schedule.title}</h2>
         <h3>
-          ID: {course.id}, Name: {course.courseName}
+          {messages.admin.courseAdmin.schedule.courseInfo(course.id, course.courseName)}
         </h3>
 
         <div className="flex w-full flex-col items-center">
           <DateInput
-            label="Course start:"
+            label={messages.admin.courseAdmin.schedule.courseStartLabel}
             value={startDate.toISOString().substring(0, 10)}
             onChange={setStartDate}
             className="my-2"
           />
 
           <DateInput
-            label="Course end:"
+            label={messages.admin.courseAdmin.schedule.courseEndLabel}
             value={endDate.toISOString().substring(0, 10)}
             onChange={setEndDate}
             className="my-2"
@@ -203,17 +204,17 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
         </div>
 
         <div className="mb-4 w-full">
-          <h3 className="px-2 font-bold text-black">Submission:</h3>
+          <h3 className="px-2 font-bold text-black">{messages.admin.courseAdmin.schedule.submissionTitle}</h3>
           <div className="my-2 flex justify-center">
             <Button
               onClick={handleRegenerateWeekly}
             >
-              Regenerate Weekly Submissions
+              {messages.admin.courseAdmin.schedule.regenerateWeekly}
             </Button>
           </div>
           <div className="my-2 flex items-end justify-center gap-2">
             <DateInput
-              label="Add Date:"
+              label={messages.admin.courseAdmin.schedule.addDateLabel}
               className="justify-center"
               value={selectedDate.toISOString().substring(0, 10)}
               onChange={setSelectedDate}
@@ -221,7 +222,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
             <Button
               onClick={() => addSubmission(selectedDate)}
             >
-              Add
+              {messages.admin.courseAdmin.schedule.add}
             </Button>
           </div>
           <div className="w-full px-2">
@@ -234,7 +235,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
                     variant="destructive"
                     onClick={() => removeSubmission(slot)}
                   >
-                    Remove
+                    {messages.admin.courseAdmin.schedule.remove}
                   </Button>
                 </li>
               ))}
@@ -260,13 +261,13 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
             onClick={onClose}
             disabled={saving}
           >
-            Close
+            {messages.common.close}
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? messages.admin.courseAdmin.schedule.saving : messages.common.save}
           </Button>
         </div>
       </div>
