@@ -93,6 +93,22 @@ describe('Term API', () => {
       expect(response.body.success).toBe(false);
     });
 
+    it('should reject invalid termName format', async () => {
+      await seedDatabase(db);
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/term')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({ termName: 'WS2024/', displayName: 'Invalid' })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe(
+        'Invalid term name. Use format: WS24, SS25, WS24/25, Winter 2024 or Summer 2025'
+      );
+    });
+
     it('should allow creating term without displayName', async () => {
       await seedDatabase(db);
       const adminToken = generateAdminToken();
@@ -336,10 +352,10 @@ describe('Term API', () => {
       await request(app)
         .post('/term')
         .set('Authorization', createAuthHeader(adminToken))
-        .send({ termName: 'Term To Delete', displayName: 'Delete Me' })
+        .send({ termName: 'WS2099', displayName: 'Winter 2099/2100' })
         .expect(201);
 
-      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['Term To Delete']);
+      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['WS2099']);
 
       const response = await request(app)
         .delete(`/term/${termResult.id}`)
@@ -400,10 +416,10 @@ describe('Term API', () => {
       await request(app)
         .post('/term')
         .set('Authorization', createAuthHeader(adminToken))
-        .send({ termName: 'Term For Non-Admin Test' })
+        .send({ termName: 'SS2098', displayName: 'Summer 2098' })
         .expect(201);
 
-      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['Term For Non-Admin Test']);
+      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['SS2098']);
 
       const response = await request(app)
         .delete(`/term/${termResult.id}`)
@@ -423,10 +439,10 @@ describe('Term API', () => {
       await request(app)
         .post('/term')
         .set('Authorization', createAuthHeader(adminToken))
-        .send({ termName: 'Term For No Auth Test' })
+        .send({ termName: 'WS2097', displayName: 'Winter 2097/2098' })
         .expect(201);
 
-      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['Term For No Auth Test']);
+      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['WS2097']);
 
       const response = await request(app)
         .delete(`/term/${termResult.id}`)
@@ -445,10 +461,10 @@ describe('Term API', () => {
       await request(app)
         .post('/term')
         .set('Authorization', createAuthHeader(adminToken))
-        .send({ termName: 'Term For Invalid Token Test' })
+        .send({ termName: 'SS2096', displayName: 'Summer 2096' })
         .expect(201);
 
-      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['Term For Invalid Token Test']);
+      const termResult = await db.get('SELECT id FROM terms WHERE termName = ?', ['SS2096']);
 
       const response = await request(app)
         .delete(`/term/${termResult.id}`)

@@ -9,6 +9,7 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./TermMessage";
 import { cn } from "@/lib/utils";
+import { TermNameInput } from "./TermNameInput";
 
 interface FormFieldProps {
   label: string;
@@ -23,7 +24,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   onChange,
   error,
 }: FormFieldProps) => (
-  <div className="flex-col items-center justify-between">
+  <div className="flex flex-col items-center justify-between">
     <h4>{label}: </h4>
     <input
       className={cn(
@@ -79,7 +80,7 @@ export const TermForm: React.FC<TermFormProps> = ({
   // Narrow the handleChanges using type assertions
   const termHandleChanges = handleChanges as (
     key: keyof Term,
-    value: string
+    value: string | boolean | number | null
   ) => void;
   const courseHandleChanges = handleChanges as (
     key: keyof Course,
@@ -108,10 +109,9 @@ export const TermForm: React.FC<TermFormProps> = ({
     <div className="space-y-4">
       {isTerm ? (
         <>
-          <FormField
+          <TermNameInput
             label={label[0]}
-            value={(formData as Term).termName || ""}
-            error={(errors as Record<keyof Term, string>).termName}
+            value={(formData as Term).termName}
             onChange={(value) => termHandleChanges("termName", value)}
           />
           <FormField
