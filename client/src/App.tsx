@@ -14,30 +14,34 @@ import Happiness from "./components/Projects/Happiness";
 import ConfirmedEmail from "./screens/Auth/ConfirmedEmail";
 import UserPanel from "./components/Configuration/UserPanel";
 import CourseAdmin from "./components/Administration/CourseAdmin";
+import { ToastProvider, Toaster } from "./components/ui/toast";
 
 function App() {
   return (
-    <div>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/forgotPassword" element={<ForgotPassword />} />
-          <Route path="/resetPassword" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/standups" element={<Standups />} />
-          <Route path="/happiness" element={<Happiness />} />
-          <Route path="/code-activity" element={<CodeActivity />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/course-participation" element={<CourseParticipation />} />
-          <Route path="/user-admin" element={<UserAdmin />} />
-          <Route path="/course-admin" element={<CourseAdmin />} />
-          <Route path="/project-config" element={<ProjectConfig />} />
-          <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
-          <Route path="/user-panel" element={<UserPanel />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <ToastProvider>
+      <div>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/forgotPassword" element={<ForgotPassword />} />
+            <Route path="/resetPassword" element={<ResetPassword />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/standups" element={<Standups />} />
+            <Route path="/happiness" element={<Happiness />} />
+            <Route path="/code-activity" element={<CodeActivity />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/course-participation" element={<CourseParticipation />} />
+            <Route path="/user-admin" element={<UserAdmin />} />
+            <Route path="/course-admin" element={<CourseAdmin />} />
+            <Route path="/project-config" element={<ProjectConfig />} />
+            <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
+            <Route path="/user-panel" element={<UserPanel />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster />
+      </div>
+    </ToastProvider>
   );
 }
 

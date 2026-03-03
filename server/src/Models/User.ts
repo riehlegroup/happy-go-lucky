@@ -90,7 +90,7 @@ export class User extends Visitor implements Serializable {
     return this.email;
   }
 
-  public getStatus(): string {
+  public getStatus(): UserStatus {
     return this.status;
   }
 
@@ -131,8 +131,16 @@ export class User extends Visitor implements Serializable {
     this.email = email;
   }
 
-  public setStatus(status: string) {
-    this.status = status;
+  public confirm(): void {
+    this.status = this.status.confirm();
+  }
+
+  public suspend(): void {
+    this.status = this.status.suspend();
+  }
+
+  public remove(): void {
+    this.status = this.status.remove();
   }
 
   public setRole(role: UserRole){
