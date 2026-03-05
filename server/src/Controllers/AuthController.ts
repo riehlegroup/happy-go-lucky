@@ -3,7 +3,7 @@ import { Database } from "sqlite";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import { UserStatusEnum } from "../ValueTypes/UserStatus";
+import { UserStatus, UserStatusEnum } from "../ValueTypes/UserStatus";
 import { ObjectHandler } from "../ObjectHandler";
 import { comparePassword, hashPassword } from "../Utils/hash";
 import { Password } from "../Models/Password";
@@ -158,7 +158,7 @@ export class AuthController implements IAppController {
       }
 
       let st: string = user.getStatus();
-      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
+      let userStatus: UserStatus = UserStatus.fromString(st as UserStatusEnum);
       if (userStatus.getStatusString() == UserStatusEnum.unconfirmed) {
         res
           .status(400)
@@ -360,7 +360,7 @@ export class AuthController implements IAppController {
         return;
       }
       let st: string = user.getStatus();
-      let userStatus: UserStatus = new UserStatus(st as UserStatusEnum);
+      let userStatus: UserStatus = UserStatus.fromString(st as UserStatusEnum);
       if (userStatus.getStatusString() != UserStatusEnum.unconfirmed) {
         res
           .status(400)
