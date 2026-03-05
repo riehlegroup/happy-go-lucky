@@ -165,10 +165,12 @@ export class AuthController implements IAppController {
           .json({ message: "Email not confirmed. Please contact system admin." });
         return;
       } else if (userStatus.getStatusString() == UserStatusEnum.suspended) {
+      } else if (userStatus.getStatusString() == UserStatusEnum.suspended) {
         res.status(400).json({
           message: "User account is suspended. Please contact system admin.",
         });
         return;
+      } else if (userStatus.getStatusString() == UserStatusEnum.removed) {
       } else if (userStatus.getStatusString() == UserStatusEnum.removed) {
         res.status(400).json({
           message: "User account is removed. Please contact system admin.",
