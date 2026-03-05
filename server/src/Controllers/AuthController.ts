@@ -159,19 +159,17 @@ export class AuthController implements IAppController {
 
       let st: string = user.getStatus();
       let userStatus: UserStatus = UserStatus.fromString(st as UserStatusEnum);
-      if (userStatus.getStatusString() == UserStatusEnum.unconfirmed) {
+      if (userStatus.getStatusEnum() == UserStatusEnum.unconfirmed) {
         res
           .status(400)
           .json({ message: "Email not confirmed. Please contact system admin." });
         return;
-      } else if (userStatus.getStatusString() == UserStatusEnum.suspended) {
-      } else if (userStatus.getStatusString() == UserStatusEnum.suspended) {
+      }  else if (userStatus.getStatusEnum() == UserStatusEnum.suspended) {
         res.status(400).json({
           message: "User account is suspended. Please contact system admin.",
         });
         return;
-      } else if (userStatus.getStatusString() == UserStatusEnum.removed) {
-      } else if (userStatus.getStatusString() == UserStatusEnum.removed) {
+      } else if (userStatus.getStatusEnum() == UserStatusEnum.removed) {
         res.status(400).json({
           message: "User account is removed. Please contact system admin.",
         });
