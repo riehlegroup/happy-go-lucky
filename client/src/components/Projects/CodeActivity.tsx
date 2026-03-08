@@ -4,6 +4,7 @@ import TopNavBar from "../common/TopNavBar";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
 import SectionCard from "@/components/common/SectionCard";
+import { en as messages } from "@/messages";
 import {
   LineChart,
   Line,
@@ -320,9 +321,9 @@ const CodeActivity: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Code Activity" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title={messages.projects.codeActivity.pageTitle} showBackButton={true} showUserInfo={true} />
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title="Commits on GitHub">
+        <SectionCard title={messages.projects.codeActivity.commitsSectionTitle}>
           <div className="space-y-4">
             {commits.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -336,11 +337,11 @@ const CodeActivity: React.FC = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : loading ? (
-              <p className="text-slate-600">Loading...</p>
+              <p className="text-slate-600">{messages.projects.codeActivity.loading}</p>
             ) : (
-              <p className="text-slate-500">No commits found.</p>
+              <p className="text-slate-500">{messages.projects.codeActivity.noneFound}</p>
             )}
-            {loading && <p className="text-sm text-slate-500">Loading more commits...</p>}
+            {loading && <p className="text-sm text-slate-500">{messages.projects.codeActivity.loadingMore}</p>}
           </div>
         </SectionCard>
       </div>

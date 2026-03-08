@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authApi from "@/services/api/auth";
+import { en as messages } from "@/messages";
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search); // search: '?query=string'
@@ -22,19 +23,19 @@ const ConfirmedEmail = () => {
     e.preventDefault();
 
     if (!token) {
-      setMessage("Invalid or missing confirmation token");
+      setMessage(messages.auth.confirmEmail.status.invalidToken);
       return;
     }
 
     try {
       await authApi.confirmEmail(token);
-      setMessage("Email has been confirmed successfully!");
+      setMessage(messages.auth.confirmEmail.status.success);
       setTimeout(() => navigate("/login"), 2000);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(error.message);
       } else {
-        setMessage("An unexpected error occurred");
+        setMessage(messages.errors.unexpected);
       }
     }
   };
@@ -43,17 +44,17 @@ const ConfirmedEmail = () => {
     <>
       <div className="container">
         <div className="COnfirmEMailheader">
-          <div className="text">Confirm Email</div>
+          <div className="text">{messages.auth.confirmEmail.title}</div>
           <br />
           <div className="underline"></div>
         </div>
         <div className="text ConfirmEmailText">
-          Thank you for confirming your email!
-          <br /> Please click the button to confirm and go back to Login Page
+          {messages.auth.confirmEmail.descriptionLine1}
+          <br /> {messages.auth.confirmEmail.descriptionLine2}
         </div>
         <div className="ConfirmEmailsubmit-container">
           <button type="submit" className="submit" onClick={handleSubmit}>
-            Confirm
+            {messages.auth.confirmEmail.button}
           </button>
         </div>
 
