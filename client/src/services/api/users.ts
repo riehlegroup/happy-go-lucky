@@ -153,7 +153,7 @@ const usersApi = {
   },
 
   sendConfirmationEmail: (body: {
-    userEmail: string;
+    email: string;
   }): Promise<Response> => {
     return ApiClient.getInstance().post<Response>("/user/confirmation/trigger", body);
   },
