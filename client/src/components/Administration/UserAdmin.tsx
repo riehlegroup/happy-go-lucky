@@ -161,7 +161,7 @@ const UserAdmin = () => {
     }
 
     function sendConfirmationEmail(user: User) {
-        usersApi.sendConfirmationEmail({ userEmail: user.email })
+        usersApi.sendConfirmationEmail({ email: user.email })
             .catch(console.error);
     }
 

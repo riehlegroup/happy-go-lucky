@@ -215,7 +215,7 @@ export class ProjectController implements IAppController {
   }
 
   async leaveProject(req: Request, res: Response): Promise<void> {
-    const { userEmail, projectName } = req.body;
+    const { userEmail, projectName } = req.query as { userEmail: string; projectName: string };
 
     try {
       let projectId;

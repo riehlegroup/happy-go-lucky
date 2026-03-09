@@ -51,11 +51,13 @@ const courseApi = {
   },
 
   updateCourse: (body: {
+    id: number;
     termId: number;
     courseName: string;
     studentsCanCreateProject: boolean;
   }): Promise<Response> => {
-    return ApiClient.getInstance().post<Response>("/course", body, true);
+    const { id, ...updateBody } = body;
+    return ApiClient.getInstance().put<Response>(`/course/${id}`, updateBody, true);
   },
 
   deleteCourse: (id: number): Promise<Response> => {

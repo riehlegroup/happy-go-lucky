@@ -78,6 +78,45 @@ export class CourseManager implements IManager {
   }
 
   /**
+   * Updates an existing course.
+   * @param id Course ID to update
+   * @param courseName New course name
+   * @param termId New term ID
+   * @returns Updated course object
+   */
+  async updateCourse(id: number, courseName: string, termId: number): Promise<Course> {
+    try {
+      // Check if course exists
+      const existingCourse = await this.oh.getCourse(id, this.db);
+      if (!existingCourse) {
+        throw new IllegalArgumentException("Course not found");
+      }
+
+      // Validate term exists
+      const term = await this.oh.getTerm(termId, this.db);
+      if (!term) {
+        throw new IllegalArgumentException("Term not found");
+      }
+
+      // Update the course in database
+      await this.db.run(
+        "UPDATE courses SET courseName = ?, termId = ? WHERE id = ?",
+        [courseName, termId, id]
+      );
+
+      // Reload the updated course
+      const updatedCourse = await this.oh.getCourse(id, this.db);
+      if (!updatedCourse) {
+        throw new MethodFailedException("Failed to load updated course.");
+      }
+
+      return updatedCourse;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Retrieves a course by ID and its associated projects.
    * @param id Unique course ID
    * @returns Course object with its projects

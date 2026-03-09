@@ -27,6 +27,7 @@ export class CourseController implements IAppController {
    */
   init(app: Application): void {
     app.post("/course", this.createCourse.bind(this));
+    app.put("/course/:id", this.updateCourse.bind(this));
     app.get("/course", this.getAllCourse.bind(this));
     app.delete("/course/:id", checkAdmin(this.db), this.deleteCourse.bind(this));
     app.post("/courseProject", this.addProject.bind(this));
@@ -57,7 +58,7 @@ export class CourseController implements IAppController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { courseName, termId } = req.body;
+      const { courseName, termId, studentsCanCreateProject } = req.body;
 
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
@@ -127,9 +128,48 @@ export class CourseController implements IAppController {
   // This method is not implemented yet
   async updateCourse(req: Request, res: Response): Promise<void> {
     try {
-      res.status(501).json({
-        success: false,
-        message: "Course delete not implemented yet",
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          message: "Course ID must be a valid number",
+        });
+        return;
+      }
+
+      const { courseName, termId } = req.body;
+
+      if (!courseName || typeof courseName !== "string") {
+        res.status(400).json({
+          success: false,
+          message: "Course name is required and must be a string",
+        });
+        return;
+      }
+
+      if (termId === undefined || termId === null) {
+        res.status(400).json({
+          success: false,
+          message: "Term ID is required",
+        });
+        return;
+      }
+
+      const termIdNum = parseInt(termId);
+      if (isNaN(termIdNum)) {
+        res.status(400).json({
+          success: false,
+          message: "Term ID must be a valid number",
+        });
+        return;
+      }
+
+      const course = await this.cm.updateCourse(id, courseName, termIdNum);
+
+      res.status(200).json({
+        success: true,
+        message: "Course updated successfully",
+        data: course,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -182,7 +222,7 @@ export class CourseController implements IAppController {
   // Composition methods for CourseProject 1:N
   async addProject(req: Request, res: Response): Promise<void> {
     try {
-      const { courseId, projectName } = req.body;
+      const { courseId, projectName, studentsCanJoinProject } = req.body;
 
       // Validate courseId is provided
       if (courseId === undefined || courseId === null) {
