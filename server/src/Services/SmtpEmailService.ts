@@ -32,8 +32,8 @@ export class SmtpEmailService implements IEmailService {
       port: this.smtpPort,
       secure: this.smtpSecure,
       auth: {
-        user: process.env.EMAIL_USER_FAU,
-        pass: process.env.EMAIL_PASS_FAU,
+        user: process.env.EMAIL_SMTP_USER,
+        pass: process.env.EMAIL_SMTP_PASS,
       },
     });
 

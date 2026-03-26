@@ -34,7 +34,7 @@ export function createApp(db: Database): Application {
 
   if (process.env.NODE_ENV === 'production') {
     // Production: use SMTP if credentials available, otherwise fallback to local MTA
-    if (process.env.EMAIL_USER_FAU && process.env.EMAIL_PASS_FAU) {
+    if (process.env.EMAIL_SMTP_USER && process.env.EMAIL_SMTP_PASS) {
       emailService = new SmtpEmailService(
         EMAIL_CONFIG.sender.name,
         EMAIL_CONFIG.sender.address,
