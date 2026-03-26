@@ -9,8 +9,8 @@ services:
       CLIENT_URL: ${CLIENT_URL}
       DB_PATH: ${DB_PATH}
       JWT_SECRET: ${JWT_SECRET}
-      EMAIL_USER_FAU: ${EMAIL_USER_FAU}
-      EMAIL_PASS_FAU: ${EMAIL_PASS_FAU}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
+      EMAIL_SMTP_PASS: ${EMAIL_SMTP_PASS}
     volumes:
       - happy-go-lucky-db:/app/server/data
     restart: unless-stopped

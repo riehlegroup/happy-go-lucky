@@ -105,9 +105,10 @@ dig your-domain.com
    # Run: openssl rand -base64 32
    JWT_SECRET=your_secure_random_jwt_secret_here
 
-   # Your FAU email credentials for sending emails
-   EMAIL_USER_FAU=your.email@fau.de
-   EMAIL_PASS_FAU=your_secure_password
+   # SMTP credentials for sending emails
+   # For Gmail, use an app password (not your regular account password)
+   EMAIL_SMTP_USER=your.email@fau.de
+   EMAIL_SMTP_PASS=your_secure_password
 
    # Optional: GitHub token for code activity features
    VITE_GITHUB_TOKEN=your_github_personal_access_token
@@ -250,12 +251,28 @@ For local testing without a domain or HTTPS:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `EMAIL_USER_FAU` | Production | - | FAU email username for sending emails |
-| `EMAIL_PASS_FAU` | Production | - | FAU email password |
+| `EMAIL_SMTP_USER` | Production | - | SMTP username for sending emails (FAU email or Gmail address) |
+| `EMAIL_SMTP_PASS` | Production | - | SMTP password or app password for sending emails |
+| `EMAIL_FROM_NAME` | No | `Happy Go Lucky` | Sender name displayed in emails |
+| `EMAIL_FROM_ADDRESS` | No | `dirk.riehle@fau.de` | Sender email address |
+| `EMAIL_SMTP_HOST` | No | `smtp-auth.fau.de` | SMTP server hostname |
+| `EMAIL_SMTP_PORT` | No | `465` | SMTP server port |
+| `EMAIL_SMTP_SECURE` | No | `true` | Whether to use TLS/SSL for SMTP connection (true/false) |
 
 **Email Behavior:**
 - **Development** (`NODE_ENV !== 'production'`): Emails logged to console, not sent
-- **Production** (`NODE_ENV === 'production'`): Emails sent via FAU SMTP server
+- **Production** (`NODE_ENV === 'production'`): 
+  - If `EMAIL_SMTP_USER` and `EMAIL_SMTP_PASS` are set: Emails sent via configured SMTP server
+  - Otherwise: Falls back to local MTA (if available)
+
+**Supported Email Providers:**
+- **FAU**: Uses default settings (`smtp-auth.fau.de:465`)
+- **Gmail**: 
+  - `EMAIL_SMTP_HOST=smtp.gmail.com`
+  - `EMAIL_SMTP_PORT=465` (or 587 with `EMAIL_SMTP_SECURE=false`)
+  - `EMAIL_SMTP_USER=your@gmail.com`
+  - `EMAIL_SMTP_PASS=<your 16-character Gmail app password>`
+  - Requires 2-Factor Authentication enabled on Google account
 
 ### Optional Features
 
@@ -659,7 +676,7 @@ docker compose restart server
 
 **Check configuration:**
 1. Verify `NODE_ENV=production` in docker-compose.yml
-2. Verify `EMAIL_USER_FAU` and `EMAIL_PASS_FAU` are correct in `.env`
+2. Verify `EMAIL_SMTP_USER` and `EMAIL_SMTP_PASS` are correct in `.env`
 3. Check server logs for SMTP errors:
    ```bash
    docker compose logs server | grep -i "email\|smtp"
@@ -670,7 +687,7 @@ docker compose restart server
 # From inside server container
 docker compose exec server sh
 cd /app/server
-node -e "require('dotenv').config(); console.log(process.env.EMAIL_USER_FAU);"
+node -e "require('dotenv').config(); console.log(process.env.EMAIL_SMTP_USER);"
 ```
 
 ### Frontend Not Loading
