@@ -3,6 +3,7 @@ import { Serializable } from "../Serializer/Serializable";
 import { Reader } from "../Serializer/Reader";
 import { Writer } from "../Serializer/Writer";
 import { Email } from "../ValueTypes/Email";
+import { UserStatus, UserStatusEnum } from "../ValueTypes/UserStatus";
 import { UserRole } from "../ValueTypes/UserRole";
 
 export class User extends Visitor implements Serializable {
@@ -10,7 +11,7 @@ export class User extends Visitor implements Serializable {
   protected name: string | null = null;
   protected githubUsername: string | null = null;
   protected email: Email | null = null;
-  protected status: string = "unconfirmed";
+  protected status: UserStatus = UserStatus.unconfirmed();
   protected role: UserRole = UserRole.user();
   protected password: string | null = null;
   protected resetPasswordToken: string | null = null;
@@ -39,8 +40,8 @@ export class User extends Visitor implements Serializable {
     } else {
       this.email = null;
     }
-    this.status = reader.readString("status") as string;
-    this.role = UserRole.fromString(reader.readString("userRole"));
+    this.status = UserStatus.fromString(reader.readString("status") as UserStatusEnum);
+    this.role = UserRole.fromString(reader.readString("userRole") as string);
     this.password = reader.readString("password");
     this.resetPasswordToken = reader.readString("resetPasswordToken");
     this.resetPasswordExpire = reader.readNumber("resetPasswordExpire");
@@ -57,7 +58,7 @@ export class User extends Visitor implements Serializable {
     } else {
       writer.writeString("email", this.email.toString());
     }
-    writer.writeString("status", this.status);
+    writer.writeString("status", this.status.getStatusString());
     writer.writeString("userRole", this.role.toString());
     writer.writeString("password", this.password);
     writer.writeString("resetPasswordToken", this.resetPasswordToken);
@@ -90,11 +91,15 @@ export class User extends Visitor implements Serializable {
     return this.email;
   }
 
-  public getStatus(): UserStatus {
-    return this.status;
+  public getStatus(): string {
+    return this.status.getStatusString();
   }
 
-  public getRole(): UserRole {
+  public getRole(): string {
+    return this.role.toString();
+  }
+
+  public getRoleClass(): UserRole {
     return this.role;
   }
 

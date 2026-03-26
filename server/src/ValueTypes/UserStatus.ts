@@ -54,8 +54,12 @@ export class UserStatus {
     }
   }
 
-  public getStatus(): UserStatusEnum {
-    return this.status;
+  getStatusString(): string {
+      return this.status.toString();
+  }
+
+  getStatusEnum(): UserStatusEnum {
+      return this.status;
   }
 
   public is(status: UserStatusEnum): boolean {

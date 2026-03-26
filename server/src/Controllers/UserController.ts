@@ -93,7 +93,7 @@ export class UserController implements IAppController {
       const currentStatus = UserStatus.fromString(row.status);
       const desiredStatus = status as UserStatusEnum;
 
-      if (currentStatus.getStatus() === desiredStatus) {
+      if (currentStatus.getStatusEnum() === desiredStatus) {
         res.status(200).json({ message: "User status updated successfully" });
         return;
       }
@@ -113,7 +113,7 @@ export class UserController implements IAppController {
           res
             .status(409)
             .json({
-              message: `Invalid transition from ${currentStatus.getStatus()} to ${desiredStatus}`,
+              message: `Invalid transition from ${currentStatus.getStatusEnum()} to ${desiredStatus}`,
             });
           return;
         default:
@@ -121,7 +121,7 @@ export class UserController implements IAppController {
       }
 
       await this.db.run("UPDATE users SET status = ? WHERE email = ?", [
-        nextStatus.getStatus(),
+        nextStatus.getStatusEnum(),
         userEmail,
       ]);
 
