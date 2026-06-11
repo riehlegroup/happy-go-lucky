@@ -51,8 +51,8 @@ export async function seedDatabase(db: Database) {
 
   // Create test course
   await db.run(
-    `INSERT INTO courses (courseName, termId) VALUES (?, ?)`,
-    ['Test Course', 1]
+    `INSERT INTO courses (courseName, termId, studentsCanCreateProject) VALUES (?, ?, ?)`,
+    ['Test Course', 1, true]
   );
 
   // Create test project
