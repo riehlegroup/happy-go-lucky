@@ -223,7 +223,7 @@ describe('Happiness API', () => {
       // Create course without schedule
       await request(app)
         .post('/course')
-        .send({ courseName: 'No Schedule Course', termId: 1 })
+        .send({ courseName: 'No Schedule Course', termId: 1, studentsCanCreateProject: false })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['No Schedule Course']);

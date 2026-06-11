@@ -37,6 +37,15 @@ export class CourseController implements IAppController {
     app.get("/course/:id/schedule", this.getSchedule.bind(this));
   }
 
+  private mapCourse(course: Course) {
+    return {
+      id: course.getId(),
+      courseName: course.getName(),
+      termId: course.getTerm()?.getId(),
+      studentsCanCreateProject: course.getStudentsCanCreateProject(),
+    };
+  }
+
   async getAllCourse(req: Request, res: Response): Promise<void> {
     try {
       let courses: Course[] = [];
@@ -44,11 +53,7 @@ export class CourseController implements IAppController {
 
       res.status(200).json({
         success: true,
-        data: courses.map((course) => ({
-          id: course.getId(),
-          courseName: course.getName(),
-          termId: course.getTerm()?.getId(),
-        })),
+        data: courses.map((course) => this.mapCourse(course)),
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -57,7 +62,7 @@ export class CourseController implements IAppController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { courseName, termId } = req.body;
+      const { courseName, termId, studentsCanCreateProject } = req.body;
 
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
@@ -84,12 +89,34 @@ export class CourseController implements IAppController {
         return;
       }
 
-      const course = await this.cm.createCourse(courseName, id);
+      let studentsCanCreate = false;
+      if (studentsCanCreateProject !== undefined && studentsCanCreateProject !== null) {
+        if (typeof studentsCanCreateProject === "boolean") {
+          studentsCanCreate = studentsCanCreateProject;
+        } else if (studentsCanCreateProject === "true" || studentsCanCreateProject === "false") {
+          studentsCanCreate = studentsCanCreateProject === "true";
+        } else {
+          res.status(400).json({
+            success: false,
+            message: "studentsCanCreateProject must be a boolean",
+          });
+          return;
+        }
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "studentsCanCreateProject is required",
+        });
+        return;
+      }
+
+
+      const course = await this.cm.createCourse(courseName, id, studentsCanCreate);
 
       res.status(201).json({
         success: true,
         message: "Course created successfully",
-        data: course,
+        data: this.mapCourse(course),
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -117,7 +144,7 @@ export class CourseController implements IAppController {
 
       res.status(200).json({
         success: true,
-        data: course,
+        data: this.mapCourse(course),
       });
     } catch (error) {
       this.handleError(res, error as Exception);

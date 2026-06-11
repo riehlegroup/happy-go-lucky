@@ -116,6 +116,7 @@ interface CourseFormProps {
   onSubmit: () => Promise<void>;
   children?: React.ReactNode;
   termOptions?: SelectOption[];
+  termSelectorDisabled?: boolean;
 }
 
 /**
@@ -133,6 +134,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   submitText = "submit",
   children,
   termOptions = [],
+  termSelectorDisabled = false,
 }: CourseFormProps) => {
   const isCourse = type === "course";
 
@@ -188,9 +190,11 @@ export const CourseForm: React.FC<CourseFormProps> = ({
             <select
               className={cn(
                 "h-10 w-full bg-gray-50 text-black border border-gray-300 rounded px-2",
+                termSelectorDisabled && "cursor-not-allowed bg-gray-100 text-gray-500",
                 (errors as Record<keyof Course, string>).termId && "border-red-500 ring-1 ring-red-500"
               )}
               value={(formData as Course).termId || 0}
+              disabled={termSelectorDisabled}
               onChange={(e) => courseHandleChanges("termId", parseInt(e.target.value))}
             >
               <option value={0}>Select a term...</option>

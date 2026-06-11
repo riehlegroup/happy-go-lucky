@@ -9,6 +9,7 @@ export class Course implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected term: Term | null = null;
+  protected studentsCanCreateProject: number = 0;
   protected projects: CourseProject[] = []; // 1:N
   protected schedule: CourseSchedule | null = null; // 1:1
   constructor(id: number) {
@@ -18,13 +19,16 @@ export class Course implements Serializable {
   async readFrom(reader: Reader): Promise<void> {
     this.id = reader.readNumber("id") as number;
     this.name = reader.readString("courseName");
+    this.studentsCanCreateProject = reader.readNumber("studentsCanCreateProject") as number;
     this.term = (await reader.readObject("termId", "Term")) as Term;
     this.projects = (await reader.readObjects("courseId", "projects")) as CourseProject[];
+    
   }
 
   writeTo(writer: Writer): void {
     writer.writeNumber("id", this.id);
     writer.writeString("courseName", this.name);
+    writer.writeNumber("studentsCanCreateProject", this.studentsCanCreateProject);
     writer.writeObject<Term>("termId", this.term);
   }
 
@@ -41,10 +45,15 @@ export class Course implements Serializable {
     return this.term;
   }
 
+  public getStudentsCanCreateProject(): boolean{
+    return this.studentsCanCreateProject === 1;
+  }
+
   public getProjects(): CourseProject[] {
     // Return a copy of the array to prevent direct modification
     return [...this.projects];
   }
+
 
   // Setters
   public setName(name: string | null) {
@@ -53,6 +62,10 @@ export class Course implements Serializable {
 
   public setTerm(term: Term | null): void {
     this.term = term;
+  }
+
+  public setStudentsCanCreateProject(studentsCanCreateProject: boolean): void {
+    this.studentsCanCreateProject = studentsCanCreateProject ? 1 : 0;
   }
 
   // Composition methods for CourseProject (1:N)
