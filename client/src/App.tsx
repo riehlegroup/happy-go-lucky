@@ -17,6 +17,7 @@ import CourseAdmin from "./components/Administration/CourseAdmin";
 import { ActiveProjectProvider } from "./context/ActiveProjectContext";
 import { CourseFeature } from "./types/CourseFeature";
 import { FeatureGuard } from "./components/common/FeatureGuard";
+import Competition from "./components/competition/Competition";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
           <Route path="/project-config" element={<ProjectConfig />} />
           <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
           <Route path="/user-panel" element={<UserPanel />} />
+          <Route path="/competition" element={<Competition />} />
         </Routes>
       </ActiveProjectProvider>
       </BrowserRouter>
