@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import {
-	createCompetitionSubmissionValidation,
-	useForm,
-} from "@/hooks/useForm";
+import { createCompetitionSubmissionValidation, useForm } from "@/hooks/useForm";
 
 interface SubmissinLinkUploaderProps {
 	existingSubmissionLink?: string;
@@ -20,8 +17,8 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 	onSubmit,
 }) => {
 	const [submitSucess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isTouched, setIsTouched] = useState(false);
+	const [submitError, setSubmitError] = useState<string | null>(null);
+	const [isTouched, setIsTouched] = useState(false);
 	const isSubmissionLinkExisting = Boolean(existingSubmissionLink);
 
 	const { data, errors, isValid, handleChanges } = useForm(
@@ -41,7 +38,7 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 		if (!isValid || isSubmitting) {
 			return;
 		}
-    setSubmitError(null);
+		setSubmitError(null);
 		setSubmitSuccess(false);
 		try {
 			await onSubmit(data.submissionLink);
@@ -67,53 +64,32 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 							value={data.submissionLink}
 							onChange={(e) => {
 								handleChanges("submissionLink", e.target.value);
-                setIsTouched(true);
-                if(submitSucess) setSubmitSuccess(false);
-                if(submitError) setSubmitError(null);
-              }}
-              className="w-full"
+								setIsTouched(true);
+								if (submitSucess) setSubmitSuccess(false);
+								if (submitError) setSubmitError(null);
+							}}
+							className="w-full"
 							placeholder="https://rrze.uni-erlangen.de/..." //TODO: Add correct placeholder for submission link
 							disabled={isSubmitting}
 						/>
 						<div className="text-left">
-							{isTouched && errors.submissionLink && (
-								<p className="text-red-500">
-									{errors.submissionLink}
-								</p>
-							)}
-							{submitError && (
-								<p className="text-red-500">
-									{submitError}
-								</p>
-							)}
+							{isTouched && errors.submissionLink && <p className="text-red-500">{errors.submissionLink}</p>}
+							{submitError && <p className="text-red-500">{submitError}</p>}
 							{submitSucess && (
 								<p className="text-green-500">
-									Solution{" "}
-									{isSubmissionLinkExisting
-										? "updated"
-										: "submitted"}{" "}
-									successfully.
+									Solution {isSubmissionLinkExisting ? "updated" : "submitted"} successfully.
 								</p>
 							)}
 							{isSubmissionLinkExisting && lastUpdated && (
 								<p className="mt-1 text-left text-xs text-gray-500">
-									Last submitted:{" "}
-									{new Date(lastUpdated).toLocaleString()}
+									Last submitted: {new Date(lastUpdated).toLocaleString()}
 								</p>
 							)}
 						</div>
 					</div>
 
-					<Button
-						type="submit"
-						className="h-14"
-						disabled={!isValid || isSubmitting}
-					>
-						{isSubmitting
-              ? "Submitting..."
-              : isSubmissionLinkExisting
-                ? "Update Solution"
-                : "Submit Solution"}
+					<Button type="submit" className="h-14" disabled={!isValid || isSubmitting}>
+						{isSubmitting ? "Submitting..." : isSubmissionLinkExisting ? "Update Solution" : "Submit Solution"}
 					</Button>
 				</div>
 			</form>
