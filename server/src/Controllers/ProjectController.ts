@@ -4,6 +4,10 @@ import { DatabaseHelpers } from "../Models/DatabaseHelpers";
 import { Email } from "../ValueTypes/Email";
 import { IAppController } from "./IAppController";
 import { IEmailService } from "../Services/IEmailService";
+import { CourseFeature } from "../Models/CourseFeature";
+import { CourseManager } from "../Managers/CourseManager";
+import { ObjectHandler } from "../ObjectHandler";
+import { requiredFeature } from "../Middleware/requiredFeature.js";
 
 /**
  * Controller for handling project-related HTTP requests.
@@ -11,7 +15,11 @@ import { IEmailService } from "../Services/IEmailService";
  * (happiness metrics, sprints, standups).
  */
 export class ProjectController implements IAppController {
-  constructor(private db: Database, private emailService: IEmailService) {}
+  private courseManager: CourseManager;
+
+  constructor(private db: Database, private emailService: IEmailService) {
+    this.courseManager = new CourseManager(db, new ObjectHandler());
+  }
 
   /**
    * Initializes API routes for project management.
@@ -31,12 +39,62 @@ export class ProjectController implements IAppController {
     app.get("/user/courses", this.getEnrolledCourses.bind(this));
 
     // Project features: Happiness
-    app.post("/courseProject/happiness", this.saveHappinessMetric.bind(this));
-    app.get("/courseProject/happiness", this.getProjectHappinessMetrics.bind(this));
-    app.get("/courseProject/availableSubmissions", this.getAvailableSubmissions.bind(this));
+    app.post(
+      "/courseProject/happiness",
+      requiredFeature(CourseFeature.HAPPINESS_INDEX, this.courseManager, {
+        resolveCourseId: this.resolveCourseIdFromProjectName.bind(this),
+      }),
+      this.saveHappinessMetric.bind(this)
+    );
+    app.get(
+      "/courseProject/happiness",
+      requiredFeature(CourseFeature.HAPPINESS_INDEX, this.courseManager, {
+        resolveCourseId: this.resolveCourseIdFromProjectName.bind(this),
+      }),
+      this.getProjectHappinessMetrics.bind(this)
+    );
+    app.get(
+      "/courseProject/availableSubmissions",
+      requiredFeature(CourseFeature.HAPPINESS_INDEX, this.courseManager, {
+        resolveCourseId: this.resolveCourseIdFromProjectName.bind(this),
+      }),
+      this.getAvailableSubmissions.bind(this)
+    );
 
     // Project features: Standups
-    app.post("/courseProject/standupsEmail", this.sendStandupEmails.bind(this));
+    app.post("/courseProject/standupsEmail",
+      requiredFeature(CourseFeature.STANDUPS, this.courseManager, {
+        resolveCourseId: this.resolveCourseIdFromProjectName.bind(this),
+      }),
+      this.sendStandupEmails.bind(this));
+  }
+
+  private async resolveCourseIdFromProjectName(req: Request): Promise<number | null> {
+    const projectName = this.getRequestValue(req, "projectName");
+
+    if (typeof projectName !== "string") {
+      return null;
+    }
+
+    const project = await this.db.get(
+      "SELECT courseId FROM projects WHERE projectName = ?",
+      [projectName]
+    );
+
+    return project?.courseId ?? null;
+  }
+
+  private getRequestValue(req: Request, key: string): unknown {
+    const sources = [req.params, req.body, req.query];
+
+    for (const source of sources) {
+      const value = source?.[key];
+      if (value !== undefined && value !== null && value !== "") {
+        return Array.isArray(value) ? value[0] : value;
+      }
+    }
+
+    return undefined;
   }
 
   async getProjects(req: Request, res: Response): Promise<void> {

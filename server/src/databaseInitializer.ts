@@ -8,6 +8,25 @@ import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
 
+type SchemaDatabase = {
+  all: (query: string) => Promise<Array<{ name: string }>>;
+  exec: (query: string) => Promise<void>;
+};
+
+async function ensureColumnExists(
+  db: SchemaDatabase,
+  tableName: string,
+  columnName: string,
+  columnDefinition: string
+): Promise<void> {
+  const columns = (await db.all(`PRAGMA table_info(${tableName})`)) as Array<{ name: string }>;
+  const hasColumn = columns.some((column) => column.name === columnName);
+
+  if (!hasColumn) {
+    await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+  }
+}
+
 export async function initializeDB(filename: string, createAdmin = true) {
   const db = await open({
     filename: filename,
@@ -60,9 +79,12 @@ export async function initializeDB(filename: string, createAdmin = true) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       courseName TEXT UNIQUE,
       termId INTEGER NOT NULL,
+      enabledFeatures TEXT DEFAULT '[]',
       FOREIGN KEY (termId) REFERENCES terms(id)
     )
   `);
+
+  await ensureColumnExists(db, 'courses', 'enabledFeatures', "TEXT DEFAULT '[]'");
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS projects (

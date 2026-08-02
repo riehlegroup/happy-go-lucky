@@ -7,6 +7,8 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { CourseFeature } from "../Models/CourseFeature";
+import { validateCourseFeatures } from "../Models/CourseFeature";
 
 /**
  * Controller for handling course-related HTTP requests.
@@ -57,7 +59,7 @@ export class CourseController implements IAppController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { courseName, termId } = req.body;
+      const { courseName, termId , enabledFeatures } = req.body;
 
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
@@ -66,7 +68,7 @@ export class CourseController implements IAppController {
         });
         return;
       }
-
+      
       if (termId === undefined || termId === null) {
         res.status(400).json({
           success: false,
@@ -83,8 +85,20 @@ export class CourseController implements IAppController {
         });
         return;
       }
+      let validatedEnabledFeatures: CourseFeature[] = [];
+      if (enabledFeatures !== undefined && enabledFeatures !== null) {
+        try {
+          validatedEnabledFeatures = validateCourseFeatures(enabledFeatures);
+        } catch (error) {
+          res.status(400).json({
+            success: false,
+            message: (error as Error).message,
+          });
+          return;
+        }
+      }
 
-      const course = await this.cm.createCourse(courseName, id);
+      const course = await this.cm.createCourse(courseName, id, validatedEnabledFeatures);
 
       res.status(201).json({
         success: true,
