@@ -1,0 +1,33 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY competition-service/package*.json ./competition-service/
+
+RUN npm ci
+
+COPY competition-service ./competition-service
+COPY tsconfig*.json ./
+
+
+RUN npm run build --prefix competition-service
+
+# --- RUNNER STAGE ---
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY package*.json ./
+COPY competition-service/package*.json ./competition-service/
+
+# Nur Production Dependencies installieren
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/competition-service/dist ./competition-service/dist
+
+EXPOSE 8081
+
+CMD ["node", "competition-service/dist/competition-service.js"]

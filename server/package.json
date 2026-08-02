@@ -17,7 +17,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.12",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

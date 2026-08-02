@@ -26,6 +26,18 @@
         }
     }
 
+    #Competition Service requests: strip /api/competition and proxy to competition-Service
+    handle /api/competition/* {
+        uri strip_prefix /api/competition
+        reverse_proxy competition-service:8081 {
+            # Forward real client IP and protocol
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up Host {host}
+        }
+    }
+
     # Serve frontend static files
     handle {
         root * /srv

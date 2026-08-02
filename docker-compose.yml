@@ -17,6 +17,24 @@ services:
     networks:
       - app-network
 
+  competition-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.competition-service # Siehe Schritt 2 unten
+    environment:
+      NODE_ENV: production
+      PORT: 8081
+      DB_PATH: ${DB_PATH:-/app/server/data/happyGoLucky.db}
+      STORAGE_PATH: /app/storage
+    volumes:
+      - happy-go-lucky-db:/app/server/data 
+      - competition-storage:/app/storage 
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - app-network
+
   caddy:
     image: caddy:2-alpine
     ports:
@@ -54,6 +72,7 @@ services:
 
 volumes:
   happy-go-lucky-db:
+  competition-storage:
   caddy-data:
   caddy-config:
   client-dist:
