@@ -8,6 +8,7 @@ import { CourseFeature } from "../Models/CourseFeature";
 import { CourseManager } from "../Managers/CourseManager";
 import { ObjectHandler } from "../ObjectHandler";
 import { requiredFeature } from "../Middleware/requiredFeature.js";
+import { ProjectDto } from "./DTOs/ProjectDto";
 
 /**
  * Controller for handling project-related HTTP requests.
@@ -323,13 +324,22 @@ export class ProjectController implements IAppController {
 
     try {
       const userId = await DatabaseHelpers.getUserIdFromEmail(this.db, userEmail.toString());
-      const projects = await this.db.all(
-        `SELECT p.id, p.projectName
+      const rawprojects = await this.db.all(
+        `SELECT p.id, p.projectName, p.courseId, c.enabledFeatures
          FROM user_projects up
          INNER JOIN projects p ON up.projectId = p.id
+         INNER JOIN courses c ON p.courseId = c.id
          WHERE up.userId = ?`,
         [userId]
       );
+
+      const projects: ProjectDto[] = rawprojects.map((row: any) => ({
+        id: row.id,
+        projectName: row.projectName,
+        courseId: row.courseId,
+        enabledFeatures: row.enabledFeatures ? JSON.parse(row.enabledFeatures) : []
+      }));
+
       res.json(projects);
     } catch (error) {
       console.error("Error during retrieving user projects:", error);

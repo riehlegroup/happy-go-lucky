@@ -3,7 +3,6 @@ export enum CourseFeature {
     STANDUPS = "STANDUPS",
     HAPPINESS_INDEX = "HAPPINESS_INDEX",
     CODE_ACTIVITY = "CODE_ACTIVITY",
-    // Add more features as needed
 }
 
 export function isValidCourseFeature(value: unknown): value is CourseFeature {

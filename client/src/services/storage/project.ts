@@ -1,3 +1,4 @@
+
 /**
  * Project storage service for managing selected project state
  */
@@ -14,15 +15,16 @@ class ProjectStorage {
     return ProjectStorage.instance;
   }
 
-  getSelectedProject(): string | null {
-    return localStorage.getItem(this.SELECTED_PROJECT_KEY);
+  getSelectedProjectId(): number | null {
+    const itemId = localStorage.getItem(this.SELECTED_PROJECT_KEY);
+    return itemId ? parseInt(itemId, 10) : null;
   }
 
-  setSelectedProject(projectName: string): void {
-    localStorage.setItem(this.SELECTED_PROJECT_KEY, projectName);
+  setSelectedProjectId(projectId: number): void {
+    localStorage.setItem(this.SELECTED_PROJECT_KEY, projectId.toString());
   }
 
-  clearSelectedProject(): void {
+  clearSelectedProjectId(): void {
     localStorage.removeItem(this.SELECTED_PROJECT_KEY);
   }
 }

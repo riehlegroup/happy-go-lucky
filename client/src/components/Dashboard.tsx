@@ -14,12 +14,19 @@ import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
 import projectsApi from "@/services/api/projects";
+import { useActiveProject} from "@/context/ActiveProjectContext";
+import { ProjectDto } from "@/types/models";
+import { FeatureGuard } from "./common/FeatureGuard";
+import { CourseFeature } from "@/types/CourseFeature";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<string[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [projects, setProjects] = useState<ProjectDto[]>([]);
   const userRole = useUserRole();
+  const {
+    activeProject,
+    setActiveProject,
+  } = useActiveProject();
 
   const authStorage = AuthStorage.getInstance();
   const projectStorage = ProjectStorage.getInstance();
@@ -34,14 +41,16 @@ const Dashboard: React.FC = () => {
       const userEmail = authStorage.getEmail();
       if (userEmail) {
         try {
-          const data = await projectsApi.getUserProjects(userEmail);
-          const projectNames = data.map((project) => project.projectName);
-          setProjects(projectNames);
+          const projects = await projectsApi.getUserProjects(userEmail);
+          setProjects(projects);
 
           // Restore selected project from localStorage
-          const savedProject = projectStorage.getSelectedProject();
-          if (savedProject && projectNames.includes(savedProject)) {
-            setSelectedProject(savedProject);
+          const savedProjectId = projectStorage.getSelectedProjectId();
+          if (savedProjectId) {
+            const savedProject = projects.find((p) => p.id === savedProjectId);
+            if (savedProject) {
+              setActiveProject(savedProject);
+            }
           }
         } catch (error) {
           console.error("Error fetching projects:", error);
@@ -52,26 +61,32 @@ const Dashboard: React.FC = () => {
     fetchProjects();
   }, [navigate, authStorage]);
 
-  const handleProjectChange = (projectName: string) => {
-    setSelectedProject(projectName);
-    projectStorage.setSelectedProject(projectName);
+  const handleProjectChange = (projectIdString: string) => {
+    const selectedProject = projects.find(
+      (p) => p.id.toString() === projectIdString
+    );
+
+    if(selectedProject) {
+      setActiveProject(selectedProject);
+      projectStorage.setSelectedProjectId(selectedProject.id);
+    }
   };
 
   const goToStandups = () => {
-    if (selectedProject) {
-      navigate("/standups", { state: { projectName: selectedProject } });
+    if (activeProject) {
+      navigate("/standups");
     }
   };
 
   const goHappiness = () => {
-    if (selectedProject) {
-      navigate("/happiness", { state: { projectName: selectedProject } });
+    if (activeProject) {
+      navigate("/happiness");
     }
   };
 
   function goCodeActivity() {
-    if (selectedProject) {
-      navigate("/code-activity", { state: { projectName: selectedProject } });
+    if (activeProject) {
+      navigate("/code-activity");
     }
   }
 
@@ -105,41 +120,47 @@ const Dashboard: React.FC = () => {
         {/* Projects Section */}
         <SectionCard title="Projects">
           <div className="space-y-4">
-            <Select value={selectedProject || ""} onValueChange={handleProjectChange}>
+            <Select value={activeProject?.id.toString() || ""} onValueChange={handleProjectChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Project" />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
-                  <SelectItem key={project} value={project}>
-                    {project}
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.projectName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <div className="flex flex-wrap gap-4">
+              <FeatureGuard feature={CourseFeature.STANDUPS}>
               <Button
                 onClick={goToStandups}
-                disabled={!selectedProject}
+                disabled={!activeProject}
                 className="w-48"
               >
                 Standups
               </Button>
+              </FeatureGuard>
+              <FeatureGuard feature={CourseFeature.HAPPINESS_INDEX}>
               <Button
                 onClick={goHappiness}
-                disabled={!selectedProject}
+                disabled={!activeProject}
                 className="w-48"
               >
                 Happiness
               </Button>
+              </FeatureGuard>
+              <FeatureGuard feature={CourseFeature.CODE_ACTIVITY}>
               <Button
                 onClick={goCodeActivity}
-                disabled={!selectedProject}
+                disabled={!activeProject}
                 className="w-48"
               >
                 Code Activity
               </Button>
+              </FeatureGuard>
             </div>
           </div>
         </SectionCard>

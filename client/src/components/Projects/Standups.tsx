@@ -1,45 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import TopNavBar from "../common/TopNavBar";
 import Button from "@/components/common/Button";
 import Textarea from "@/components/common/Textarea";
 import SectionCard from "@/components/common/SectionCard";
 import AuthStorage from "@/services/storage/auth";
 import projectsApi from "@/services/api/projects";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 
 const Standups: React.FC = () => {
-  const location = useLocation();
-  const [projectName, setProjectName] = useState<string | null>(null);
+  const {activeProject} = useActiveProject();
   const [userName, setUserName] = useState<string | null>(null);
-
-  useEffect(() => {
-    const projectNameFromState = location.state?.projectName;
-    if (projectNameFromState) {
-      setProjectName(projectNameFromState);
-    }
-    const authStorage = AuthStorage.getInstance();
-    const storedUserName = authStorage.getUserName();
-    if (storedUserName) {
-      setUserName(storedUserName);
-    }
-  }, [location.state]);
-
   const [doneText, setDoneText] = useState("");
   const [plansText, setPlansText] = useState("");
   const [challengesText, setChallengesText] = useState("");
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    const authStorage = AuthStorage.getInstance();
+    const storedUserName = authStorage.getUserName();
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+  }, []);
+
   const handleSendStandups = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!projectName || !userName) {
+    if (!activeProject?.projectName || !userName) {
       setMessage("Missing project or user information");
       return;
     }
 
     try {
       await projectsApi.sendStandupEmail({
-        projectName,
+        projectName: activeProject.projectName,
         userName,
         doneText,
         plansText,
@@ -71,6 +65,11 @@ const Standups: React.FC = () => {
       <TopNavBar title="Standup Emails" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
+        {!activeProject ? (
+           <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700">
+             No project selected. Please select a project in the dashboard to send standup emails.
+           </div>
+        ) : (
         <SectionCard title="Submit Standup">
           <form onSubmit={handleSendStandups} className="space-y-6">
             <Textarea
@@ -113,6 +112,7 @@ const Standups: React.FC = () => {
             )}
           </form>
         </SectionCard>
+        )}
       </div>
     </div>
   );

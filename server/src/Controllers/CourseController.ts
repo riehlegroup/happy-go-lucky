@@ -196,6 +196,7 @@ export class CourseController implements IAppController {
   // Composition methods for CourseProject 1:N
   async addProject(req: Request, res: Response): Promise<void> {
     try {
+      //TODO: In Frontend the body contains studentCanJoinProject, but in the backend it is not used. Should we use it or remove it from the frontend?
       const { courseId, projectName } = req.body;
 
       // Validate courseId is provided

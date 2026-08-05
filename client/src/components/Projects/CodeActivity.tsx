@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import TopNavBar from "../common/TopNavBar";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
@@ -16,6 +15,7 @@ import {
 } from "recharts";
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 
 type ArrayElement<T> = T extends (infer U)[] ? U : never;
 type Commit = ArrayElement<Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"]>;
@@ -34,8 +34,7 @@ type CommitCount = {
 };
 
 const CodeActivity: React.FC = () => {
-  const location = useLocation();
-
+  const { activeProject } = useActiveProject();
   const [commits, setCommits] = useState<Commit[]>([]);
   // GitHub API only returns 30 results on subsequent requests
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,45 +47,16 @@ const CodeActivity: React.FC = () => {
   } | null>(null);
   const [sprints, setSprints] = useState<Sprint[]>([]);
 
-  const [projectName, setProjectName] = useState<string | null>("");
   const [user, setUser] = useState<{
     name: string;
     email: string;
     githubUsername: string;
   } | null>(null);
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [commitsPerSprint, setCommitsPerSprint] = useState<CommitCount[]>([]);
 
   const octokit = new Octokit({
     auth: import.meta.env.VITE_GITHUB_TOKEN,
   });
-
-  useEffect(() => {
-    const projectNameFromState = location.state?.projectName;
-    if (projectNameFromState) {
-      setProjectName(projectNameFromState);
-    }
-  }, [location.state]);
-
-  useEffect(() => {
-    const fetchCourse = async () => {
-      if (!projectName) return;
-
-      try {
-        const data = await ApiClient.getInstance().get<{ courseId: number; courseName: string }>(
-          "/courseProject/course",
-          { projectName: projectName }
-        );
-        if (data && data.courseId) {
-          setSelectedCourseId(data.courseId);
-        }
-      } catch (error) {
-        console.error("Error fetching project group:", error);
-      }
-    };
-
-    fetchCourse();
-  }, [projectName]);
 
   useEffect(() => {
     const fetchUserData = () => {
@@ -123,14 +93,14 @@ const CodeActivity: React.FC = () => {
   };
 
   const fetchRepoUrl = async () => {
-    if (!projectName || !user?.email) return;
+    if (!activeProject?.projectName || !user?.email) return;
 
     try {
       const data = await ApiClient.getInstance().get<{ url: string; message?: string }>(
         "/user/project/url",
         {
           userEmail: user.email,
-          projectName: projectName
+          projectName: activeProject.projectName
         }
       );
 
@@ -154,16 +124,16 @@ const CodeActivity: React.FC = () => {
 
   useEffect(() => {
     fetchRepoUrl();
-  }, [projectName, user]);
+  }, [activeProject?.projectName, user]);
 
   useEffect(() => {
     const fetchAllSprints = async () => {
-      if (!selectedCourseId) {
-        console.log("No selectedCourseId, skipping sprint fetch");
+      if (!activeProject?.courseId) {
+        console.log("No active project, skipping sprint fetch");
         return;
       }
 
-      console.log("Fetching schedule for courseId:", selectedCourseId);
+      console.log("Fetching schedule for courseId:", activeProject.courseId);
       try {
         const scheduleData = await ApiClient.getInstance().get<{
           success: boolean;
@@ -173,7 +143,7 @@ const CodeActivity: React.FC = () => {
             endDate: string;
             submissionDates: string[];
           };
-        }>(`/course/${selectedCourseId}/schedule`);
+        }>(`/course/${activeProject.courseId}/schedule`);
 
         console.log("Schedule data received:", scheduleData);
 
@@ -216,7 +186,7 @@ const CodeActivity: React.FC = () => {
     };
 
     fetchAllSprints();
-  }, [selectedCourseId]);
+  }, [activeProject?.courseId]);
   
 
   const getCommits = async (page: number) => {
@@ -322,11 +292,16 @@ const CodeActivity: React.FC = () => {
     <div className="min-h-screen">
       <TopNavBar title="Code Activity" showBackButton={true} showUserInfo={true} />
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title="Commits on GitHub">
-          <div className="space-y-4">
-            {commits.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={commitsPerSprint}>
+        {!activeProject ? (
+          <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700">
+            No project selected. Please select a project in the dashboard to send standup emails.
+          </div>
+        ) : (
+          <SectionCard title="Commits on GitHub">
+            <div className="space-y-4">
+              {commits.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={commitsPerSprint}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="sprint" />
                   <YAxis />
@@ -343,6 +318,7 @@ const CodeActivity: React.FC = () => {
             {loading && <p className="text-sm text-slate-500">Loading more commits...</p>}
           </div>
         </SectionCard>
+        )}
       </div>
     </div>
   );
