@@ -127,6 +127,7 @@ export class TermController implements IAppController {
 
       let validatedEnabledFeatures: CourseFeature[] = [];
       if (enabledFeatures !== undefined && enabledFeatures !== null) {
+        // Keep the same feature validation rules as the standalone course creation endpoint.
         try {
           validatedEnabledFeatures = validateCourseFeatures(enabledFeatures);
         } catch (error) {

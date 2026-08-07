@@ -31,6 +31,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   const username = authStorage.getUserName();
 
   const handleLogout = () => {
+    // Clear both auth and project selection so the next login starts cleanly.
     authStorage.clear();
     projectStorage.clearSelectedProjectId();
     setActiveProject(null);

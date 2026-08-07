@@ -24,6 +24,7 @@ export class Course implements Serializable {
     this.projects = (await reader.readObjects("courseId", "projects")) as CourseProject[];
 
     try {
+      // Older rows may not have the new column yet, so fall back to an empty feature list.
       const enabledFeatures = reader.readString("enabledFeatures");
       this.enabledFeatures = enabledFeatures ? JSON.parse(enabledFeatures) : [];
     } catch {

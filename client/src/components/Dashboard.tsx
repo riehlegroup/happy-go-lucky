@@ -14,7 +14,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import AuthStorage from "@/services/storage/auth";
 import ProjectStorage from "@/services/storage/project";
 import projectsApi from "@/services/api/projects";
-import { useActiveProject} from "@/context/ActiveProjectContext";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 import { ProjectDto } from "@/types/models";
 import { FeatureGuard } from "./common/FeatureGuard";
 import { CourseFeature } from "@/types/CourseFeature";
@@ -23,10 +23,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const userRole = useUserRole();
-  const {
-    activeProject,
-    setActiveProject,
-  } = useActiveProject();
+  const { activeProject, setActiveProject } = useActiveProject();
 
   const authStorage = AuthStorage.getInstance();
   const projectStorage = ProjectStorage.getInstance();
@@ -63,10 +60,11 @@ const Dashboard: React.FC = () => {
 
   const handleProjectChange = (projectIdString: string) => {
     const selectedProject = projects.find(
-      (p) => p.id.toString() === projectIdString
+      (p) => p.id.toString() === projectIdString,
     );
 
-    if(selectedProject) {
+    if (selectedProject) {
+      // Store the full project so feature pages can read the course and feature flags.
       setActiveProject(selectedProject);
       projectStorage.setSelectedProjectId(selectedProject.id);
     }
@@ -120,7 +118,10 @@ const Dashboard: React.FC = () => {
         {/* Projects Section */}
         <SectionCard title="Projects">
           <div className="space-y-4">
-            <Select value={activeProject?.id.toString() || ""} onValueChange={handleProjectChange}>
+            <Select
+              value={activeProject?.id.toString() || ""}
+              onValueChange={handleProjectChange}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Project" />
               </SelectTrigger>
@@ -134,32 +135,33 @@ const Dashboard: React.FC = () => {
             </Select>
 
             <div className="flex flex-wrap gap-4">
+              {/* Each feature button is wrapped so the dashboard only exposes enabled course features. */}
               <FeatureGuard feature={CourseFeature.STANDUPS}>
-              <Button
-                onClick={goToStandups}
-                disabled={!activeProject}
-                className="w-48"
-              >
-                Standups
-              </Button>
+                <Button
+                  onClick={goToStandups}
+                  disabled={!activeProject}
+                  className="w-48"
+                >
+                  Standups
+                </Button>
               </FeatureGuard>
               <FeatureGuard feature={CourseFeature.HAPPINESS_INDEX}>
-              <Button
-                onClick={goHappiness}
-                disabled={!activeProject}
-                className="w-48"
-              >
-                Happiness
-              </Button>
+                <Button
+                  onClick={goHappiness}
+                  disabled={!activeProject}
+                  className="w-48"
+                >
+                  Happiness
+                </Button>
               </FeatureGuard>
               <FeatureGuard feature={CourseFeature.CODE_ACTIVITY}>
-              <Button
-                onClick={goCodeActivity}
-                disabled={!activeProject}
-                className="w-48"
-              >
-                Code Activity
-              </Button>
+                <Button
+                  onClick={goCodeActivity}
+                  disabled={!activeProject}
+                  className="w-48"
+                >
+                  Code Activity
+                </Button>
               </FeatureGuard>
             </div>
           </div>

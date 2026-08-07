@@ -159,6 +159,7 @@ const Happiness: React.FC = (): React.ReactNode => {
 
   useEffect(() => {
     if (activeProject?.projectName) {
+      // Refresh the chart whenever the active project changes.
       fetchHappinessData();
     }
   }, [activeProject?.projectName]);

@@ -40,6 +40,7 @@ export class ProjectController implements IAppController {
     app.get("/user/courses", this.getEnrolledCourses.bind(this));
 
     // Project features: Happiness
+    // These routes are protected against the feature flag
     app.post(
       "/courseProject/happiness",
       requiredFeature(CourseFeature.HAPPINESS_INDEX, this.courseManager, {

@@ -1,4 +1,3 @@
-// src/context/ActiveProjectContext.tsx
 import { ProjectDto } from "@/types/models";
 import React, { createContext, useContext, useState } from "react";
 
@@ -21,6 +20,7 @@ export const ActiveProjectProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 export const useActiveProject = () => {
+  // This shared state keeps the selected project available across all feature pages.
   const context = useContext(ActiveProjectContext);
   if (!context) throw new Error("Missing Provider");
   return context;

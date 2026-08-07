@@ -87,6 +87,7 @@ export class CourseController implements IAppController {
       }
       let validatedEnabledFeatures: CourseFeature[] = [];
       if (enabledFeatures !== undefined && enabledFeatures !== null) {
+        // Validate the incoming array so only known feature flags are persisted.
         try {
           validatedEnabledFeatures = validateCourseFeatures(enabledFeatures);
         } catch (error) {
