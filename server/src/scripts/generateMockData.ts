@@ -65,7 +65,7 @@ async function generateMockData(db: Database, deleteOnly: boolean = false) {
 
     const adapResult = await db.run(
       `INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)`,
-      ['ADAP Course Mock', termId, JSON.stringify([])]
+      ['ADAP Course Mock', termId, JSON.stringify([CourseFeature.HAPPINESS_INDEX])]
     );
     const adapCourseId = adapResult.lastID;
     console.log(`  ✓ ADAP Course Mock created with ID: ${adapCourseId}\n`);

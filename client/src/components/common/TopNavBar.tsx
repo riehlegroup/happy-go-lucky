@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Settings, LogOut } from "lucide-react";
 import AuthStorage from "@/services/storage/auth";
+import ProjectStorage from "@/services/storage/project";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 
 interface TopNavBarProps {
   title: string;
@@ -24,10 +26,14 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
 }) => {
   const navigate = useNavigate();
   const authStorage = AuthStorage.getInstance();
+  const projectStorage = ProjectStorage.getInstance();
+  const { setActiveProject } = useActiveProject();
   const username = authStorage.getUserName();
 
   const handleLogout = () => {
     authStorage.clear();
+    projectStorage.clearSelectedProjectId();
+    setActiveProject(null);
     navigate("/login");
   };
 
@@ -81,23 +87,34 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{username}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {username}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {authStorage.getEmail()}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleUserProfile} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={handleUserProfile}
+                  className="cursor-pointer"
+                >
                   <User className="mr-2 size-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={handleSettings}
+                  className="cursor-pointer"
+                >
                   <Settings className="mr-2 size-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer"
+                >
                   <LogOut className="mr-2 size-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
