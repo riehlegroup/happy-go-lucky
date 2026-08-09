@@ -37,7 +37,7 @@ describe('Basic serializer read/write test', async () => {
     expect(term.getId()).toBeDefined();
 
     const cm: CourseManager = new CourseManager(db, oh);
-    const c = await cm.createCourse("ADAP", term.getId(), [CourseFeature.HAPPINESS_INDEX]);
+    const c = await cm.createCourse("ADAP", term.getId(), false, [CourseFeature.HAPPINESS_INDEX]);
     expect(c.getName()).toBe("ADAP");
     expect(c.getEnabledFeatures()).toContain(CourseFeature.HAPPINESS_INDEX);
 

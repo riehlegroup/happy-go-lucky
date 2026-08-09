@@ -32,7 +32,7 @@ export class CourseManager implements IManager {
    * Creates a new course if it does not already exist.
    * @returns Newly created or existing course
    */
-  async createCourse(courseName: string, termId: number, enabledFeatures: CourseFeature[]): Promise<Course> {
+  async createCourse(courseName: string, termId: number, studentsCanCreateProject: boolean = false, enabledFeatures: CourseFeature[] = []): Promise<Course> {
     let course: Course | null = null;
 
     try {
@@ -58,8 +58,8 @@ export class CourseManager implements IManager {
       } else {
         const enabledFeaturesJson = JSON.stringify(enabledFeatures);
         const result = await this.db.run(
-          "INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)",
-          [courseName, termId, enabledFeaturesJson]
+          "INSERT INTO courses (courseName, termId, studentsCanCreateProject, enabledFeatures) VALUES (?, ?, ?, ?)",
+          [courseName, termId, studentsCanCreateProject ? 1 : 0, enabledFeaturesJson]
         );
 
         if (!result || !result.lastID) {
