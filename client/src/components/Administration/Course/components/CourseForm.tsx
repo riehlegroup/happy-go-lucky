@@ -8,6 +8,8 @@ import {
 import Button from "@/components/common/Button";
 import { Message } from "./CourseMessage";
 import { cn } from "@/lib/utils";
+import Select from "react-select";
+import { CourseFeature, CourseFeatureDisplayNames } from "@/types/CourseFeature";
 
 interface FormFieldProps {
   label: string;
@@ -138,6 +140,12 @@ export const CourseForm: React.FC<CourseFormProps> = ({
 }: CourseFormProps) => {
   const isCourse = type === "course";
 
+  // Course features options for the multi-select dropdown, using display names for better readability
+  const featureOptions = Object.values(CourseFeature).map((feature) => ({
+    value: feature,
+    label: CourseFeatureDisplayNames[feature],
+  }));
+
   // Use the correct type & validation schema based on form type<T>
   const {
     data: formData,
@@ -156,7 +164,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({
   // Narrow the handleChanges using type assertions
   const courseHandleChanges = handleChanges as (
     key: keyof Course,
-    value: string | boolean | number
+    value: string | boolean | number | CourseFeature[]
   ) => void;
   const projectHandleChanges = handleChanges as (
     key: keyof Project,
@@ -221,6 +229,20 @@ export const CourseForm: React.FC<CourseFormProps> = ({
               courseHandleChanges("studentsCanCreateProject", value)
             }
           />
+          <Select
+            isMulti
+            name = "enabledFeatures"
+            options={featureOptions}
+            placeholder="Select enabled features for Course..."
+            value={featureOptions.filter((option) =>
+              ((formData as Course).enabledFeatures || []).includes(option.value)
+            )}
+            onChange= {(selectedOptions) => {
+              const newValues = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+              courseHandleChanges("enabledFeatures", newValues as CourseFeature[]);
+            }}
+          />
+
         </>
       ) : (
         <FormField
