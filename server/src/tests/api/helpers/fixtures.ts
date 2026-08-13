@@ -16,7 +16,6 @@ export const validTerm = () => ({
 export const validCourse = () => ({
   courseName: 'Software Engineering',
   termId: 1,
-  studentsCanCreateProject: true,
 });
 
 export const validProject = () => ({

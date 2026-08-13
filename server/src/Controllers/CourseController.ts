@@ -39,15 +39,6 @@ export class CourseController implements IAppController {
     app.get("/course/:id/schedule", this.getSchedule.bind(this));
   }
 
-  private mapCourse(course: Course) {
-    return {
-      id: course.getId(),
-      courseName: course.getName(),
-      termId: course.getTerm()?.getId(),
-      studentsCanCreateProject: course.getStudentsCanCreateProject(),
-    };
-  }
-
   async getAllCourse(req: Request, res: Response): Promise<void> {
     try {
       let courses: Course[] = [];
@@ -55,7 +46,11 @@ export class CourseController implements IAppController {
 
       res.status(200).json({
         success: true,
-        data: courses.map((course) => this.mapCourse(course)),
+        data: courses.map((course) => ({
+          id: course.getId(),
+          courseName: course.getName(),
+          termId: course.getTerm()?.getId(),
+        })),
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -64,7 +59,7 @@ export class CourseController implements IAppController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { courseName, termId, enabledFeatures } = req.body;
+      const { courseName, termId , enabledFeatures } = req.body;
 
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
@@ -109,7 +104,7 @@ export class CourseController implements IAppController {
       res.status(201).json({
         success: true,
         message: "Course created successfully",
-        data: this.mapCourse(course),
+        data: course,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
@@ -137,7 +132,7 @@ export class CourseController implements IAppController {
 
       res.status(200).json({
         success: true,
-        data: this.mapCourse(course),
+        data: course,
       });
     } catch (error) {
       this.handleError(res, error as Exception);
