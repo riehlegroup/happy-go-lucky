@@ -10,6 +10,7 @@ import { DatabaseResultSetReader } from "../Serializer/DatabaseResultSetReader";
 import { CourseProject } from "../Models/CourseProject";
 import { CourseManager } from "../Managers/CourseManager";
 import { TermManager } from "../Managers/TermManager";
+import { CourseFeature } from "../Models/CourseFeature";
 
 /** You need to delete the DB each time before running tests, unfortunately! */
 
@@ -36,13 +37,16 @@ describe('Basic serializer read/write test', async () => {
     expect(term.getId()).toBeDefined();
 
     const cm: CourseManager = new CourseManager(db, oh);
-    const c = await cm.createCourse("ADAP", term.getId());
+    const c = await cm.createCourse("ADAP", term.getId(), [CourseFeature.HAPPINESS_INDEX]);
     expect(c.getName()).toBe("ADAP");
+    expect(c.getEnabledFeatures()).toContain(CourseFeature.HAPPINESS_INDEX);
 
     const result = db.all(`SELECT * FROM courses`);
     const courses = await (new DatabaseResultSetReader(result, db)).readRoot<Course>(Course) as Course[];
     expect(courses.length).toBe(1);
     expect(courses[0].getName()).toBe("ADAP");
+    expect(courses[0].getEnabledFeatures().length).toBe(1);
+    expect(courses[0].getEnabledFeatures()).toContain(CourseFeature.HAPPINESS_INDEX);
     const c2 = await oh.getCourse(c.getId(), db) as Course;
     expect(c2 !== null).toBe(true);
     expect(c2.getName()).toBe(c.getName());

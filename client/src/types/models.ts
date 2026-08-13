@@ -2,6 +2,8 @@
  * Domain model type definitions used across the application
  */
 
+import { CourseFeature } from "./CourseFeature";
+
 export interface User {
   id: number;
   email: string;
@@ -24,6 +26,13 @@ export interface Project {
   projectName: string;
   courseId: number;
   studentsCanJoinProject: boolean;
+}
+
+export interface ProjectDto {
+  id: number;
+  projectName: string;
+  courseId: number;
+  enabledFeatures?: CourseFeature[];
 }
 
 export interface CourseSchedule {
