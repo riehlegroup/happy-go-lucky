@@ -10,6 +10,7 @@ export class Course implements Serializable {
   protected id: number;
   protected name: string | null = null;
   protected term: Term | null = null;
+  protected studentsCanCreateProject: number = 0;
   protected projects: CourseProject[] = []; // 1:N
   protected schedule: CourseSchedule | null = null; // 1:1
   protected enabledFeatures: CourseFeature[] = []; // List of enabled features for the course
@@ -20,6 +21,7 @@ export class Course implements Serializable {
   async readFrom(reader: Reader): Promise<void> {
     this.id = reader.readNumber("id") as number;
     this.name = reader.readString("courseName");
+    this.studentsCanCreateProject = reader.readNumber("studentsCanCreateProject") as number;
     this.term = (await reader.readObject("termId", "Term")) as Term;
     this.projects = (await reader.readObjects("courseId", "projects")) as CourseProject[];
 
@@ -35,6 +37,7 @@ export class Course implements Serializable {
   writeTo(writer: Writer): void {
     writer.writeNumber("id", this.id);
     writer.writeString("courseName", this.name);
+    writer.writeNumber("studentsCanCreateProject", this.studentsCanCreateProject);
     writer.writeObject<Term>("termId", this.term);
   }
 
@@ -49,6 +52,10 @@ export class Course implements Serializable {
 
   public getTerm(): Term | null {
     return this.term;
+  }
+
+  public getStudentsCanCreateProject(): boolean{
+    return this.studentsCanCreateProject === 1;
   }
 
   public getProjects(): CourseProject[] {
@@ -71,7 +78,6 @@ export class Course implements Serializable {
   }
 
   public setEnabledFeatures(features: CourseFeature[]): void {
-
     this.enabledFeatures = features;
   }
 

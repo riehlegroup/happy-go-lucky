@@ -23,6 +23,7 @@ import {
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const ProjectConfig: React.FC = () => {
   const navigate = useNavigate();
@@ -34,16 +35,18 @@ const ProjectConfig: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedAvailableProject, setSelectedAvailableProject] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [courses, setCourses] = useState<{ id: number; courseName: string }[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<{ id: number; courseName: string } | null>(null);
+  const [courses, setCourses] = useState<{ id: number; courseName: string; studentsCanCreateProject: boolean }[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<{ id: number; courseName: string; studentsCanCreateProject: boolean } | null>(null);
   const [user, setUser] = useState<{
     name: string;
     email: string;
+    role: string | null;
   } | null>(null);
   const [createdProject, setCreatedProject] = useState<string>("");
   const [memberRole, setMemberRole] = useState("");
   const [projectRoles, setProjectRoles] = useState<{ [key: string]: string | null }>({});
   const [error, setError] = useState('');
+  const userRole: string = useUserRole();
 
 
 
@@ -58,10 +61,12 @@ const ProjectConfig: React.FC = () => {
     const fetchUserData = async () => {
       const userName = authStorage.getUserName();
       const userEmail = authStorage.getEmail();
+      const userRole = authStorage.getUserRole();
       if (userName && userEmail) {
         setUser({
           name: userName,
           email: userEmail,
+          role: userRole,
         });
       } else {
         console.warn("User data not found in storage");
@@ -434,6 +439,8 @@ const ProjectConfig: React.FC = () => {
             </SectionCard>
 
             {/* Create Project Section */}
+            {/* TODO: check if the user has permission to create a project in this course (studentsCanCreateProject Flag) */}
+            {(userRole === "ADMIN" || selectedCourse.studentsCanCreateProject)?(
             <SectionCard title="Create New Project">
               <Dialog>
                 <DialogTrigger asChild>
@@ -471,7 +478,11 @@ const ProjectConfig: React.FC = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </SectionCard>
+            </SectionCard>) : (
+              <SectionCard title="Create New Project">
+                <p className="text-slate-500">You do not have permission to create a project in this course.</p>
+              </SectionCard>
+            )}
           </>
         )}
       </div>
