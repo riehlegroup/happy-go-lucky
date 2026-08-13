@@ -33,14 +33,13 @@ describe('Course API', () => {
       expect(dbCourse).toBeDefined();
       expect(dbCourse.courseName).toBe(course.courseName);
       expect(dbCourse.termId).toBe(1);
-      expect(dbCourse.studentsCanCreateProject).toBe(1);
     });
 
     it('should reject missing courseName', async () => {
       await seedDatabase(db);
       const response = await request(app)
         .post('/course')
-        .send({ termId: 1, studentsCanCreateProject: true })
+        .send({ termId: 1 })
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -50,38 +49,18 @@ describe('Course API', () => {
     it('should reject missing termId', async () => {
       const response = await request(app)
         .post('/course')
-        .send({ courseName: 'Test Course', studentsCanCreateProject: true })
+        .send({ courseName: 'Test Course' })
         .expect(400);
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('Term ID is required');
     });
 
-    it('should reject missing studentsCanCreateProject', async () => {
-      const response = await request(app)
-        .post('/course')
-        .send({ courseName: 'Test Course', termId: 1 })
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('studentsCanCreateProject is required');
-    });
-
-    it('should reject non-boolean studentsCanCreateProject', async () => {
-      const response = await request(app)
-        .post('/course')
-        .send({ courseName: 'Test Course', termId: 1, studentsCanCreateProject: 'not-a-boolean' })
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('studentsCanCreateProject must be a boolean');
-    });
-
     it('should reject non-string courseName', async () => {
       await seedDatabase(db);
       const response = await request(app)
         .post('/course')
-        .send({ courseName: 123, termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 123, termId: 1 })
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -90,7 +69,7 @@ describe('Course API', () => {
     it('should reject invalid termId', async () => {
       const response = await request(app)
         .post('/course')
-        .send({ courseName: 'Test Course', termId: 'not-a-number', studentsCanCreateProject: false })
+        .send({ courseName: 'Test Course', termId: 'not-a-number' })
         .expect(400);
 
       expect(response.body.success).toBe(false);
@@ -100,7 +79,7 @@ describe('Course API', () => {
     it('should reject non-existent termId', async () => {
       const response = await request(app)
         .post('/course')
-        .send({ courseName: 'Test Course', termId: 999, studentsCanCreateProject: false })
+        .send({ courseName: 'Test Course', termId: 999 })
         .expect(404);
 
       expect(response.body.success).toBe(false);
@@ -142,7 +121,6 @@ describe('Course API', () => {
       expect(course).toHaveProperty('id');
       expect(course).toHaveProperty('courseName');
       expect(course).toHaveProperty('termId');
-      expect(course).toHaveProperty('studentsCanCreateProject');
     });
 
     it('should return multiple courses', async () => {
@@ -150,7 +128,7 @@ describe('Course API', () => {
 
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course 2', termId: 1, studentsCanCreateProject: true })
+        .send({ courseName: 'Course 2', termId: 1 })
         .expect(201);
 
       const response = await request(app)
@@ -345,7 +323,7 @@ describe('Course API', () => {
       // Create another course
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course 2', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course 2', termId: 1 })
         .expect(201);
 
       const response = await request(app)
@@ -494,7 +472,7 @@ describe('Course API', () => {
       // Create a new course without a schedule
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course Without Schedule', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course Without Schedule', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course Without Schedule']);
@@ -519,7 +497,7 @@ describe('Course API', () => {
       // Create a course without projects
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course To Delete', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course To Delete', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course To Delete']);
@@ -543,7 +521,7 @@ describe('Course API', () => {
       // Create a course with schedule but no projects
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course With Schedule', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course With Schedule', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course With Schedule']);
@@ -622,7 +600,7 @@ describe('Course API', () => {
       // Create a course without projects
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course For Non-Admin Test', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course For Non-Admin Test', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course For Non-Admin Test']);
@@ -644,7 +622,7 @@ describe('Course API', () => {
       // Create a course without projects
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course For No Auth Test', termId: 1, studentsCanCreateProject: false })
+        .send({ courseName: 'Course For No Auth Test', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course For No Auth Test']);
@@ -665,7 +643,7 @@ describe('Course API', () => {
       // Create a course without projects
       await request(app)
         .post('/course')
-        .send({ courseName: 'Course For Invalid Token Test', termId: 1, studentsCanCreateProject: false})
+        .send({ courseName: 'Course For Invalid Token Test', termId: 1 })
         .expect(201);
 
       const courseResult = await db.get('SELECT id FROM courses WHERE courseName = ?', ['Course For Invalid Token Test']);
