@@ -1,6 +1,7 @@
 import { Reader } from "../Serializer/Reader";
 import { Serializable } from "../Serializer/Serializable";
 import { Writer } from "../Serializer/Writer";
+import { CourseFeature } from "./CourseFeature";
 import { CourseProject } from "./CourseProject";
 import { CourseSchedule } from "./CourseSchedule";
 import { Term } from "./Term";
@@ -12,6 +13,7 @@ export class Course implements Serializable {
   protected studentsCanCreateProject: number = 0;
   protected projects: CourseProject[] = []; // 1:N
   protected schedule: CourseSchedule | null = null; // 1:1
+  protected enabledFeatures: CourseFeature[] = []; // List of enabled features for the course
   constructor(id: number) {
     this.id = id;
   }
@@ -22,7 +24,14 @@ export class Course implements Serializable {
     this.studentsCanCreateProject = reader.readNumber("studentsCanCreateProject") as number;
     this.term = (await reader.readObject("termId", "Term")) as Term;
     this.projects = (await reader.readObjects("courseId", "projects")) as CourseProject[];
-    
+
+    try {
+      // Older rows may not have the new column yet, so fall back to an empty feature list.
+      const enabledFeatures = reader.readString("enabledFeatures");
+      this.enabledFeatures = enabledFeatures ? JSON.parse(enabledFeatures) : [];
+    } catch {
+      this.enabledFeatures = [];
+    }
   }
 
   writeTo(writer: Writer): void {
@@ -54,6 +63,10 @@ export class Course implements Serializable {
     return [...this.projects];
   }
 
+  public getEnabledFeatures(): CourseFeature[] {
+    return this.enabledFeatures;
+  }
+
 
   // Setters
   public setName(name: string | null) {
@@ -64,8 +77,8 @@ export class Course implements Serializable {
     this.term = term;
   }
 
-  public setStudentsCanCreateProject(studentsCanCreateProject: boolean): void {
-    this.studentsCanCreateProject = studentsCanCreateProject ? 1 : 0;
+  public setEnabledFeatures(features: CourseFeature[]): void {
+    this.enabledFeatures = features;
   }
 
   // Composition methods for CourseProject (1:N)

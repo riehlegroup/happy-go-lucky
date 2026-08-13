@@ -1,5 +1,5 @@
 import ApiClient from "./client";
-import { Project, Sprint, HappinessRating, StandupEmail } from "@/types/models";
+import { Project, Sprint, HappinessRating, StandupEmail, ProjectDto } from "@/types/models";
 import { ApiResponse } from "@/types/api";
 
 /**
@@ -24,9 +24,9 @@ const projectsApi = {
     }
   },
 
-  getUserProjects: async (userEmail: string): Promise<Project[]> => {
+  getUserProjects: async (userEmail: string): Promise<ProjectDto[]> => {
     try {
-      const response = await ApiClient.getInstance().get<Project[]>(
+      const response = await ApiClient.getInstance().get<ProjectDto[]>(
         "/user/projects",
         { userEmail }
       );

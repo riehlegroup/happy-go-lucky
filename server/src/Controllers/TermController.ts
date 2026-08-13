@@ -7,6 +7,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { CourseFeature, validateCourseFeatures } from "../Models/CourseFeature";
 
 /**
  * Controller for handling term-related HTTP requests.
@@ -105,7 +106,7 @@ export class TermController implements IAppController {
 
   async addCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { termId, courseName } = req.body;
+      const { termId, courseName, enabledFeatures } = req.body;
 
       if (termId === undefined || termId === null) {
         res.status(400).json({
@@ -124,7 +125,21 @@ export class TermController implements IAppController {
         return;
       }
 
-      const course = await this.tm.addCourseToTerm(id, courseName);
+      let validatedEnabledFeatures: CourseFeature[] = [];
+      if (enabledFeatures !== undefined && enabledFeatures !== null) {
+        // Keep the same feature validation rules as the standalone course creation endpoint.
+        try {
+          validatedEnabledFeatures = validateCourseFeatures(enabledFeatures);
+        } catch (error) {
+          res.status(400).json({
+            success: false,
+            message: (error as Error).message,
+          });
+          return;
+        }
+      }
+
+      const course = await this.tm.addCourseToTerm(id, courseName, validatedEnabledFeatures);
 
       res.status(201).json({
         success: true,
@@ -133,6 +148,7 @@ export class TermController implements IAppController {
           id: course.getId(),
           courseName: course.getName(),
           termId: course.getTerm()?.getId(),
+          enabledFeatures: course.getEnabledFeatures(),
         },
       });
     } catch (error) {

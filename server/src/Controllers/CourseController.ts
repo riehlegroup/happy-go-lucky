@@ -7,6 +7,8 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { IAppController } from "./IAppController";
 import { ObjectHandler } from "../ObjectHandler";
 import { checkAdmin } from "../Middleware/checkAdmin";
+import { CourseFeature } from "../Models/CourseFeature";
+import { validateCourseFeatures } from "../Models/CourseFeature";
 
 /**
  * Controller for handling course-related HTTP requests.
@@ -62,7 +64,7 @@ export class CourseController implements IAppController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const { courseName, termId, studentsCanCreateProject } = req.body;
+      const { courseName, termId, enabledFeatures } = req.body;
 
       if (!courseName || typeof courseName !== "string") {
         res.status(400).json({
@@ -71,7 +73,7 @@ export class CourseController implements IAppController {
         });
         return;
       }
-
+      
       if (termId === undefined || termId === null) {
         res.status(400).json({
           success: false,
@@ -88,30 +90,21 @@ export class CourseController implements IAppController {
         });
         return;
       }
-
-      let studentsCanCreate = false;
-      if (studentsCanCreateProject !== undefined && studentsCanCreateProject !== null) {
-        if (typeof studentsCanCreateProject === "boolean") {
-          studentsCanCreate = studentsCanCreateProject;
-        } else if (studentsCanCreateProject === "true" || studentsCanCreateProject === "false") {
-          studentsCanCreate = studentsCanCreateProject === "true";
-        } else {
+      let validatedEnabledFeatures: CourseFeature[] = [];
+      if (enabledFeatures !== undefined && enabledFeatures !== null) {
+        // Validate the incoming array so only known feature flags are persisted.
+        try {
+          validatedEnabledFeatures = validateCourseFeatures(enabledFeatures);
+        } catch (error) {
           res.status(400).json({
             success: false,
-            message: "studentsCanCreateProject must be a boolean",
+            message: (error as Error).message,
           });
           return;
         }
-      } else {
-        res.status(400).json({
-          success: false,
-          message: "studentsCanCreateProject is required",
-        });
-        return;
       }
 
-
-      const course = await this.cm.createCourse(courseName, id, studentsCanCreate);
+      const course = await this.cm.createCourse(courseName, id, validatedEnabledFeatures);
 
       res.status(201).json({
         success: true,
@@ -209,6 +202,7 @@ export class CourseController implements IAppController {
   // Composition methods for CourseProject 1:N
   async addProject(req: Request, res: Response): Promise<void> {
     try {
+      //TODO: In Frontend the body contains studentCanJoinProject, but in the backend it is not used. Should we use it or remove it from the frontend?
       const { courseId, projectName } = req.body;
 
       // Validate courseId is provided
