@@ -136,6 +136,18 @@ export async function initializeDB(filename: string, createAdmin = true) {
         OR NEW.submissionDate > (SELECT endDate FROM schedules WHERE id = NEW.scheduleId);
     END;
     `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      start_date INTEGER NOT NULL,
+      end_date INTEGER NOT NULL,
+      courseId INTEGER NOT NULL,
+      FOREIGN KEY (courseId) REFERENCES courses(id)
+    )
+  `);
   
   return db;
 }
