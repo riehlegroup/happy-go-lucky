@@ -15,7 +15,7 @@ export function createCompetitionRouter(db: Database): Router {
 
   competitionRouter.get(
     "/",
-    requireAuth(authRepo),
+    requireAuth(authRepo), //TODO : should only admin be able to see all competitions, normal users should probably only see competitions of their courses. Or does this endpoint only return competitions of the courses the user is in? 
     controller.getAllCompetitions.bind(controller),
   );
   competitionRouter.get(

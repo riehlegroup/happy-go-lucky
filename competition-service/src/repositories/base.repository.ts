@@ -5,11 +5,8 @@ export abstract class BaseRepo<T> {
   ) {}
 
   async getAll(): Promise<T[]> {
-    console.log(`Fetching all records from table: ${this.tableName}`);
     const sql = `SELECT * FROM ${this.tableName}`;
-    console.log(`Executing SQL: ${sql}`);
     const result = (await this.db.all(sql)) as T[];
-    console.log(`Result: ${JSON.stringify(result)}`);
     return result;
   }
 

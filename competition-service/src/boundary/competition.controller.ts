@@ -11,16 +11,15 @@ export class CompetitionController {
 
     async getAllCompetitions(req: any, res: any) {
         try {
-            console.log("inside getAllCompetitions controller method");
             const competitions = await this.competitionService.getAllCompetitions();
             res.json(competitions);
         } catch (error) {
+            console.error("Error fetching competitions:", error);
             res.status(500).json({ error: 'Failed to fetch competitions' });
         }
     }
     
     async getCompetitionById(req: any, res: any) {
-        console.log("inside getCompetitionById controller method");
         const { id } = req.params;
         const competitionId = parseInt(id, 10);
         if (isNaN(competitionId)) {
@@ -36,6 +35,7 @@ export class CompetitionController {
                 res.status(404).json({ error: 'Competition not found' });
             }
         } catch (error) {
+            console.error("Error fetching competition by ID:", error);
             res.status(500).json({ error: 'Failed to fetch competition' });
         }
 
@@ -54,6 +54,7 @@ export class CompetitionController {
                     errors: z.treeifyError(error)
                 });
             }
+            console.error("Error creating competition:", error);
             res.status(500).json({ error: 'Failed to create competition' });
         }
     }

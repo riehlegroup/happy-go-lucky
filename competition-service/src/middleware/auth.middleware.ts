@@ -15,7 +15,7 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return res.status(401).json({ message: "Authorization header missing" });
+      return res.status(401).json({ message: "No token provided" });
     }
     const token = authHeader.split(" ")[1];
     try {
@@ -32,7 +32,8 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
           .json({ message: "User with token userId not found" });
       }
       req.user = userFromTokenId; // Attach the user to the request object for further use
-    } catch {
+    } catch (error) {
+      console.error("middleware error: ", error);
       res.status(401).json({ message: "Invalid token" });
       return;
     }
@@ -46,7 +47,10 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
  * @param authRepo
  * @returns
  */
-export const requireCourseMember = (competitionRepo: CompetitionRepo, authRepo: AuthentificationRepo) => {
+export const requireCourseMember = (
+  competitionRepo: CompetitionRepo,
+  authRepo: AuthentificationRepo,
+) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as DatabaseUser;
     const competitionId = req.params.id; // Takes the competition ID from the path parameter
@@ -67,7 +71,12 @@ export const requireCourseMember = (competitionRepo: CompetitionRepo, authRepo: 
     );
 
     if (!isMemberOfCourse) {
-      return res.status(403).json({ message: "User is not a member of the course associated with this competition" });
+      return res
+        .status(403)
+        .json({
+          message:
+            "User is not a member of the course associated with this competition",
+        });
     }
     next();
   };

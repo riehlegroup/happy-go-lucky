@@ -17,9 +17,11 @@ export interface Competition {
 export const CreateCompetitionSchema = z.object({
   name: z.string().min(3, "Name muss mindestens 3 Zeichen lang sein"),
   courseId: z.number().int().positive(),
-  description: z.string().min(10, "Beschreibung muss mindestens 10 Zeichen lang sein"),
-  startDate: z.iso.datetime().optional(), // ISO-Datum
-  endDate: z.iso.datetime().optional(),
+  description: z
+    .string()
+    .min(10, "Beschreibung muss mindestens 10 Zeichen lang sein"),
+  start_date: z.iso.datetime(),
+  end_date: z.iso.datetime(),
 });
 /**
  * DTO for creating a competition
@@ -36,5 +38,3 @@ export interface CompetitionResponseDto {
   description: string;
   isActive: boolean;
 }
-
-
