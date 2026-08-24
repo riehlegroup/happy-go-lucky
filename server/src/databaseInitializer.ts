@@ -150,6 +150,17 @@ export async function initializeDB(filename: string, createAdmin = true) {
       FOREIGN KEY (courseId) REFERENCES courses(id)
     )
   `);
-  
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_datasets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      dataset_type TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+    )
+  `);
+
   return db;
 }

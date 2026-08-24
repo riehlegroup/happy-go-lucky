@@ -56,8 +56,9 @@ erDiagram
     competition_datasets {
         INTEGER id PK
         INTEGER competitionId FK
-        TEXT dataType
-        TEXT fileUrl
+        TEXT dataset_type
+        TEXT file_name
+        TEXT file_path
     }
 
     competition_participants {

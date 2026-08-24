@@ -207,13 +207,9 @@ components:
         description:
           type: string
           example: "Vorhersage von Sicherheitslücken in Open-Source-Metrik-Zeitreihen"
-        projectId:
+        courseId:
           type: integer
           example: 10
-        status:
-          type: string
-          enum: [DRAFT, ACTIVE, ARCHIVED]
-          example: "ACTIVE"
         startDate:
           type: string
           format: date-time
@@ -225,7 +221,8 @@ components:
       type: object
       required:
         - title
-        - projectId
+        - description
+        - courseId
         - startDate
         - endDate
       properties:
@@ -233,7 +230,7 @@ components:
           type: string
         description:
           type: string
-        projectId:
+        courseId:
           type: integer
         startDate:
           type: string

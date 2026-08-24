@@ -6,6 +6,14 @@ declare global {
                 id: number;
                 role?: string;
             };
+            competition?: {
+                id: number;
+                name: string;
+                courseId: number;
+                description: string;
+                startDate: Date;
+                endDate: Date;
+            };
         }
     }
 }
