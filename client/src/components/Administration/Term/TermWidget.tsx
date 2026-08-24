@@ -32,7 +32,7 @@ const TermWidget: React.FC<TermWidgetProps> = ({
   const addCourse = useCourse().createCourse; // For course creation within term dialog
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false };
+  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false, enabledFeatures: [] };
 
   const {
     dialogState,

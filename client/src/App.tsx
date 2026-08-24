@@ -15,7 +15,6 @@ import ConfirmedEmail from "./screens/Auth/ConfirmedEmail";
 import UserPanel from "./components/Configuration/UserPanel";
 import CourseAdmin from "./components/Administration/CourseAdmin";
 import { ActiveProjectProvider } from "./context/ActiveProjectContext";
-import { Feather } from "lucide-react";
 import { CourseFeature } from "./types/CourseFeature";
 import { FeatureGuard } from "./components/common/FeatureGuard";
 
