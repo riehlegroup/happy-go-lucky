@@ -1,6 +1,6 @@
 import { CourseFeature } from "@/types/CourseFeature";
 
-//TODO: Why is there a types.ts file in the course administration folder? This should be removed and the Course and Project interfaces should be imported from the models.ts file instead.
+//TODO: Check if this seperate types file is necessary or if it can be merged with the competition.types.ts file.
 export interface Course {
   id: number;
   termId: number;
