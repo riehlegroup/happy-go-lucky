@@ -16,7 +16,7 @@ export class DatasetRepo extends BaseRepo<Dataset> {
             VALUES (?, ?, ?, ?)
             RETURNING *
         `;
-		const result = await this.db.run(sql, [
+		const result = await this.db.get(sql, [
 			dataset.competitionId,
 			dataset.dataset_type,
 			dataset.file_name,

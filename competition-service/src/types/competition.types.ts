@@ -61,3 +61,13 @@ export enum DatasetType {
 export const datasetTypeSchema = z.object({
 	type: z.enum(DatasetType),
 });
+
+
+export const DatasetResponseSchema = z.object({
+  id: z.number(),
+  competitionId: z.number(),
+  dataset_type: z.enum(DatasetType),
+  file_name: z.string(),
+});
+
+export type DatasetResponseDto = z.infer<typeof DatasetResponseSchema>;

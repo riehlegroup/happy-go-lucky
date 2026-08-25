@@ -158,7 +158,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
       dataset_type TEXT NOT NULL,
       file_path TEXT NOT NULL,
       file_name TEXT NOT NULL,
-      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+      FOREIGN KEY (competitionId) REFERENCES competitions(id)
     )
   `);
 

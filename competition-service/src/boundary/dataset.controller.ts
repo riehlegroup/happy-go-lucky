@@ -1,6 +1,7 @@
 import { DatasetService } from "../services/dataset.service";
 import {
 	Competition,
+	DatasetResponseSchema,
 	DatasetType,
 	datasetTypeSchema as datasetTypeSchema,
 } from "../types/competition.types";
@@ -45,7 +46,9 @@ export class DatasetController {
 					filePath,
 				);
 
-			res.status(201).json(createdDataset);
+            const responseDataset = DatasetResponseSchema.parse(createdDataset);
+
+			res.status(201).json(responseDataset);
 		} catch (error) {
 			// If an error occurs, delete the uploaded file to avoid orphaned files
 			if (req.file && fs.existsSync(req.file.path)) {
