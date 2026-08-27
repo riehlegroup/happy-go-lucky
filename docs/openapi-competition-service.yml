@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: Competition Service API
+  description: >
+    Microservice zur Verwaltung von CVE-Vorhersage-Wettbewerben, 
+    Datensätzen (TRAIN & EVALUATION), Student-API-Registrierungen und automatischer Evaluierung.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/competition
+    description: Lokale Entwicklungsumgebung
+
+paths:
+  # ---------------------------------------------------------------------------
+  # COMPETITION MANAGEMENT
+  # ---------------------------------------------------------------------------
+  /competitions:
+    get:
+      summary: Liste aller Competitions abrufen
+      operationId: getCompetitions
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filtert Competitions nach einem bestimmten Kurs-Projekt
+      responses:
+        '200':
+          description: Erfolgreiche Abfrage
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competition'
+
+    post:
+      summary: Neue Competition anlegen
+      operationId: createCompetition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompetitionInput'
+      responses:
+        '201':
+          description: Competition erfolgreich angelegt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+
+  /competitions/{id}:
+    get:
+      summary: Details einer bestimmten Competition abrufen
+      operationId: getCompetitionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Competition gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+        '404':
+          description: Competition nicht gefunden
+
+  /competitions/{id}/datasets:
+    post:
+      summary: Datensatz-Datei hochladen (TRAIN oder EVALUATION)
+      description: Überträgt die JSON/CSV Datei. Der Service speichert sie im Volume und trägt den Pfad ein.
+      operationId: uploadDataset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - dataType
+                - file
+              properties:
+                dataType:
+                  type: string
+                  enum: [TRAIN, EVALUATION]
+                  example: "EVALUATION"
+                file:
+                  type: string
+                  format: binary
+                  description: Die eigentliche Datensatz-Datei (.json / .csv)
+      responses:
+        '201':
+          description: Datei erfolgreich im Volume gespeichert & DB-Eintrag erstellt
+
+
+  # ---------------------------------------------------------------------------
+  # STUDENT ENDPOINT REGISTRATION
+  # ---------------------------------------------------------------------------
+  /competitions/{id}/register-endpoint:
+    post:
+      summary: URL als Student registrieren
+      description: Der Student übermittelt die REST-URL seines Modells.
+      operationId: registerStudentEndpoint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - apiUrl
+              properties:
+                userId:
+                  type: integer
+                  example: 42
+                apiUrl:
+                  type: string
+                  format: uri
+                  example: "https://student-app.rz.uni-erlangen.de/predict"
+      responses:
+        '200':
+          description: URL erfolgreich hinterlegt
+        '400':
+          description: Ungültige URL oder Daten
+
+  # ---------------------------------------------------------------------------
+  # LEADERBOARD & EVALUATIONS
+  # ---------------------------------------------------------------------------
+  /competitions/{id}/leaderboard:
+    get:
+      summary: Leaderboard einer Competition abrufen
+      description: Liefert die aktuellsten und besten Scores der Studierenden.
+      operationId: getLeaderboard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
+
+  /competitions/{id}/evaluate:
+    post:
+      summary: Manuelle Evaluierung auslösen (Trigger / Cron-Run)
+      description: Startet den Evaluierungsprozess für alle registrierten Studenten-APIs dieser Competition.
+      operationId: triggerEvaluation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '202':
+          description: Evaluierung im Hintergrund gestartet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Evaluation triggered for all registered endpoints."
+
+# ---------------------------------------------------------------------------
+# COMPONENTS & SCHEMAS
+# ---------------------------------------------------------------------------
+components:
+  schemas:
+    Competition:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "CVE Prediction Challenge 2026"
+        description:
+          type: string
+          example: "Vorhersage von Sicherheitslücken in Open-Source-Metrik-Zeitreihen"
+        projectId:
+          type: integer
+          example: 10
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, ARCHIVED]
+          example: "ACTIVE"
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+
+    CreateCompetitionInput:
+      type: object
+      required:
+        - title
+        - projectId
+        - startDate
+        - endDate
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        projectId:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+        competitionId:
+          type: integer
+          example: 1
+        dataType:
+          type: string
+          enum: [TRAIN, EVALUATION]
+          example: "EVALUATION"
+        fileUrl:
+          type: string
+          example: "storage/competitions/comp_1/eval_data.json"
+
+    CreateDatasetInput:
+      type: object
+      required:
+        - dataType
+        - fileUrl
+      properties:
+        dataType:
+          type: string
+          enum: [TRAIN, EVALUATION]
+        fileUrl:
+          type: string
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 42
+        userName:
+          type: string
+          example: "Max Mustermann"
+        score:
+          type: number
+          format: float
+          example: 0.8845
+        status:
+          type: string
+          enum: [SUCCESS, TIMEOUT, FAILED, INVALID_OUTPUT]
+          example: "SUCCESS"
+        evaluatedAt:
+          type: string
+          format: date-time
+        metricsDetails:
+          type: object
+          additionalProperties: true
+
+    # ---------------------------------------------------------------------------
+    # SCHEMAS FOR THE STUDENT CONTAINER INTERFACE
+    # ---------------------------------------------------------------------------
+    StudentPredictionRequestPayload:
+      type: object
+      description: Datenstruktur, die der Competition Service an die Studenten-API sendet.
+      properties:
+        componentMetrics:
+          type: array
+          items:
+            type: object
+            properties:
+              componentId:
+                type: string
+                example: "apache/commons-io"
+              timeSeries:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+    StudentPredictionResponsePayload:
+      type: object
+      description: Erwartete Antwort der Studenten-API an den Competition Service.
+      properties:
+        predictions:
+          type: array
+          items:
+            type: object
+            properties:
+              componentId:
+                type: string
+                example: "apache/commons-io"
+              cveProbability:
+                type: number
+                format: float
+                example: 0.75
+              criticalityHistogram:
+                type: object
+                properties:
+                  low:
+                    type: number
+                    example: 0.1
+                  medium:
+                    type: number
+                    example: 0.5
+                  high:
+                    type: number
+                    example: 0.4

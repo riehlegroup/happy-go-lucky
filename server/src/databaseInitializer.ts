@@ -175,6 +175,20 @@ export async function initializeDB(filename: string, createAdmin = true) {
         OR NEW.submissionDate > (SELECT endDate FROM schedules WHERE id = NEW.scheduleId);
     END;
     `);
+
+
+  // ------ Tables and relationships for competition service -------
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      courseId INTEGER NOT NULL,
+      FOREIGN KEY (courseId) REFERENCES courses(id)
+    )
+  `);
   
   return db;
 }
