@@ -7,6 +7,7 @@ import { DatabaseWriter } from "../Serializer/DatabaseWriter";
 import { MethodFailedException } from "../Exceptions/MethodFailedException";
 import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException";
 import { IManager } from "./IManager";
+import { CourseFeature } from "../Models/CourseFeature";
 
 /**
  * Manages Term operations and writes them persistently.
@@ -100,7 +101,8 @@ export class TermManager implements IManager {
    */
   async addCourseToTerm(
     termId: string | number,
-    courseName: string
+    courseName: string,
+    enabledFeatures: CourseFeature[] = []
   ): Promise<Course> {
     const id = parseInt(termId as string);
     if (isNaN(id)) {
@@ -120,10 +122,10 @@ export class TermManager implements IManager {
       }
 
       // Insert course directly with termId (required field)
-      const result = await this.db.run(
-        "INSERT INTO courses (courseName, termId) VALUES (?, ?)",
-        [courseName, id]
-      );
+        const result = await this.db.run(
+          "INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)",
+          [courseName, id, JSON.stringify(enabledFeatures)]
+        );
 
       if (!result || !result.lastID) {
         throw new MethodFailedException("Course creation failed.");

@@ -9,6 +9,7 @@ const DEFAULT: Course = {
   courseName: "",
   projects: [],
   studentsCanCreateProject: false,
+  enabledFeatures: [],
 };
 
 /**
@@ -44,6 +45,7 @@ export const useCourse = () => {
         courseName: course.courseName ?? "",
         projects: course.projects ?? [],
         studentsCanCreateProject: course.studentsCanCreateProject ?? false,
+        enabledFeatures: course.enabledFeatures ?? [],
       }));
 
       setCourses(validCourses);
@@ -61,6 +63,7 @@ export const useCourse = () => {
       termId: course.termId,
       courseName: course.courseName,
       studentsCanCreateProject: course.studentsCanCreateProject,
+      enabledFeatures: course.enabledFeatures,
     };
 
     try {

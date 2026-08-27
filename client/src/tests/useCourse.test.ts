@@ -4,6 +4,7 @@ import courseApi from "@/components/Administration/Course/api";
 import { useCourse } from "@/hooks/useCourse";
 import { Course } from "@/components/Administration/Course/types";
 import { Message } from "@/components/Administration/Course/components/CourseMessage";
+import { CourseFeature } from "@/types/CourseFeature";
 
 // Mock Api before imports
 vi.mock("@/components/Administration/Course/api", () => ({
@@ -75,6 +76,7 @@ describe("useCourse", () => {
         courseName: "adapV2",
         projects: [],
         studentsCanCreateProject: false,
+        enabledFeatures: [CourseFeature.HAPPINESS_INDEX, CourseFeature.STANDUPS],
       },
     ];
 
@@ -104,6 +106,7 @@ describe("useCourse", () => {
       courseName: "adap",
       projects: [],
       studentsCanCreateProject: true,
+      enabledFeatures: [CourseFeature.HAPPINESS_INDEX, CourseFeature.STANDUPS],
     });
 
     // Verify message was set correctly
@@ -126,6 +129,7 @@ describe("useCourse", () => {
       courseName: "adapV2",
       projects: [],
       studentsCanCreateProject: false,
+      enabledFeatures: [],
     });
 
     // Verify message was set correctly
@@ -149,6 +153,7 @@ describe("useCourse", () => {
       courseName: "Test Course",
       projects: [],
       studentsCanCreateProject: false,
+      enabledFeatures: [],
     });
 
     // Verify initial message was set

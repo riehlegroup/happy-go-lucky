@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import TopNavBar from "../common/TopNavBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SectionCard from "@/components/common/SectionCard";
@@ -15,11 +14,10 @@ import {
 import AuthStorage from "@/services/storage/auth";
 import ApiClient from "@/services/api/client";
 import coursesApi from "@/services/api/courses";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 
 const Happiness: React.FC = (): React.ReactNode => {
-  const location = useLocation();
-
-  const [projectName, setProjectName] = useState<string | null>("");
+  const {activeProject} = useActiveProject();
   const [user, setUser] = useState<{ name: string; email: string } | null>(
     null
   );
@@ -39,20 +37,15 @@ const Happiness: React.FC = (): React.ReactNode => {
   } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [userCurrentHappiness, setUserCurrentHappiness] = useState<number | null>(null);
-  const [courseId, setCourseId] = useState<number | null>(null);
   const [allSubmissionDates, setAllSubmissionDates] = useState<string[]>([]);
 
   useEffect(() => {
-    const projectNameFromState = location.state?.projectName;
-    if (projectNameFromState) {
-      setProjectName(projectNameFromState);
-    }
     const authStorage = AuthStorage.getInstance();
     const storedUserName = authStorage.getUserName();
     if (storedUserName) {
       setUser((prev) => prev && ({ ...prev , name: storedUserName }));
     }
-  }, [location.state]);
+  }, []);
 
   useEffect(() => {
     const fetchUserData = () => {
@@ -69,32 +62,14 @@ const Happiness: React.FC = (): React.ReactNode => {
     fetchUserData();
   }, []);
 
-  // Fetch courseId from projectName
-  useEffect(() => {
-    const fetchCourseId = async () => {
-      if (!projectName) return;
-
-      try {
-        const course = await ApiClient.getInstance().get<{ courseId: number; courseName: string }>(
-          "/courseProject/course",
-          { projectName: projectName }
-        );
-        setCourseId(course.courseId);
-      } catch (error) {
-        console.error("Error fetching project course ID:", error);
-      }
-    };
-
-    fetchCourseId();
-  }, [projectName]);
 
   // Fetch all submission dates from course schedule
   useEffect(() => {
     const fetchSchedule = async () => {
-      if (!courseId) return;
+      if (!activeProject?.courseId) return;
 
       try {
-        const schedule = await coursesApi.getSchedule(courseId);
+        const schedule = await coursesApi.getSchedule(activeProject.courseId);
         if (schedule && schedule.submissionDates) {
           // Sort submission dates chronologically
           const sortedDates = [...schedule.submissionDates].sort();
@@ -106,18 +81,18 @@ const Happiness: React.FC = (): React.ReactNode => {
     };
 
     fetchSchedule();
-  }, [courseId]);
+  }, [activeProject?.courseId]);
 
   useEffect(() => {
     const fetchNextSubmission = async () => {
-      if (!projectName) return;
+      if (!activeProject?.projectName) return;
 
       try {
         const submission = await ApiClient.getInstance().get<{
           id: number;
           submissionDate: string;
         }>("/courseProject/availableSubmissions",
-          { projectName: projectName }
+          { projectName: activeProject.projectName }
         );
 
         setNextSubmission(submission);
@@ -128,10 +103,10 @@ const Happiness: React.FC = (): React.ReactNode => {
     };
 
     fetchNextSubmission();
-  }, [projectName]);
+  }, [activeProject?.projectName]);
 
   const handleHappinessSubmit = async (ratingValue: number) => {
-    if (!projectName || !user?.email || !nextSubmission) {
+    if (!activeProject?.projectName || !user?.email || !nextSubmission) {
       alert("Missing project, user, or submission information");
       return;
     }
@@ -143,7 +118,7 @@ const Happiness: React.FC = (): React.ReactNode => {
       await ApiClient.getInstance().post<{ message: string }>(
         "/courseProject/happiness",
         {
-          projectName,
+          projectName: activeProject.projectName,
           userEmail: user.email,
           happiness: ratingValue,
           submissionDateId: nextSubmission.id,
@@ -174,7 +149,7 @@ const Happiness: React.FC = (): React.ReactNode => {
         userEmail: string;
       }>>(
         "/courseProject/happiness",
-        { projectName: projectName ?? "" }
+        { projectName: activeProject?.projectName ?? "" }
       );
       setHappinessData(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -183,10 +158,11 @@ const Happiness: React.FC = (): React.ReactNode => {
   };
 
   useEffect(() => {
-    if (projectName) {
+    if (activeProject?.projectName) {
+      // Refresh the chart whenever the active project changes.
       fetchHappinessData();
     }
-  }, [projectName]);
+  }, [activeProject?.projectName]);
 
   // Update user's current happiness when data or submission changes
   useEffect(() => {
@@ -276,6 +252,11 @@ const Happiness: React.FC = (): React.ReactNode => {
     <div className="min-h-screen">
       <TopNavBar title="Happiness" showBackButton={true} showUserInfo={true} />
       <div className="mx-auto max-w-6xl space-y-4 p-4">
+        {!activeProject ? (
+           <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700">
+              No project selected. Please select a project in the dashboard to send standup emails.
+           </div>
+        ) : (
         <Tabs defaultValue="User" className="w-full">
           <TabsList className="inline-flex h-auto gap-1 bg-slate-100 p-2">
             <TabsTrigger value="User" className="data-[state=active]:bg-white data-[state=active]:shadow">
@@ -335,7 +316,7 @@ const Happiness: React.FC = (): React.ReactNode => {
           </SectionCard>
         </TabsContent>
         <TabsContent value="Display">
-          <SectionCard title={`Happiness - ${projectName}`}>
+          <SectionCard title={`Happiness - ${activeProject?.projectName}`}>
             <ResponsiveContainer height={400} width="100%">
               <LineChart
                 data={chartData}
@@ -358,6 +339,7 @@ const Happiness: React.FC = (): React.ReactNode => {
           </SectionCard>
         </TabsContent>
         </Tabs>
+          )}
       </div>
     </div>
   );

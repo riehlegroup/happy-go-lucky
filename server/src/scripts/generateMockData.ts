@@ -1,6 +1,7 @@
 import type { Database } from 'sqlite';
 import { hashPassword } from '../Utils/hash';
 import { initializeDB } from '../databaseInitializer';
+import { CourseFeature } from '../Models/CourseFeature';
 
 /**
  * Generates mock data for development.
@@ -14,10 +15,10 @@ async function generateMockData(db: Database, deleteOnly: boolean = false) {
 
     console.log('Cleaning up any existing mock data...');
     await db.run(`DELETE FROM happiness WHERE projectId IN (
-      SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
+      SELECT id FROM projects WHERE projectName IN ('AMOS – Smart Campus App', 'ADAP – Personal Learning Tracker')
     )`);
     await db.run(`DELETE FROM user_projects WHERE projectId IN (
-      SELECT id FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')
+      SELECT id FROM projects WHERE projectName IN ('AMOS – Smart Campus App', 'ADAP – Personal Learning Tracker')
     )`);
     await db.run(`DELETE FROM submissions WHERE scheduleId IN (
       SELECT id FROM courses WHERE courseName IN ('AMOS Course Mock', 'ADAP Course Mock')
@@ -25,9 +26,9 @@ async function generateMockData(db: Database, deleteOnly: boolean = false) {
     await db.run(`DELETE FROM schedules WHERE id IN (
       SELECT id FROM courses WHERE courseName IN ('AMOS Course Mock', 'ADAP Course Mock')
     )`);
-    await db.run(`DELETE FROM projects WHERE projectName IN ('AMOS Project 1', 'ADAP Project 1')`);
+    await db.run(`DELETE FROM projects WHERE projectName IN ('AMOS – Smart Campus App', 'ADAP – Personal Learning Tracker')`);
     await db.run(`DELETE FROM users WHERE email IN (
-      'amos-student-1@fau.de', 'amos-student-2@fau.de', 'adap-student-1@fau.de'
+      'elias.zimmermann@fau.de', 'clara.hartmann@fau.de', 'marie.schmidt@fau.de'
     )`);
     await db.run(`DELETE FROM courses WHERE courseName IN ('AMOS Course Mock', 'ADAP Course Mock')`);
     await db.run(`DELETE FROM terms WHERE termName = 'WS26'`);
@@ -56,15 +57,15 @@ async function generateMockData(db: Database, deleteOnly: boolean = false) {
 
     console.log('Creating courses...');
     const amosResult = await db.run(
-      `INSERT INTO courses (courseName, termId) VALUES (?, ?)`,
-      ['AMOS Course Mock', termId]
+      `INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)`,
+      ['AMOS Course Mock', termId, JSON.stringify([CourseFeature.HAPPINESS_INDEX, CourseFeature.STANDUPS, CourseFeature.CODE_ACTIVITY])]
     );
     const amosCourseId = amosResult.lastID;
     console.log(`  ✓ AMOS Course Mock created with ID: ${amosCourseId}`);
 
     const adapResult = await db.run(
-      `INSERT INTO courses (courseName, termId) VALUES (?, ?)`,
-      ['ADAP Course Mock', termId]
+      `INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)`,
+      ['ADAP Course Mock', termId, JSON.stringify([CourseFeature.HAPPINESS_INDEX])]
     );
     const adapCourseId = adapResult.lastID;
     console.log(`  ✓ ADAP Course Mock created with ID: ${adapCourseId}\n`);

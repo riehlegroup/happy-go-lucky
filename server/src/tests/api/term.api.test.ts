@@ -200,7 +200,11 @@ describe('Term API', () => {
       const response = await request(app)
         .post('/termCourse')
         .set('Authorization', createAuthHeader(adminToken))
-        .send({ termId: 1, courseName: 'New Course' })
+        .send({
+          termId: 1,
+          courseName: 'New Course',
+          enabledFeatures: ['HAPPINESS_INDEX'],
+        })
         .expect(201);
 
       expect(response.body.success).toBe(true);
@@ -208,6 +212,7 @@ describe('Term API', () => {
       expect(response.body.data).toBeDefined();
       expect(response.body.data.courseName).toBe('New Course');
       expect(response.body.data.termId).toBe(1);
+      expect(response.body.data.enabledFeatures).toEqual(['HAPPINESS_INDEX']);
     });
 
     it('should reject creation by non-admin user', async () => {
@@ -216,7 +221,11 @@ describe('Term API', () => {
       const response = await request(app)
         .post('/termCourse')
         .set('Authorization', createAuthHeader(userToken))
-        .send({ termId: 1, courseName: 'New Course' })
+        .send({
+          termId: 1,
+          courseName: 'New Course',
+          enabledFeatures: ['HAPPINESS_INDEX'],
+        })
         .expect(403);
 
       expect(response.body.success).toBe(false);
@@ -268,6 +277,23 @@ describe('Term API', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
+    });
+
+    it('should reject invalid enabledFeatures', async () => {
+      const adminToken = generateAdminToken();
+
+      const response = await request(app)
+        .post('/termCourse')
+        .set('Authorization', createAuthHeader(adminToken))
+        .send({
+          termId: 1,
+          courseName: 'New Course',
+          enabledFeatures: ['NOT_A_FEATURE'],
+        })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('Invalid course features');
     });
   });
 

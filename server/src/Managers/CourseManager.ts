@@ -9,6 +9,7 @@ import { IllegalArgumentException } from "../Exceptions/IllegalArgumentException
 import { ProjectManager } from "./ProjectManager";
 import { CourseSchedule, SubmissionDate } from "../Models/CourseSchedule";
 import { IManager } from "./IManager";
+import { CourseFeature } from "../Models/CourseFeature";
 
 /**
  * Manages Course operations and writes them persistent.
@@ -31,7 +32,7 @@ export class CourseManager implements IManager {
    * Creates a new course if it does not already exist.
    * @returns Newly created or existing course
    */
-  async createCourse(courseName: string, termId: number): Promise<Course> {
+  async createCourse(courseName: string, termId: number, studentsCanCreateProject: boolean = false, enabledFeatures: CourseFeature[] = []): Promise<Course> {
     let course: Course | null = null;
 
     try {
@@ -55,9 +56,10 @@ export class CourseManager implements IManager {
         }
         return course;
       } else {
+        const enabledFeaturesJson = JSON.stringify(enabledFeatures);
         const result = await this.db.run(
-          "INSERT INTO courses (courseName, termId) VALUES (?, ?)",
-          [courseName, termId]
+          "INSERT INTO courses (courseName, termId, studentsCanCreateProject, enabledFeatures) VALUES (?, ?, ?, ?)",
+          [courseName, termId, studentsCanCreateProject ? 1 : 0, enabledFeaturesJson]
         );
 
         if (!result || !result.lastID) {
@@ -93,6 +95,10 @@ export class CourseManager implements IManager {
       }
     }
     return c;
+  }
+
+  async getCourseById(id: number): Promise<Course | null> {
+    return await this.oh.getCourse(id, this.db);
   }
 
   /**

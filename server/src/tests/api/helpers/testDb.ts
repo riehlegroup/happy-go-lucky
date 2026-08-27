@@ -1,6 +1,7 @@
 import { Database } from 'sqlite';
 import { initializeDB } from '../../../databaseInitializer';
 import { hashPassword } from '../../../Utils/hash';
+import { CourseFeature } from '../../../Models/CourseFeature';
 
 /**
  * Creates an in-memory SQLite database for testing
@@ -51,8 +52,8 @@ export async function seedDatabase(db: Database) {
 
   // Create test course
   await db.run(
-    `INSERT INTO courses (courseName, termId) VALUES (?, ?)`,
-    ['Test Course', 1]
+    `INSERT INTO courses (courseName, termId, studentsCanCreateProject, enabledFeatures) VALUES (?, ?, ?, ?)`,
+    ['Test Course', 1, true, JSON.stringify([CourseFeature.HAPPINESS_INDEX])]
   );
 
   // Create test project
