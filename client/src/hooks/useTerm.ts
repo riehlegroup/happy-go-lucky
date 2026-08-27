@@ -112,6 +112,7 @@ export const useTerm = () => {
         termId: course.termId,
         projects: course.projects ?? [],
         studentsCanCreateProject: course.studentsCanCreateProject ?? false,
+        enabledFeatures: course.enabledFeatures ?? [],
       }));
 
       // Update state with courses for this term

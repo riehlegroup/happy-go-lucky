@@ -8,6 +8,20 @@ import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
 
+async function ensureCourseFlagColumn(db: Awaited<ReturnType<typeof open>>) {
+  const columns = await db.all<{ name: string }[]>(`PRAGMA table_info(courses)`);
+  const hasStudentsCanCreateProject = columns.some(
+    (column) => column.name === "studentsCanCreateProject"
+  );
+
+  if (!hasStudentsCanCreateProject) {
+    await db.exec(`
+      ALTER TABLE courses
+      ADD COLUMN studentsCanCreateProject INTEGER NOT NULL DEFAULT 0
+    `);
+  }
+}
+
 type SchemaDatabase = {
   all: (query: string) => Promise<Array<{ name: string }>>;
   exec: (query: string) => Promise<void>;
@@ -79,10 +93,13 @@ export async function initializeDB(filename: string, createAdmin = true) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       courseName TEXT UNIQUE,
       termId INTEGER NOT NULL,
+      studentsCanCreateProject INTEGER NOT NULL DEFAULT 0,
       enabledFeatures TEXT DEFAULT '[]',
       FOREIGN KEY (termId) REFERENCES terms(id)
     )
   `);
+
+  await ensureCourseFlagColumn(db);
 
   await ensureColumnExists(db, 'courses', 'enabledFeatures', "TEXT DEFAULT '[]'");
 

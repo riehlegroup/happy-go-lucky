@@ -225,7 +225,7 @@ describe('Happiness API', () => {
         .post('/course')
         .send({
           courseName: 'No Schedule Course',
-          termId: 1,
+          termId: 1, studentsCanCreateProject: false,
           enabledFeatures: ['HAPPINESS_INDEX'],
         })
         .expect(201);

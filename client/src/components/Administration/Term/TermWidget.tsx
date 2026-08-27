@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Term } from "./types";
 import { Course } from "../Course/types";
+import { CourseDialog } from "../Course/components/CourseDialog";
+import { CourseForm } from "../Course/components/CourseForm";
 import { TermDialog } from "./components/TermDialog";
 import { TermForm } from "./components/TermForm";
 import { TermAction } from "./components/TermAction";
 import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useCourse } from "@/hooks/useCourse";
 
 interface TermWidgetProps {
   label?: string;
@@ -25,10 +28,11 @@ const TermWidget: React.FC<TermWidgetProps> = ({
   onFetch,
   onDeleteTerm,
 }: TermWidgetProps) => {
-  const { message, DEFAULT, createTerm, addCourse, deleteTerm: deleteTermFromHook } = useTerm();
+  const { message, DEFAULT, createTerm, deleteTerm: deleteTermFromHook } = useTerm();
+  const addCourse = useCourse().createCourse; // For course creation within term dialog
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false };
+  const defaultData = type === "term" ? DEFAULT : { id: 0, termId: term?.id || 0, courseName: "", projects: [], studentsCanCreateProject: false, enabledFeatures: [] };
 
   const {
     dialogState,
@@ -111,13 +115,45 @@ const TermWidget: React.FC<TermWidgetProps> = ({
   /**
    * Main Dialog-based UI for term/course operations
    */
+  if (type === "course") {
+    return (
+      <>
+        <CourseDialog
+          isOpen={dialogState.isOpen}
+          title={`Create Course`}
+          trigger={
+            <TermAction
+              label={label}
+              type={type}
+              action={action}
+              onClick={handleStateDialog}
+              dataCy={`add-course-trigger`}
+            />
+          }
+          onClick={handleStateDialog}
+          onClose={closeDialog}
+          message={message || undefined}
+        >
+          <CourseForm
+            type="course"
+            label={["Term", "Course Name", "Students Can Create Project"]}
+            data={dialogState.data as Course | undefined}
+            message={message || undefined}
+            onChange={updateDialogData}
+            onSubmit={handleSubmit}
+            termOptions={term ? [{ id: term.id, label: term.displayName || term.termName }] : []}
+            termSelectorDisabled
+          />
+        </CourseDialog>
+      </>
+    );
+  }
+
   return (
     <>
       <TermDialog
         isOpen={dialogState.isOpen}
-        title={`${action === "edit" ? "Edit" : "Create"} ${
-          type === "course" ? "Course" : "Term"
-        }`}
+        title={`${action === "edit" ? "Edit" : "Create"} Term`}
         trigger={
           <TermAction
             label={label}

@@ -46,6 +46,7 @@ const courseApi = {
     termId: number;
     courseName: string;
     studentsCanCreateProject: boolean;
+    enabledFeatures: string[];
   }): Promise<Response> => {
     return ApiClient.getInstance().post<Response>("/course", body, true);
   },

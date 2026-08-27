@@ -31,4 +31,5 @@ export interface CourseResult {
     id: number;
     semester: string | null;
     courseName: string | null;
+    studentsCanCreateProject: number | null;
 }
