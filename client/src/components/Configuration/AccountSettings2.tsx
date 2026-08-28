@@ -64,7 +64,7 @@ const SettingsRow = ({
 );
 
 
-const Settings: React.FC = () => {
+const AccountSettings2: React.FC = () => {
   /* form inputs */
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -207,7 +207,7 @@ const Settings: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Settings" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title="Account Settings 2" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
         <SectionCard title="Account Settings">
@@ -343,4 +343,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default AccountSettings2;
