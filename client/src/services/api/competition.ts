@@ -1,66 +1,86 @@
-import { API_BASE_URL } from "@/config/api";
+import { Competition, DatasetType} from "@/types/competition.models";
+import ApiClient from "./client";
+import { ApiResponse } from "@/types/api";
 
-export const COMPETITION_SUBMISSION_ENDPOINT = "eval/competition/submissions";
 
-export type CompetitionSubmissionPayload = {
-  submissionLink: string;
-};
+export const COMPETITON_ENDPOINT_ADDITION = "/competition/competitions";
 
-export async function submitCompetitionSubmission(
-  payload: CompetitionSubmissionPayload
-): Promise<unknown> {
-  const response = await fetch(
-    `${API_BASE_URL}${COMPETITION_SUBMISSION_ENDPOINT}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+
+const competitionApi = {
+  getCompetitionById: async (competitionId: number): Promise<Competition | null> => {
+    try {
+    const response= await ApiClient.getInstance().get<ApiResponse<Competition>>(`{COMPETITON_ENDPOINT_ADDITION}/${competitionId}`, undefined, true);
+    if (!response || !response.success) {
+      console.log("Failed to fetch competition details By Id");
+      return null;
     }
-  );
 
-  if (!response.ok) {
-    let errorMessage = `Submission failed (${response.status})`;
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching competition details By Id:", error);
+    return null;
+  }
+  },
+
+  getCompetitionByCourse: async (courseId: number): Promise<Competition | null> => {
+    try {
+      const response = await ApiClient.getInstance().get<ApiResponse<Competition>>(`${COMPETITON_ENDPOINT_ADDITION}/course/${courseId}`,undefined, true);
+      if (!response || !response.success) {
+        console.log("Failed to fetch competition details By Course");
+        return null;
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching competition details By Course:", error);
+      return null;
+    }
+  },
+
+  createCompetition: async (body: {
+    name: string;
+    description: string;
+    courseId: number;
+    startDate: string;
+    endDate: string;
+  }): Promise<Competition | null> => {
+    try {
+      const response = await ApiClient.getInstance().post<ApiResponse<Competition>>(COMPETITON_ENDPOINT_ADDITION, body, true);
+      if (!response || !response.success) {
+        console.log("Failed to create competition");
+        return null;
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error creating competition:", error);
+      return null;
+    }
+  },
+
+  downloadDatasetByType: async (competitionId: number, datasetType: DatasetType) => {
+    try {
+     const blob = await ApiClient.getInstance().getBlob(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/dataset`, { type: datasetType }, true);
+     return blob;
+    } catch (error) {
+      console.error("Error fetching dataset by competition and type:", error);
+      return null;
+    }
+  },
+
+  uploadDataset: async (competitionId: number, datasetType: DatasetType, file: File) => {
+    const formData = new FormData();
+    formData.append("dataset", file);
+    formData.append("type", datasetType);
 
     try {
-      const errorData = await response.json();
-      if (typeof errorData?.message === "string") {
-        errorMessage = errorData.message;
-      }
-    } catch {
-      // Keep the generic message when the backend does not return JSON.
+      const response = await ApiClient.getInstance().post(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/dataset`, formData, true);
+      return response;
+    } catch (error) {
+      console.error("Error uploading dataset:", error);
+      return null;
     }
-
-    throw new Error(errorMessage);
   }
 
-  if (response.status === 204) {
-    return null;
-  }
 
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
+};
 
-export async function fetchCompetitionDetails(): Promise<{
-  title: string;
-  description: string;
-}> {
-  const response = await fetch(`${API_BASE_URL}eval/competition/details`, {
-    method: "GET",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch competition details (${response.status})`);
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    throw new Error("Failed to parse competition details response");
-  }
-}   
+export default competitionApi;

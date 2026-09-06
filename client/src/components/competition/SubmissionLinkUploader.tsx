@@ -1,10 +1,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import {
-  submitCompetitionSubmission,
-  type CompetitionSubmissionPayload,
-} from "../../services/api/competition";
+
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
 
@@ -43,11 +40,12 @@ export default function CompetitionSubmission() {
     setStatus("uploading");
 
     try {
-      const payload: CompetitionSubmissionPayload = {
+      /*
+      const payload = {
         submissionLink: formData.submissionLink,
-      };
+      };*/
 
-      await submitCompetitionSubmission(payload);
+      await //submitCompetitionSubmission(payload); /TODO add the correct function to submit the competition submission
       setStatus("success");
       setFormData({ submissionLink: "" });
     } catch (error) {
