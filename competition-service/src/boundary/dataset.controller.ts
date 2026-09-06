@@ -5,7 +5,6 @@ import {
 	DatasetType,
 	datasetTypeSchema as datasetTypeSchema,
 } from "../types/competition.types";
-import { z } from "zod";
 import fs from "fs";
 import { errorHandling } from "../errors/errorhandling.helper";
 
@@ -18,7 +17,7 @@ export class DatasetController {
 
 	async uploadDataset(req: any, res: any) {
 		try {
-			//TODO Check if zod validation is needed here or can do the complete req validation.
+			
 			if (!req.file) {
 				return res.status(400).json({ error: "No file uploaded" });
 			}

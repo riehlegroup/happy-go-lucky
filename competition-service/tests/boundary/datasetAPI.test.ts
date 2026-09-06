@@ -29,15 +29,6 @@ describe("Dataset API Integrationtest", () => {
 	});
 
 	afterAll(async () => {
-		/** 
-        // wipe all uploaded files after all tests are done
-        if (fs.existsSync(uploadDir)) {
-            fs.rmSync(uploadDir, { recursive: true, force: true });
-        }
-
-        // create the upload directory again for future tests
-        fs.mkdirSync(uploadDir, { recursive: true });
-        */
 		if (fs.existsSync(dummyFilePath)) {
 			fs.unlinkSync(dummyFilePath); // Delete the dummy file after tests
 		}
@@ -97,5 +88,44 @@ describe("Dataset API Integrationtest", () => {
 		expect(downloadResponse.text).toBe("id, name\n1, John\n2, Jane\n");
 	});
 
-	//TODO: Add more test cases for other dataset types, error scenarios, and edge cases.
+	it("should return 400 when trying to download a TEST dataset over general Enpoint", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);	
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		const downloadResponse = await request(app)
+			.get(`/competitions/${competitionId}/datasets?type=TEST`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(downloadResponse.status).toBe(400);
+		expect(downloadResponse.body).toHaveProperty("success", false);
+		expect(downloadResponse.body).toHaveProperty("error", "Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.");
+	});
+
+	it("should return 400 when uploading without a file", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`)
+			.field("type", "TRAIN"); // No file attached
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("error", "No file uploaded");
+	});
+
+	it("should return 400 when uploading with an invalid dataset type", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("dataset", dummyFilePath)
+			.field("type", "INVALID_TYPE"); 
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("success", false);
+	});
+
 });
