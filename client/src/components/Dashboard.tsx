@@ -94,12 +94,6 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  function goCompetition() {
-    if (selectedProject) {
-      navigate("/competition", { state: { projectName: selectedProject } });
-    }
-  }
-
   function goSettings() {
     navigate("/settings");
   }
@@ -178,14 +172,13 @@ const Dashboard: React.FC = () => {
                 </Button>
               </FeatureGuard>
               <FeatureGuard feature={CourseFeature.COMPETITION}>
-              <Button
-                onClick={goCompetition}
-                disabled={!selectedProject}
-                className="w-48"
-              >
-
-                Competition
-              </Button>
+                <Button
+                  onClick={goCompetition}
+                  disabled={!activeProject}
+                  className="w-48"
+                >
+                  Competition
+                </Button>
               </FeatureGuard>
             </div>
           </div>
