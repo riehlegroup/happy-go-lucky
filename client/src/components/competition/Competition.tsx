@@ -1,37 +1,32 @@
-import React, { useEffect } from "react";
+import React from "react";
 import TopNavBar from "../common/TopNavBar";
 import SectionCard from "../common/SectionCard";
 import SubmissionLinkUploader from "./SubmissionLinkUploader";
-import FileDownloader from "./FileDownloader";
-import {useState} from "react";
-import {
-  fetchCompetitionDetails,
-} from "../../services/api/competition";
+import { useCompetition } from "@/hooks/useCompetition";
+import { DatasetType } from "@/types/competition.models";
+import Button from "../common/Button";
 
 const Competition: React.FC = () => {
-  const [challengeTitle, setChallengeTitle] = useState("Title of Competition");
-  const [challengeDescription, setChallengeDescription] = useState("Description of the competition goes here.");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    competition, 
+    isLoading,
+    isActionLoading,
+    error,
+    downloadDataset,
+  } = useCompetition(1); // TODO Replace 1 with the actual competition ID out of context
 
-  useEffect(() => {
-    async function fetchCompetitionData() {
-      try {
-        const response =  await fetchCompetitionDetails();
-        setChallengeTitle(response.title);
-        setChallengeDescription(response.description);
-      } catch (error) {
-        setError("Failed to fetch competition data");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    //fetchCompetitionData(); TODO implement fetching competition data from backend when the endpoint is ready
-  }, []);
 
   const submissionGuidelines = (<p>Specific instructions for the submission system goes here.</p>)
 
+
+  if (isLoading) {
+    return <div>Loading...</div>; //TODO: Replace with a proper loading spinner or skeleton component
+  }
+
+  //Handle error state if no competition is found or if there was an error fetching the competition data
+  if(!competition) {
+    return <div>No competition found or an error occurred: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -42,14 +37,15 @@ const Competition: React.FC = () => {
       />
       
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title={challengeTitle}>
+        <SectionCard title={competition.name}>
           <div className="mb-3 flex items-center justify-between gap-4">
             <h3 className="text-lg font-semibold">Description</h3>
-            <FileDownloader />
+            <Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
+              Download Training Dataset
+            </Button>
           </div>
           <div className="text-left">
-
-            {challengeDescription}
+            {competition.description}
           </div>
          
           <details className="text-left my-4">

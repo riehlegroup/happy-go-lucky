@@ -29,8 +29,9 @@ class ApiClient {
     endpoint: string,
     options?: {
       params?: Record<string, string | number>;
-      body?: Record<string, string | number | boolean | string[]>;
+      body?: Record<string, string | number | boolean | string[]> | FormData;
       requiresAuth?: boolean;
+      responseType?: "json" | "blob";
     }
   ): Promise<T> {
     const { params, body, requiresAuth = false } = options || {};
@@ -44,9 +45,11 @@ class ApiClient {
         );
       }
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      const headers: Record<string, string> = {};
+
+      if (!(body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+      }
 
       if (requiresAuth) {
         const token = this.getAuthToken();
@@ -55,16 +58,25 @@ class ApiClient {
         }
       }
 
+      let fetchBody: BodyInit | undefined;
+      if(body) {
+        fetchBody = body instanceof FormData ? body : JSON.stringify(body);
+      }
+
       const response = await fetch(url.toString(), {
         method,
         headers,
-        body: body ? JSON.stringify(body) : undefined,
+        body: fetchBody,
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || `HTTP Error: ${response.status}`;
         throw new Error(errorMessage);
+      }
+
+      if (options?.responseType === "blob") {
+        return (await response.blob()) as unknown as T;
       }
 
       return (await response.json()) as T;
@@ -82,18 +94,27 @@ class ApiClient {
     return this.request<T>("GET", endpoint, { params, requiresAuth });
   }
 
+  async getBlob(
+    endpoint: string,
+    params?: Record<string, string | number>,
+    requiresAuth = false
+  ): Promise<Blob> {
+    return this.request<Blob>("GET", endpoint, { params, requiresAuth, responseType: "blob" });
+  }
+
   async post<T>(
     endpoint: string,
-    body: Record<string, string | number | boolean | string[]>,
-    requiresAuth = false
+    body: Record<string, string | number | boolean | string[]> | FormData,
+    requiresAuth = false,
+   
   ): Promise<T> {
     return this.request<T>("POST", endpoint, { body, requiresAuth });
   }
 
   async put<T>(
     endpoint: string,
-    body: Record<string, string | number | boolean | string[]>,
-    requiresAuth = false
+    body: Record<string, string | number | boolean | string[]> | FormData,
+    requiresAuth = false,
   ): Promise<T> {
     return this.request<T>("PUT", endpoint, { body, requiresAuth });
   }
