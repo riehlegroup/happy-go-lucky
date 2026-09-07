@@ -10,6 +10,8 @@ export default function CompetitionSubmission() {
   const [errors, setErrors] = useState<{ submissionLink?: string }>({});
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [submitError, setSubmitError] = useState<string>("");
+  //TODO use the useCompetition hook to use api to submit the submission link and handle the response
+  //TODO: use the useForm hook to handle the form state and validation -> Form validation has to be copied to the useForm hook
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     setFormData((currentFormData) => ({

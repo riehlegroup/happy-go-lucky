@@ -5,18 +5,26 @@ import SubmissionLinkUploader from "./SubmissionLinkUploader";
 import { useCompetition } from "@/hooks/useCompetition";
 import { DatasetType } from "@/types/competition.models";
 import Button from "../common/Button";
+import { useActiveProject } from "@/context/ActiveProjectContext";
 
 const Competition: React.FC = () => {
+
+  const {activeProject} = useActiveProject();
   const {
     competition, 
     isLoading,
     isActionLoading,
     error,
     downloadDataset,
-  } = useCompetition(1); // TODO Replace 1 with the actual competition ID out of context
+  } = useCompetition(activeProject?.courseId); 
 
 
-  const submissionGuidelines = (<p>Specific instructions for the submission system goes here.</p>)
+  const submissionGuidelines = (<div><p>For each competition a Training and Validation dataset will be provided. The training dataset will be used to train your model, while the validation dataset will be used to evaluate its performance before u submit your solution for evaluation. Use it to get an idea of how well your model performs on unseen data.</p>
+    <p>Submit your solution by providing a link to your implementation. Your implementation must strictly follow this format. ...</p> {//TODO: add format/ schema for submission 
+    }
+    <p>At the end of the competition the interface of your solution will be called with an unknown set of evaluation data. Your predicitions will be evaluated based on their performance on this data. After Evaluation, a leaderboards will be updated with the results.</p>
+    </div>
+  )
 
 
   if (isLoading) {
@@ -40,9 +48,15 @@ const Competition: React.FC = () => {
         <SectionCard title={competition.name}>
           <div className="mb-3 flex items-center justify-between gap-4">
             <h3 className="text-lg font-semibold">Description</h3>
-            <Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
-              Download Training Dataset
-            </Button>
+            <div className="flex gap-4">
+              <Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
+                Download Training Dataset
+              </Button>
+              <Button onClick={() => downloadDataset(DatasetType.VALIDATION)} disabled={isActionLoading}>
+                Download Validation Dataset
+              </Button>
+            </div>
+            
           </div>
           <div className="text-left">
             {competition.description}

@@ -24,4 +24,10 @@ export class CompetitionRepo extends BaseRepo<Competition> {
 		}
 		return result as Competition;
 	}
+
+	async getByCourseId(courseId: number): Promise<Competition[]> {
+		const sql = "SELECT * FROM competitions WHERE courseId = ?";
+		const results = await this.db.all(sql, [courseId]);
+		return results as Competition[];
+	}
 }

@@ -52,6 +52,13 @@ function App() {
                 <CodeActivity /> 
               </FeatureGuard>
             } />
+          <Route 
+            path="/competition" 
+            element={
+              <FeatureGuard feature={CourseFeature.COMPETITION} fallback={<Navigate to="/dashboard" replace />}>
+                <Competition /> 
+              </FeatureGuard>
+            } />
           {/*other routes*/}
           <Route path="/settings" element={<Settings />} />
           <Route path="/course-participation" element={<CourseParticipation />} />
@@ -60,7 +67,7 @@ function App() {
           <Route path="/project-config" element={<ProjectConfig />} />
           <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
           <Route path="/user-panel" element={<UserPanel />} />
-          <Route path="/competition" element={<Competition />} />
+         
         </Routes>
       </ActiveProjectProvider>
       </BrowserRouter>

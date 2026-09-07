@@ -18,18 +18,20 @@ export const useCompetition = (courseId: number | undefined) => {
 
     const fetchCompetiton = useCallback(async () => {
         if (!courseId) {
-            setError("Course ID is undefined");
-            setIsLoading(false);
+            setIsLoading(true);
             return;
         }
         setIsLoading(true);
+        setError(null);
         try {
             const response = await competitionApi.getCompetitionByCourse(courseId);
             setCompetition(response);
-            setError(null);
+            if (!response) {
+                setError("No competition found for this course");
+            }
         } catch (error) {
             setError("Failed to fetch competition data");
-            throw error;
+            console.error("Error fetching competition data:", error);
         } finally {
             setIsLoading(false);
         }

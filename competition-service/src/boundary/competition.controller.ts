@@ -58,4 +58,20 @@ export class CompetitionController {
             res.status(500).json({ error: 'Failed to create competition' });
         }
     }
+
+    async getCompetitionByCourseId(req: any, res: any) {
+        const { courseId } = req.params;
+        const parsedCourseId = parseInt(courseId, 10);
+        if (isNaN(parsedCourseId)) {
+            return res.status(400).json({ error: 'Invalid course ID' });
+        }
+
+        try {
+            const competition = await this.competitionService.getCompetitionByCourseId(parsedCourseId);
+            res.status(200).json({ success: true, data: competition });
+        } catch (error) {
+            console.error("Error fetching competition by course ID:", error);
+            res.status(500).json({ error: 'Failed to fetch competition for the course' });
+        }
+    }
 }
