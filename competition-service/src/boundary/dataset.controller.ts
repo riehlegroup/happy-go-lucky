@@ -66,6 +66,7 @@ export class DatasetController {
 
 			if (validatedDatasetType.type === DatasetType.TEST) {
 				return res.status(400).json({
+					success: false,
 					error: "Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.",
 				});
 			}
