@@ -52,6 +52,13 @@ function App() {
                 <CodeActivity /> 
               </FeatureGuard>
             } />
+          <Route 
+            path="/competition" 
+            element={
+              <FeatureGuard feature={CourseFeature.COMPETITION} fallback={<Navigate to="/dashboard" replace />}>
+                <Competition /> 
+              </FeatureGuard>
+            } />
           {/*other routes*/}
           <Route path="/settings" element={<AccountSettings2 />} />
           <Route path="/course-participation" element={<CourseParticipation />} />

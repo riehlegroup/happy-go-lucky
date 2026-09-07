@@ -14,34 +14,33 @@ const secretKey = process.env.JWT_SECRET || "your_jwt_secret";
  * @returns
  */
 export const requireAuth = (authRepo: AuthentificationRepo) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-    const token = authHeader.split(" ")[1];
-    try {
-      const decoded = jwt.verify(token, secretKey) as {
-        id: string;
-        email: string;
-      };
-      const userFromTokenId: DatabaseUser | undefined = await authRepo.getById(
-        Number(decoded.id),
-      );
-      if (!userFromTokenId) {
-        return res
-          .status(401)
-          .json({ message: "User with token userId not found" });
-      }
-      req.user = userFromTokenId; // Attach the user to the request object for further use
-    } catch (error) {
-      console.error("middleware error: ", error);
-      res.status(401).json({ message: "Invalid token" });
-      return;
-    }
+	return async (req: Request, res: Response, next: NextFunction) => {
+		const authHeader = req.headers.authorization;
+		if (!authHeader) {
+			return res.status(401).json({ message: "No token provided" });
+		}
+		const token = authHeader.split(" ")[1];
+		try {
+			const decoded = jwt.verify(token, secretKey) as {
+				id: string;
+				email: string;
+			};
+			const userFromTokenId: DatabaseUser | undefined =
+				await authRepo.getById(Number(decoded.id));
+			if (!userFromTokenId) {
+				return res
+					.status(401)
+					.json({ message: "User with token userId not found" });
+			}
+			req.user = userFromTokenId; // Attach the user to the request object for further use
+		} catch (error) {
+			console.error("middleware error: ", error);
+			res.status(401).json({ message: "Invalid token" });
+			return;
+		}
 
-    next();
-  };
+		next();
+	};
 };
 
 
@@ -109,15 +108,17 @@ export const requireCourseMember = (
 };
 
 export const requireAdmin = () => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as DatabaseUser;
-    if (!user) {
-      return res.status(400).json({ message: "Missing user information" });
-    }
-    
-    if (user.userRole !== "ADMIN") {
-      return res.status(403).json({ message: "User is not an admin" });
-    }
-    next();
-  };
+	return async (req: Request, res: Response, next: NextFunction) => {
+		const user = req.user as DatabaseUser;
+		if (!user) {
+			return res
+				.status(400)
+				.json({ message: "Missing user information" });
+		}
+
+		if (user.userRole !== "ADMIN") {
+			return res.status(403).json({ message: "User is not an admin" });
+		}
+		next();
+	};
 };
