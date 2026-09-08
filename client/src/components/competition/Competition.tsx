@@ -12,10 +12,12 @@ const Competition: React.FC = () => {
   const {activeProject} = useActiveProject();
   const {
     competition, 
+    mySubmission,
     isLoading,
     isActionLoading,
     error,
     downloadDataset,
+    submitCompetitionSubmission,
   } = useCompetition(activeProject?.courseId); 
 
 
@@ -62,8 +64,8 @@ const Competition: React.FC = () => {
             {competition.description}
           </div>
          
-          <details className="text-left my-4">
-            <summary className="font-bold cursor-pointer hover:text-blue-600">
+          <details className="my-4 text-left">
+            <summary className="cursor-pointer font-bold hover:text-blue-600">
               Submission Guidelines
             </summary>
             <div className="mt-2">
@@ -75,7 +77,12 @@ const Competition: React.FC = () => {
         </SectionCard>
         <SectionCard title="Solution Submission">
           <div>
-            <SubmissionLinkUploader />
+            <SubmissionLinkUploader 
+              existingSubmissionLink={mySubmission?.apiUrl}
+              lastUpdated={mySubmission?.updatedAt}
+              isSubmitting={isActionLoading}
+              onSubmit={(link: string) => submitCompetitionSubmission(link)}
+            />
           </div>
         </SectionCard>
       </div>

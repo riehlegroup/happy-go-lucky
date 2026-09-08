@@ -88,6 +88,16 @@ export const createCourseToTermValidation = () => ({
   ],
 });
 
+export const createCompetitionSubmissionValidation = () => ({
+  submissionLink: [
+    rules.required("Submission Link"),
+    rules.pattern(
+      /^https?:\/\/[^\s/$.?#].[^\s]*$/i,
+      "Please enter a valid URL"
+    ),
+  ],
+});
+
 export const useForm = <T extends object>(
   initialValues: T,
   validationSchema: ValidationSchema<T>

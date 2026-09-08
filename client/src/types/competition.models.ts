@@ -12,3 +12,12 @@ export enum DatasetType {
     TEST = "TEST",
     VALIDATION = "VALIDATION",
 }
+
+export interface CompetitionSubmission {
+    id: number;
+    competitionId: number;
+    userId: number;
+    apiUrl: string;
+    createdAt: string;
+    updatedAt: string;
+}
