@@ -6,6 +6,8 @@ import { useCompetition } from "@/hooks/useCompetition";
 import { DatasetType } from "@/types/competition.models";
 import Button from "../common/Button";
 import { useActiveProject } from "@/context/ActiveProjectContext";
+import { CompetitionSkeleton } from "./CompetitionSkeleton";
+import { useDelayedLoading } from "@/hooks/useDelayedLoading";
 
 const Competition: React.FC = () => {
 
@@ -20,6 +22,10 @@ const Competition: React.FC = () => {
     submitCompetitionSubmission,
   } = useCompetition(activeProject?.courseId); 
 
+  const showSkeleton = useDelayedLoading(isLoading, {
+    delay: 200,
+    minDuration: 400,
+  });
 
   const submissionGuidelines = (<div><p>For each competition a Training and Validation dataset will be provided. The training dataset will be used to train your model, while the validation dataset will be used to evaluate its performance before u submit your solution for evaluation. Use it to get an idea of how well your model performs on unseen data.</p>
     <p>Submit your solution by providing a link to your implementation. Your implementation must strictly follow this format. ...</p> {//TODO: add format/ schema for submission 
@@ -28,14 +34,14 @@ const Competition: React.FC = () => {
     </div>
   )
 
-
-  if (isLoading) {
-    return <div>Loading...</div>; //TODO: Replace with a proper loading spinner or skeleton component
+  // Show skeleton if loading or if competition data is not yet available
+  if (showSkeleton || (isLoading && !competition)) {
+    return <CompetitionSkeleton />;
   }
 
-  //Handle error state if no competition is found or if there was an error fetching the competition data
+  //Handle error state if no competition is found but loading is complete
   if(!competition) {
-    return <div>No competition found or an error occurred: {error}</div>;
+    return <div>No competition found or an error occurred: {error}</div>; //TODO: Add reusable error page component
   }
 
   return (
