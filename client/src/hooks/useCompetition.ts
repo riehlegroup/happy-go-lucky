@@ -1,6 +1,7 @@
 import competitionApi from "@/services/api/competition";
-import { Competition, DatasetType } from "@/types/competition.models";
+import { Competition, CompetitionSubmission, DatasetType } from "@/types/competition.models";
 import { useCallback, useEffect, useState } from "react";
+
 
 
 /**
@@ -10,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
  */
 export const useCompetition = (courseId: number | undefined) => {
     const [competition, setCompetition] = useState<Competition | null>(null);
+    const [mySubmission, setMySubmission] = useState<CompetitionSubmission | null>(null);
     // Loading for first time fetch
     const[isLoading, setIsLoading] = useState<boolean>(true);
     // Loading for all mutations 
@@ -28,9 +30,13 @@ export const useCompetition = (courseId: number | undefined) => {
             setCompetition(response);
             if (!response) {
                 setError("No competition found for this course");
+            }else if(response.id) { 
+                // try to find submission for the current user if competition is found
+                const userSubmission = await competitionApi.getMySubmission(response.id);
+                setMySubmission(userSubmission);
             }
         } catch (error) {
-            setError("Failed to fetch competition data");
+            setError(error instanceof Error ? error.message : "An unknown error occurred");
             console.error("Error fetching competition data:", error);
         } finally {
             setIsLoading(false);
@@ -130,8 +136,28 @@ export const useCompetition = (courseId: number | undefined) => {
         }
     };
 
+    const submitCompetitionSubmission = async (submissionLink: string) => {
+        if(!competition?.id) {
+            setError("No competition found to submit submission link");
+            return;
+        }
+        setIsActionLoading(true);
+        setError(null);
+        try {
+            const submission = await competitionApi.submitCompetitionSubmission(competition.id, submissionLink);
+            setMySubmission(submission);
+            return submission;
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Failed to submit competition submission");
+            throw error;
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
     return {
         competition,
+        mySubmission,
         isLoading,
         isActionLoading,
         error,
@@ -139,6 +165,7 @@ export const useCompetition = (courseId: number | undefined) => {
         createCompetition,
         getCompetitionById,
         uploadDataset,
-        downloadDataset
+        downloadDataset,
+        submitCompetitionSubmission,
     };
 }

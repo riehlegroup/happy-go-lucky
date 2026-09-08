@@ -1,4 +1,4 @@
-import { Competition, DatasetType} from "@/types/competition.models";
+import { Competition, CompetitionSubmission, DatasetType} from "@/types/competition.models";
 import ApiClient from "./client";
 import { ApiResponse } from "@/types/api";
 
@@ -72,15 +72,45 @@ const competitionApi = {
     formData.append("type", datasetType);
 
     try {
-      const response = await ApiClient.getInstance().post(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/dataset`, formData, true);
-      return response;
+      const response = await ApiClient.getInstance().post<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/dataset`, formData, true);
+      if(!response || !response.success) {
+        console.log("Failed to upload dataset");
+        throw new Error(response?.message || "Failed to upload dataset");
+      }
+      return response.data;
     } catch (error) {
       console.error("Error uploading dataset:", error);
-      return null;
+      throw new Error("Error occurred while uploading dataset");
     }
-  }
-
-
+  },
+  
+  submitCompetitionSubmission: async (competitionId: number, submissionLink: string) => { 
+    try {
+      const response = await ApiClient.getInstance().post<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions`, { apiUrl: submissionLink }, true);
+      if(!response || !response.success) {
+        console.log("Failed to submit competition submission");
+        throw new Error(response?.message || "Failed to submit competition submission");
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting competition submission:", error);
+      throw new Error("Error occurred while submitting competition submission");
+    }
+  },
+  
+  getMySubmission: async (competitionId: number) => { 
+    try {
+      const response = await ApiClient.getInstance().get<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions/my`, undefined, true);
+      if (!response || !response.success) {
+        console.log("Failed to fetch my competition submission");
+       throw new Error(response?.message || "Failed to fetch my competition submission");
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching my competition submission:", error);
+      throw new Error("Error occurred while fetching my competition submission");
+    }
+  },
 };
 
 export default competitionApi;
