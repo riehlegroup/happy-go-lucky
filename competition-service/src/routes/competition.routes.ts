@@ -16,7 +16,9 @@ import { SubmissionController } from "../boundary/submission.controller";
 
 export function createCompetitionRouter(db: Database): Router {
   
+  
   const competitionRouter = Router();
+  // instances for competition service, repo and controller
   // instances for competition service, repo and controller
   const repo = new CompetitionRepo(db);
   const authRepo = new AuthentificationRepo(db);
