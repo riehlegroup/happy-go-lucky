@@ -189,6 +189,20 @@ export async function initializeDB(filename: string, createAdmin = true) {
       FOREIGN KEY (courseId) REFERENCES courses(id)
     )
   `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      apiUrl TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (competitionId, userId)
+    )
+  `);
   
   return db;
 }

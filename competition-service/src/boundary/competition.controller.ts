@@ -4,7 +4,7 @@ import { z } from "zod";
 
 
 /**
- * CompetitionController is responsible for handling HTTP requests related to competitions
+ * CompetitionController is responsible for handling HTTP requests related to competitions. It only handles request that modify, fetch or create competition entities. All other requests related to existing competitions (e.g. submissions, datasets, etc.) are handled by their respective controllers.
  */
 export class CompetitionController {
     constructor(private competitionService: CompetitionService) {};
@@ -59,6 +59,11 @@ export class CompetitionController {
         }
     }
 
+    /**
+     * This endpoint is needed for the first fetch of competition data where only courseId is known. 
+     * It relies on the assumption that there is only one competition per course.
+     *  If there is the possibility of multiple competitions per course in the future, this endpoint must be changed.
+     */
     async getCompetitionByCourseId(req: any, res: any) {
         const { courseId } = req.params;
         const parsedCourseId = parseInt(courseId, 10);

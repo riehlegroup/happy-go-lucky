@@ -86,7 +86,7 @@ const competitionApi = {
   
   submitCompetitionSubmission: async (competitionId: number, submissionLink: string) => { 
     try {
-      const response = await ApiClient.getInstance().post<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions`, { apiUrl: submissionLink }, true);
+      const response = await ApiClient.getInstance().put<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions`, { apiUrl: submissionLink }, true);
       if(!response || !response.success) {
         console.log("Failed to submit competition submission");
         throw new Error(response?.message || "Failed to submit competition submission");
@@ -100,7 +100,7 @@ const competitionApi = {
   
   getMySubmission: async (competitionId: number) => { 
     try {
-      const response = await ApiClient.getInstance().get<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions/my`, undefined, true);
+      const response = await ApiClient.getInstance().get<ApiResponse<CompetitionSubmission>>(`${COMPETITON_ENDPOINT_ADDITION}/${competitionId}/submissions/me`, undefined, true);
       if (!response || !response.success) {
         console.log("Failed to fetch my competition submission");
        throw new Error(response?.message || "Failed to fetch my competition submission");

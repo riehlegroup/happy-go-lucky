@@ -38,3 +38,29 @@ export interface CompetitionResponseDto {
   description: string;
   isActive: boolean;
 }
+
+export const SubmissionInboundDtoSchema = z.object({
+  competitionId: z.number().int().positive(),
+  userId: z.number().int().positive(),
+  apiUrl: z.url("apiUrl must be a valid URL"),
+});
+
+/**
+ * Inbound DTO for a competition submission
+ */
+export type SubmissionInboundDto = z.infer<typeof SubmissionInboundDtoSchema>;
+
+
+/**
+ * Database model for a competition submission
+ */
+export interface Submission {
+  id: number;
+  competitionId: number;
+  userId: number;
+  apiUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
