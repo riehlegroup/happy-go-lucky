@@ -15,11 +15,11 @@ export interface Competition {
  * validation Schema for creating a competition
  */
 export const CreateCompetitionSchema = z.object({
-	name: z.string().min(3, "Name muss mindestens 3 Zeichen lang sein"),
+	name: z.string().min(3, "name must be at least 3 characters long"),
 	courseId: z.number().int().positive(),
 	description: z
 		.string()
-		.min(10, "Beschreibung muss mindestens 10 Zeichen lang sein"),
+		.min(20, "description must be at least 20 characters long"),
 	start_date: z.iso.datetime(),
 	end_date: z.iso.datetime(),
 });
