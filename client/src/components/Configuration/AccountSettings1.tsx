@@ -6,7 +6,7 @@ import SectionCard from "@/components/common/SectionCard";
 import AuthStorage from "@/services/storage/auth";
 import usersApi from "@/services/api/users";
 
-const UserPanel: React.FC = () => {
+const AccountSettings1: React.FC = () => {
 
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -143,10 +143,10 @@ const UserPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="User Profile" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title="Account Settings 1" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title="Update Profile">
+        <SectionCard title="UPDATE profile">
           <div className="space-y-6">
             <Input
               type="email"
@@ -210,4 +210,4 @@ const UserPanel: React.FC = () => {
   );
 };
 
-export default UserPanel;
+export default AccountSettings1;
