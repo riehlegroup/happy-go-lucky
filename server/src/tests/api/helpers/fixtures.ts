@@ -17,6 +17,7 @@ export const validCourse = () => ({
   courseName: 'Software Engineering',
   termId: 1,
   studentsCanCreateProject: true,
+  enabledFeatures: ['HAPPINESS_INDEX'],
 });
 
 export const validProject = () => ({

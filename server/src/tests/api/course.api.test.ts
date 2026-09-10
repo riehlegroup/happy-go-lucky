@@ -34,6 +34,7 @@ describe('Course API', () => {
       expect(dbCourse.courseName).toBe(course.courseName);
       expect(dbCourse.termId).toBe(1);
       expect(dbCourse.studentsCanCreateProject).toBe(1);
+      expect(dbCourse.enabledFeatures).toBe(JSON.stringify(['HAPPINESS_INDEX']));
     });
 
     it('should reject missing courseName', async () => {
