@@ -1,4 +1,5 @@
 import { CompetitionRepo } from "../repositories/competition.repository";
+import { CreateCompetitionDto } from "../types/competition.types";
 
 /**
  * CompetitionService is responsible for handling business logic related to competitions
@@ -14,7 +15,7 @@ export class CompetitionService {
         return this.competitionRepo.getById(id);
     }
 
-    async createCompetition(competitionData: any) {
+    async createCompetition(competitionData: CreateCompetitionDto) {
         return this.competitionRepo.createCompetition(competitionData);
     }
 

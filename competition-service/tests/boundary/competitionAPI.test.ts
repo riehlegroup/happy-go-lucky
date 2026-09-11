@@ -40,7 +40,7 @@ describe("Competition API Integrationtest", () => {
     expect(response.body.message).toBe("No token provided");
   });
 
-  it("should return 200 and list of competitions for authenticated user", async () => {
+  it("should return 200 and list of competitions for admin user", async () => {
     const token = generateTestToken(TEST_USERS.ADMIN.id);
     const response = await request(app)
       .get("/competitions")
@@ -65,6 +65,14 @@ describe("Competition API Integrationtest", () => {
         }),
       ]),
     );
+  });
+  it("should return 403 if a non-admin user tries to access all competitions", async () => {
+    const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);
+    const response = await request(app)
+      .get("/competitions")
+      .set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe("User is not an admin");
   });
 
   it("should return 403 if user is not a member of the course associated with the competition", async () => {
