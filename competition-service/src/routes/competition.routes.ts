@@ -4,7 +4,12 @@ import { CompetitionRepo } from "../repositories/competition.repository";
 import { CompetitionController } from "../boundary/competition.controller";
 import { Database } from "sqlite";
 import { AuthentificationRepo } from "../repositories/authentification.repository";
-import { requireAdmin, requireAuth, requireCourseMember } from "../middleware/auth.middleware";
+import { requireAdmin, requireAuth, requireCompetitionExists, requireCourseMember } from "../middleware/auth.middleware";
+import { createUploader} from "../middleware/upload.middleware";
+import { DatasetRepo } from "../repositories/dataset.repository";
+import { DatasetService } from "../services/dataset.service";
+import { DatasetController } from "../boundary/dataset.controller";
+
 import { SubmissionRepo } from "../repositories/submission.repository";
 import { SubmissionService } from "../services/submission.service";
 import { SubmissionController } from "../boundary/submission.controller";
@@ -18,6 +23,13 @@ export function createCompetitionRouter(db: Database): Router {
   const service = new CompetitionService(repo);
   const controller = new CompetitionController(service);
 
+  // Dataset upload controller and service
+  const datasetRepo = new DatasetRepo(db);
+  const datasetService = new DatasetService(datasetRepo); 
+  const datasetController = new DatasetController(datasetService);
+
+  const datasetUploader = createUploader();
+
   // instanes for submission service, repo and controller
   const submissionRepo = new SubmissionRepo(db);
   const submissionService = new SubmissionService(submissionRepo);
@@ -25,13 +37,15 @@ export function createCompetitionRouter(db: Database): Router {
 
   competitionRouter.get(
     "/",
-    requireAuth(authRepo), //TODO : should only admin be able to see all competitions, normal users should probably only see competitions of their courses. Or does this endpoint only return competitions of the courses the user is in? 
+    requireAuth(authRepo), 
+    requireAdmin(),
     controller.getAllCompetitions.bind(controller),
   );
   competitionRouter.get(
     "/:id",
     requireAuth(authRepo),
-    requireCourseMember(repo, authRepo),
+    requireCompetitionExists(service),
+    requireCourseMember(authRepo),
     controller.getCompetitionById.bind(controller),
   );
   competitionRouter.post(
@@ -59,6 +73,24 @@ export function createCompetitionRouter(db: Database): Router {
     requireAuth(authRepo),
     requireCourseMember(repo, authRepo),
     submissionController.getMyCompetitionSubmission.bind(submissionController),
+  );
+
+  competitionRouter.post(
+    "/:id/datasets",
+    requireAuth(authRepo),
+    requireCompetitionExists(service),
+    requireAdmin(),
+    datasetUploader.single("dataset"),
+    datasetController.uploadDataset.bind(datasetController),
+    
+  );
+
+  competitionRouter.get(
+    "/:id/datasets",
+    requireAuth(authRepo),
+    requireCompetitionExists(service),
+    requireCourseMember(authRepo),
+    datasetController.getDatasetsForCompetition.bind(datasetController),
   );
 
   return competitionRouter;

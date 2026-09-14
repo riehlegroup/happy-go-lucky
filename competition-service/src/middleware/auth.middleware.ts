@@ -3,6 +3,8 @@ import { AuthentificationRepo } from "../repositories/authentification.repositor
 import jwt from "jsonwebtoken";
 import { DatabaseUser } from "../types/user.types";
 import { CompetitionRepo } from "../repositories/competition.repository";
+import { CompetitionService } from "../services/competition.service";
+import { Competition } from "../types/competition.types";
 
 const secretKey = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -41,57 +43,68 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
 	};
 };
 
+
 /**
- * middleware to check if the user is a member of the course associated with the competition. Requires the competition ID to be present in the request parameters (:id in path). Only use after requireAuth middleware.
+ * Checks if a competition with the given ID exists. If it dos not exist, it returns a 404 response. If it exists, it attaches the competition to the request object for further use.
+ * Requires the competition ID to be present in the request parameters (:id in path).
+ * @param competitionService 
+ */
+export const requireCompetitionExists = (competitionService: CompetitionService) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const competitionId = Number(req.params.id); // Takes the competition ID from the path parameter
+
+        if (isNaN(competitionId)) {
+            return res.status(400).json({ message: "Missing competition ID" });
+        }
+
+        try {
+            const competition = await competitionService.getCompetitionById(competitionId);
+            if (!competition) {
+                return res.status(404).json({ message: "Competition not found" });
+            }
+            req.competition = competition; // Attach the competition to the request object for further use
+            next();
+        } catch (error) {
+            console.error("DB Error in competition existence check: ", error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+    };
+};
+
+
+/**
+ * middleware to check if the user is a member of the course associated with the competition (admin is also allowed). Only use after requireAuth and requireCompetitionExists middleware.
  * @param authRepo
  * @returns
  */
 export const requireCourseMember = (
-	competitionRepo: CompetitionRepo,
-	authRepo: AuthentificationRepo,
+  authRepo: AuthentificationRepo,
 ) => {
-	return async (req: Request, res: Response, next: NextFunction) => {
-		const user = req.user as DatabaseUser;
-    if (!user) {
-			return res
-				.status(400)
-				.json({
-					message: "Missing user information",
-				});
-		}
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user as DatabaseUser;
+    const competition = req.competition as Competition; // Takes the competition from the previous middleware
 
-    let courseId: number | null = null;
-    // check if courseIs provided in request params, if not, check if competitionId is provided and get the courseId from the competition
-    if (req.params.courseId) {
-      courseId = Number(req.params.courseId);
-		} else if (req.params.id || req.params.competitionId) {
-      const competitionId = Number(req.params.id || req.params.competitionId);
-      const competition = await competitionRepo.getById(competitionId);
-      if (!competition) {
-        return res.status(404).json({ message: "Competition not found" });
-      }
-      courseId = competition.courseId;
+    if (!competition || !user) {
+      return res
+        .status(400)
+        .json({ message: "Missing competition or user information" });
     }
 
-    if(!courseId || isNaN(courseId)) {
-      return res.status(400).json({ message: "No valid courseId could be resolved from the request parameters" });
+    const isMemberOfCourse = await authRepo.userIsInCourse(
+      user.id,
+      competition.courseId,
+    );
+
+    if (!isMemberOfCourse && user.userRole !== "ADMIN") {
+      return res
+        .status(403)
+        .json({
+          message:
+            "User is not a member of the course associated with this competition",
+        });
     }
-
-		const isMemberOfCourse = await authRepo.userIsInCourse(
-				user.id,
-				courseId,
-			);
-		
-		if (!isMemberOfCourse) {
-			return res.status(403).json({
-				message:
-					"User is not a member of the course associated with this competition",
-			});
-		}
-
-    (req as any).courseId = courseId; // Attach the courseId to the request object for further use
-		next();
-	};
+    next();
+  };
 };
 
 export const requireAdmin = () => {
