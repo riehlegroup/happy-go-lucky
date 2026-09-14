@@ -4,9 +4,9 @@ import { Submission, SubmissionInboundDto } from "../types/competition.types";
 export class SubmissionService {
     constructor(private submissionRepo: SubmissionRepo) {}
 
-    async createOrUpdateCompetitionSubmission(submission: SubmissionInboundDto): Promise<Submission> {
+    async createOrUpdateCompetitionSubmission(submission: SubmissionInboundDto, competitionId: number, userId: number): Promise<Submission> {
        //TODO: health check for the apiUrl before saving?
-        return await this.submissionRepo.upsertSubmission(submission.competitionId, submission.userId, submission.apiUrl);
+        return await this.submissionRepo.upsertSubmission(competitionId, userId, submission.apiUrl);
     }
 
     async getMyCompetitionSubmission(competitionId: number, userId: number): Promise<Submission | null> {

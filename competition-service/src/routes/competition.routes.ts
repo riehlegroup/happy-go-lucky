@@ -57,21 +57,23 @@ export function createCompetitionRouter(db: Database): Router {
   competitionRouter.get(
     "/course/:courseId",
     requireAuth(authRepo),
-    requireCourseMember(repo, authRepo),
+    requireCourseMember(authRepo), 
     controller.getCompetitionByCourseId.bind(controller),
   );
 
   competitionRouter.put(
     "/:id/submissions",
     requireAuth(authRepo),
-    requireCourseMember(repo, authRepo),
+    requireCompetitionExists(service),
+    requireCourseMember(authRepo),
     submissionController.createOrUpdateCompetitionSubmission.bind(submissionController),
   );
 
   competitionRouter.get(
     "/:id/submissions/me",
     requireAuth(authRepo),
-    requireCourseMember(repo, authRepo),
+    requireCompetitionExists(service),
+    requireCourseMember(authRepo),
     submissionController.getMyCompetitionSubmission.bind(submissionController),
   );
 

@@ -1,3 +1,4 @@
+import { errorResponse, handleError } from "../errors/errorhandling.helper";
 import { SubmissionService } from "../services/submission.service";
 import { Submission, SubmissionInboundDto, SubmissionInboundDtoSchema } from "../types/competition.types";
 import { Request, Response } from "express";
@@ -12,10 +13,16 @@ export class SubmissionController {
         try {
             // validate the request body using Zod schema
             const submissionData: SubmissionInboundDto = SubmissionInboundDtoSchema.parse(req.body);
-            const submission: Submission = await this.submissionService.createOrUpdateCompetitionSubmission(submissionData);
-            res.status(200).json({ success: true, data: submission });
+            const userId = req.user?.id;
+            const competitionId = req.competition?.id; 
+            if (!userId || !competitionId) {
+                return errorResponse("User ID or competition ID not found in request", 400, res);
+            }
+
+            const submission: Submission = await this.submissionService.createOrUpdateCompetitionSubmission(submissionData, competitionId, userId);
+            res.status(200).json(submission );
         } catch (error) {
-            //TODO: handle error if other branch is merged 
+            handleError(error, "Failed to create or update submission", res); 
         }
     }
 
@@ -23,21 +30,21 @@ export class SubmissionController {
         try {
             const userId = req.user?.id;
             if (!userId) {
-                return res.status(400).json({ message: "User ID not found in request" });
+                return errorResponse("User ID not found in request", 400, res);
             }
-            const competitionId = Number(req.params.id);
-            if (isNaN(competitionId)) {
-                return res.status(400).json({ message: "Invalid competition ID" });
+            const competitionId = req.competition?.id;
+            if (!competitionId) {
+                return errorResponse("Competition ID not found in request", 400, res);
             }
 
             const submission: Submission | null = await this.submissionService.getMyCompetitionSubmission(competitionId, userId);
             if (submission) {
-                res.status(200).json({ success: true, data: submission });
+                res.status(200).json(submission );
             } else {
-                res.status(404).json({ success: false, message: "No Submission found for logged-in user" });
+                return errorResponse("No Submission found for logged-in user", 404, res);
             }
         } catch (error) {
-            //TODO: handle error if other branch is merged 
+            handleError(error, "Failed to retrieve submission", res);
         }
     }
 

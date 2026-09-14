@@ -20,13 +20,19 @@ export const CreateCompetitionSchema = z.object({
 	description: z
 		.string()
 		.min(20, "description must be at least 20 characters long"),
-	start_date: z.iso.datetime(),
-	end_date: z.iso.datetime(),
+	start_date: z.iso.date(),
+	end_date: z.iso.date(),
 });
 /**
  * DTO for creating a competition
  */
 export type CreateCompetitionDto = z.infer<typeof CreateCompetitionSchema>;
+
+export const UpdateCompetitionSchema = CreateCompetitionSchema.omit({ courseId: true })
+/**
+ * DTO for updating a competition
+ */
+export type UpdateCompetitionDto = z.infer<typeof UpdateCompetitionSchema>;
 
 /**
  * DTO for Response when fetching competitions
@@ -40,8 +46,6 @@ export interface CompetitionResponseDto {
 }
 
 export const SubmissionInboundDtoSchema = z.object({
-  competitionId: z.number().int().positive(),
-  userId: z.number().int().positive(),
   apiUrl: z.url("apiUrl must be a valid URL"),
 });
 

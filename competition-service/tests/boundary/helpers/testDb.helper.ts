@@ -49,7 +49,7 @@ export const TEST_PROJECTS = {
   PROJECT_2: {
     id: 2,
     projectName: 'Test Project 2',
-    courseId: 1
+    courseId: 2
   }
 } as const;
 
@@ -149,11 +149,28 @@ export async function createTestDatabase(): Promise<Database> {
     )
   `);
    
+
+   await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      apiUrl TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (competitionId, userId)
+    )
+  `);
+
+   
   return db;
 }
 
 export async function resetTestDatabase(db: Database): Promise<void> {
     await db.exec(`
+    DELETE FROM competition_submissions;
     DELETE FROM competitions;
     DELETE FROM user_projects;
     DELETE FROM projects;
@@ -202,7 +219,7 @@ export async function generateTestData(db: Database): Promise<void> {
     `);
     await db.run(`
       INSERT INTO projects (id, projectName, courseId) VALUES
-      (2, 'Test Project 2', 1)
+      (2, 'Test Project 2', 2)
     `);
 
     // Test user_projects
@@ -224,4 +241,11 @@ export async function generateTestData(db: Database): Promise<void> {
       INSERT INTO competitions (id, name, description, start_date, end_date, courseId) VALUES
       (2, 'Test Competition 2', 'Description for Competition 2', strftime('%s','now'), strftime('%s','now','+7 days'), 2)
     `);
+}
+
+export async function createTestSubmissionForUser(db: Database, competitionId: number, userId: number, apiUrl: string): Promise<void> {
+    await db.run(`
+      INSERT INTO competition_submissions (competitionId, userId, apiUrl) VALUES
+      (?, ?, ?)
+    `, [competitionId, userId, apiUrl]);
 }
