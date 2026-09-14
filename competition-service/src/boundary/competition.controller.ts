@@ -72,15 +72,14 @@ export class CompetitionController {
         const { courseId } = req.params;
         const parsedCourseId = parseInt(courseId, 10);
         if (isNaN(parsedCourseId)) {
-            return res.status(400).json({ error: 'Invalid course ID' });
+            return errorResponse("Invalid course ID", 400, res);
         }
 
         try {
             const competition = await this.competitionService.getCompetitionByCourseId(parsedCourseId);
-            res.status(200).json({ success: true, data: competition });
+            res.status(200).json(competition );
         } catch (error) {
-            console.error("Error fetching competition by course ID:", error);
-            res.status(500).json({ error: 'Failed to fetch competition for the course' });
+            handleError(error, "Failed to fetch competition for the course", res);
         }
     }
 }
