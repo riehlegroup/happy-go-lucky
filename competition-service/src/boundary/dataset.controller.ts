@@ -18,7 +18,7 @@ export class DatasetController {
 	async uploadDataset(req: any, res: any) {
 		try {
 			if (!req.file) {
-				return res.status(400).json({ error: "No file uploaded" });
+				return errorResponse("No file uploaded", 400, res);
 			}
 
 			// Validate the request body using Zod schema
@@ -71,8 +71,7 @@ export class DatasetController {
 
 			res.download(dataset.file_path, dataset.file_name, (err: any) => {
 				if (err) {
-					console.error("Error sending file:", err);
-					res.status(500).json({ error: "Failed to send File" });
+					handleError(err, "Failed to send dataset file", res);
 				}
 			});
 		} catch (error) {

@@ -21,6 +21,6 @@ export class SubmissionRepo extends BaseRepo<Submission> {
             DO UPDATE SET apiUrl = EXCLUDED.apiUrl, updatedAt = CURRENT_TIMESTAMP
             RETURNING *;
         `;
-        return await this.db.one(query, [competitionId, userId, apiUrl]) as Submission;
+        return await this.db.get(query, [competitionId, userId, apiUrl]) as Submission;
     }
 }

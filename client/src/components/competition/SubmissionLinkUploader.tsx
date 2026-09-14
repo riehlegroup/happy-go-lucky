@@ -31,16 +31,17 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 
 	// if submission link is asynchronously updated, we need to update the form data accordingly
 	useEffect(() => {
-		if (existingSubmissionLink) {
+		if (existingSubmissionLink && existingSubmissionLink !== data.submissionLink) {
 			handleChanges("submissionLink", existingSubmissionLink);
 		}
-	}, [existingSubmissionLink, handleChanges]);
+	}, [existingSubmissionLink]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!isValid || isSubmitting) {
 			return;
 		}
+    setSubmitError(null);
 		setSubmitSuccess(false);
 		try {
 			await onSubmit(data.submissionLink);

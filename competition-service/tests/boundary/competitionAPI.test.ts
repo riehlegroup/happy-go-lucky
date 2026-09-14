@@ -120,8 +120,8 @@ describe("Competition API Integrationtest", () => {
     const newCompetition: CreateCompetitionDto = {
       name: "New Test Competition",
       description: "Description for New Test Competition",
-      start_date: "2026-01-01T00:00:00Z",
-      end_date: "2026-01-08T00:00:00Z",
+      start_date: "2026-01-01",
+      end_date: "2026-01-08",
       courseId: 3,
     };
 
