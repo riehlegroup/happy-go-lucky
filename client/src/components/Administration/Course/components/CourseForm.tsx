@@ -109,7 +109,7 @@ interface SelectOption {
 }
 
 interface CourseFormProps {
-  type: "course" | "project" | "schedule";
+  type: "course" | "project" | "schedule" | "competition";
   label: string[];
   data: Course | Project | undefined;
   message: Message | undefined;

@@ -54,6 +54,12 @@ export function createCompetitionRouter(db: Database): Router {
     requireAdmin(),
     controller.createCompetition.bind(controller),
   );
+  competitionRouter.put(
+    "/:id",
+    requireAuth(authRepo),
+    requireAdmin(),
+    controller.updateCompetition.bind(controller),
+  );
   competitionRouter.get(
     "/course/:courseId",
     requireAuth(authRepo),
