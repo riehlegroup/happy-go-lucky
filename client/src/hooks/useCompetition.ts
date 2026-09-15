@@ -1,5 +1,5 @@
 import competitionApi from "@/services/api/competition";
-import { Competition, CompetitionSubmission, DatasetType } from "@/types/competition.models";
+import { Competition, CompetitionSubmission, DatasetMetadata, DatasetType } from "@/types/competition.models";
 import { useCallback, useEffect, useState } from "react";
 
 function extractErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -167,6 +167,44 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		}
 	};
 
+    const getDatasetMetadata = async (type: DatasetType) => {
+        if (!competition?.id) {
+            setError("No competition found to get dataset metadata");
+            return;
+        }
+        setIsActionLoading(true);
+        setError(null);
+        try {
+            const datasetMetadata: DatasetMetadata = await competitionApi.getDatasetMetadataByType(competition.id, type);
+            if (!datasetMetadata) {
+                setError("No dataset metadata found for the specified type");
+            }
+            return datasetMetadata;
+        } catch (error) {
+            setError(extractErrorMessage(error, "Failed to get dataset metadata"));
+            throw error;
+        } finally {
+            setIsActionLoading(false);
+        }
+    }
+
+    const deleteDataset = async (datasetId: number) => {
+        if (!competition?.id) {
+            setError("No competition found to delete dataset");
+            return;
+        }
+        setIsActionLoading(true);
+        setError(null);
+        try {
+            await competitionApi.deleteDataset(competition.id, datasetId);
+        } catch (error) {
+            setError(extractErrorMessage(error, "Failed to delete dataset"));
+            throw error;
+        } finally {
+            setIsActionLoading(false);
+        }
+    }
+
 	const submitCompetitionSubmission = async (submissionLink: string) => {
 		if (!competition?.id) {
 			setError("No competition found to submit submission link");
@@ -198,6 +236,8 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		updateCompetition,
 		uploadDataset,
 		downloadDataset,
+        getDatasetMetadata,
+        deleteDataset,
 		submitCompetitionSubmission,
 	};
 };
