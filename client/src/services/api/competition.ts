@@ -1,4 +1,4 @@
-import { Competition, CompetitionSubmission, DatasetType } from "@/types/competition.models";
+import { Competition, CompetitionSubmission, DatasetMetadata, DatasetType } from "@/types/competition.models";
 import ApiClient from "./client";
 
 export const COMPETITION_ENDPOINT_ADDITION = "/competition/competitions";
@@ -53,12 +53,20 @@ return await ApiClient.getInstance().get<Competition>(
 
 	downloadDatasetByType: async (competitionId: number, datasetType: DatasetType) => {
 			const blob = await ApiClient.getInstance().getBlob(
-				`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets`,
+				`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets/download`,
 				{ type: datasetType },
 				true,
 			);
 			return blob;
 	},
+
+  getDatasetMetadataByType: async (competitionId: number, datasetType: DatasetType) => {
+      return await ApiClient.getInstance().get<DatasetMetadata>(
+        `${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets`,
+        { type: datasetType },
+        true,
+      );
+  },
 
 	uploadDataset: async (competitionId: number, datasetType: DatasetType, file: File) => {
 		const formData = new FormData();
@@ -66,11 +74,18 @@ return await ApiClient.getInstance().get<Competition>(
 		formData.append("type", datasetType);
 
 			return await ApiClient.getInstance().post<CompetitionSubmission>(
-				`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/dataset`,
+				`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets`,
 				formData,
 				true,
 			);
 	},
+
+  deleteDataset: async (competitionId: number, datasetId: number) => {
+    return await ApiClient.getInstance().delete(
+      `${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets/${datasetId}`,
+      true,
+    );
+  },
 
 	submitCompetitionSubmission: async (competitionId: number, submissionLink: string) => {
 			return await ApiClient.getInstance().put<CompetitionSubmission>(
