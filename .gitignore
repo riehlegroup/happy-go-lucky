@@ -41,7 +41,7 @@ dist
 # User files
 /server/database.sqlite
 /server/happyGoLucky.db
-/competition-service/uploads
+/competition-service/storage
 
 # AI agents
 CLAUDE.md

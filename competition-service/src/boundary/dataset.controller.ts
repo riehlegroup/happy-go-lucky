@@ -29,14 +29,14 @@ export class DatasetController {
 				return errorResponse("Competition not found in request", 400, res);
 			}
 
-			const competitionId = req.competition.id;
 			const datasetType = validatedData.type;
 			const fileName = req.file.originalname;
 			const filePath = req.file.path;
 
+
 			// Call the service to handle the database entry. Dataset file ist already saved by multer in the upload middleware.
 			const createdDataset = await this.datasetService.createDatabaseEntryForUploadedFile(
-				competitionId,
+				req.competition,
 				datasetType,
 				fileName,
 				filePath,

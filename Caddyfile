@@ -14,10 +14,11 @@
     # Enable compression
     encode gzip
 
-    # API requests: strip /api prefix and proxy to backend
-    handle /api/* {
-        uri strip_prefix /api
-        reverse_proxy server:3000 {
+
+    #Competition Service requests: strip /api/competition and proxy to competition-Service
+    handle /api/competition/* {
+        uri strip_prefix /api/competition
+        reverse_proxy competition-service:8081 {
             # Forward real client IP and protocol
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -26,10 +27,10 @@
         }
     }
 
-    #Competition Service requests: strip /api/competition and proxy to competition-Service
-    handle /api/competition/* {
-        uri strip_prefix /api/competition
-        reverse_proxy competition-service:8081 {
+    # API requests: strip /api prefix and proxy to backend
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy server:3000 {
             # Forward real client IP and protocol
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}

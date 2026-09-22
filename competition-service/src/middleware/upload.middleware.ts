@@ -2,6 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import {Request, Response, NextFunction } from "express";
+import { DatasetPathResolver } from "../services/datasetpath.resolver";
 
 export const createUploader = (
  sub_folder_name: string = "datasets",
@@ -16,7 +17,7 @@ export const createUploader = (
  allowed_file_extensions: string[] = [".csv", ".json", ".yaml", ".yml"],
 ) => {
  
- const UPLOAD_FOLDER = path.join("uploads", sub_folder_name); // "uploads" has to be consistent with volume mapping in docker-compose.yml
+ const UPLOAD_FOLDER = DatasetPathResolver.UPLOAD_PATH; 
 
  const createFolderIfNotExist = (folderPath: string) => {
   if (!fs.existsSync(folderPath)) {

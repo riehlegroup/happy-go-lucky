@@ -1,5 +1,6 @@
 import { z } from "zod";
 import http from "http";
+import { HttpError } from "./http.error";
 
 /**
  * Logs errors and handles validationerrors and sends appropriate error responses
@@ -23,6 +24,10 @@ export function handleError(
 			error: http.STATUS_CODES[400],
 		});
 	}
+	if (error instanceof HttpError) {
+		return res.status(error.statusCode).json(error.toJSON());
+	}
+	
 	res.status(statusCode).json({
 		statusCode: statusCode,
 		error: http.STATUS_CODES[statusCode],

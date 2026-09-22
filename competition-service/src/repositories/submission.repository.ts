@@ -13,6 +13,12 @@ export class SubmissionRepo extends BaseRepo<Submission> {
         return row as Submission | null;
     }
 
+    async getAllSubmissionsByCompetition(competitionId: number): Promise<Submission[]> {
+        const query = `SELECT * FROM ${this.tableName} WHERE competitionId = ?`;
+        const rows = await this.db.all(query, [competitionId]);
+        return rows as Submission[];
+    }
+
     async upsertSubmission(competitionId: number, userId: number, apiUrl: string): Promise<Submission> {
         const query = `
             INSERT INTO ${this.tableName} (competitionId, userId, apiUrl, updatedAt)

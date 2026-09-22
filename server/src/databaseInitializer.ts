@@ -8,6 +8,7 @@ import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
 
+
 async function ensureCourseFlagColumn(db: Awaited<ReturnType<typeof open>>) {
   const columns = await db.all<{ name: string }[]>(`PRAGMA table_info(courses)`);
   const hasStudentsCanCreateProject = columns.some(
@@ -186,7 +187,9 @@ export async function initializeDB(filename: string, createAdmin = true) {
       start_date TEXT NOT NULL,
       end_date TEXT NOT NULL,
       courseId INTEGER NOT NULL,
-      FOREIGN KEY (courseId) REFERENCES courses(id)
+      evaluation_config_id INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY (courseId) REFERENCES courses(id),
+      FOREIGN KEY (evaluation_config_id) REFERENCES competition_evaluation_configs(id)
     )
   `);
 
@@ -214,6 +217,39 @@ export async function initializeDB(filename: string, createAdmin = true) {
       FOREIGN KEY (competitionId) REFERENCES competitions(id)
     )
   `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_evaluations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submissionId INTEGER NOT NULL,
+      token TEXT,
+      score REAL,
+      detailed_scores TEXT,
+      error_message TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      started_at TEXT,
+      completed_at TEXT,
+      inference_time_ms INTEGER,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      prediciton TEXT,
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id)
+    )
+  `);
+  //Create unique index for token to ensure token is unique and faster lookup by token in evaluation
+  await db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_competition_evaluations_token ON competition_evaluations(token)
+  `);
+
+  // Config for dynamic evaluation of competition submissions. target columns stores json of array with target_column_name and evaluation_metric.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_evaluation_configs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      input_column_names TEXT NOT NULL,
+      target_columns TEXT NOT NULL
+    )
+  `);
+  // TODO: ensure default evaluation config exists and is set to all competetitions.
 
   return db;
 }

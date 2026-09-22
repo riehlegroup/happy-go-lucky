@@ -24,12 +24,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: 8081
+      CLIENT_URL: ${CLIENT_URL}
       DB_PATH: ${DB_PATH:-/app/server/data/happyGoLucky.db}
-      STORAGE_PATH: /app/uploads
+      STORAGE_PATH: /app/storage
       JWT_SECRET: ${JWT_SECRET}
     volumes:
       - happy-go-lucky-db:/app/server/data 
-      - competition-uploads:/app/uploads 
+      - competition-storage:/app/storage 
     depends_on:
       - server
     restart: unless-stopped
@@ -73,7 +74,7 @@ services:
 
 volumes:
   happy-go-lucky-db:
-  competition-uploads:
+  competition-storage:
   caddy-data:
   caddy-config:
   client-dist:
