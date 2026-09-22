@@ -27,12 +27,12 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
 			};
 			const userFromTokenId: DatabaseUser | undefined = await authRepo.getById(Number(decoded.id));
 			if (!userFromTokenId) {
-        return errorResponse("User with token userId not found", 401, res);
+				return errorResponse("User with token userId not found", 401, res);
 			}
 			req.user = userFromTokenId; // Attach the user to the request object for further use
 		} catch (error) {
 			handleError(error, "Invalid token", res);
-			return
+			return;
 		}
 
 		next();
@@ -47,22 +47,28 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
 export const requireCompetitionExists = (competitionService: CompetitionService) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const competitionId = Number(req.params.id); // Takes the competition ID from the path parameter
+		const courseId = req.params.courseId ? Number(req.params.courseId) : undefined; // Takes the competition ID from the path parameter
 
-		if (isNaN(competitionId)) {
+		if (isNaN(competitionId) && (courseId === undefined || isNaN(courseId))) {
 			return errorResponse("Missing competition ID", 400, res);
 		}
 
 		try {
-			const competition = await competitionService.getCompetitionById(competitionId);
+			let competition: Competition | undefined;
+			if (competitionId) {
+				competition = await competitionService.getCompetitionById(competitionId);
+			} else if (courseId) {
+        competition = await competitionService.getCompetitionByCourseId(courseId);
+      }
 			if (!competition) {
-        return errorResponse("Competition not found", 404, res);
+				return errorResponse("Competition not found", 404, res);
 			}
 			req.competition = competition; // Attach the competition to the request object for further use
 		} catch (error) {
-      handleError(error, "Failed to check competition existence", res);
-      return;
+			handleError(error, "Failed to check competition existence", res);
+			return;
 		}
-    next();
+		next();
 	};
 };
 
@@ -102,11 +108,35 @@ export const requireAdmin = () => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const user = req.user as DatabaseUser;
 		if (!user) {
-      return errorResponse("Missing user information", 400, res);
+			return errorResponse("Missing user information", 400, res);
 		}
 
 		if (user.userRole !== "ADMIN") {
-      return errorResponse("User is not an admin", 403, res);
+			return errorResponse("User is not an admin", 403, res);
+		}
+		next();
+	};
+};
+
+/**middleware to check if the competition is active (between start and end date). Competition exists must be used before this middleware. Admins are always allowed. */
+export const requireCompetitionActive = () => {
+	return async (req: Request, res: Response, next: NextFunction) => {
+		// competition and user from previous middleware
+		const user = req.user as DatabaseUser;
+		const competition = req.competition as Competition;
+
+		if (!competition || !user) {
+			return errorResponse("Missing competition or user information", 400, res);
+		}
+
+		const now = new Date();
+		const startDate = new Date(competition.startDate);
+		const endDate = new Date(competition.endDate);
+
+		if (now < startDate || now > endDate) {
+			if (user.userRole !== "ADMIN") {
+				return errorResponse("Competition is not active", 403, res);
+			}
 		}
 		next();
 	};
