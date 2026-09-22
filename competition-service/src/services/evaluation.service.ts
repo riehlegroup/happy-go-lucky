@@ -7,6 +7,7 @@ import {
 	Competition,
 	Dataset,
 	DatasetType,
+	Evaluation,
 	EvaluationConfig,
 	EvaluationStatus,
 	UpdateEvaluationDto,
@@ -17,10 +18,6 @@ import { groundTruthCache, GroundTruthMap } from "./groundtruth.cache";
 import { DatasetPathResolver } from "./datasetpath.resolver";
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 
-interface SplitResult {
-	inputCsvFilePath: string;
-	groundTruthJsonPath: string;
-}
 
 export class EvaluationService {
 	private evaluationConfigRepo: EvaluationConfigRepo;
@@ -61,21 +58,38 @@ export class EvaluationService {
 		//TODO: implement way to check which validation dataset should be used for evaluation. For now, we will just use the first one.
 		const dataset = datasets[0];
 
-		const splitResult = await this.createSeparatDatasets(competition.id, dataset, evaluationConfig);
+		await this.createSeparatDatasets(competition.id, dataset, evaluationConfig);
 
 		// split inputs from dataset and introduce id
 
 		// call asynchrounously the requests to student apis
 		console.log(`Starting evaluation for competition ID: ${competition.id}`);
-		this.callSubmissionApis(competition.id);
+		this.callSubmissionApis(competition.id, dataset.id);
+
+        //TODO: Timer to start background job to check for delayed evaluations and mark them as failed after a certain time limit. And maybe delete prepared datasets?
 	}
+
+    async requireEvaluationEntryExists(token: string, expectedStatus: EvaluationStatus): Promise<(Evaluation & {competitionId: number})> {
+        const evaluation = await this.evaluationRepo.getEvaluationWithCompetitionByToken(token);
+        if (!evaluation) {
+            throw new BadRequestException("No evaluation entry found for the provided token");
+        }
+        if (evaluation.status !== expectedStatus) {
+            throw new BadRequestException("Evaluation entry is not in the expected status");
+        }
+        return evaluation;
+    }
+
+    async updateEvaluation(evaluationId: number, updateDto: UpdateEvaluationDto): Promise<boolean> {
+        return this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
+    }
 
 	/* parses the stored dataset file and prepares input data with id and splits the ground truth data from the dataset file. It creates and stores two separate dataset files: one for input data and one for ground truth data both with a unique id per row. Ground truth is also stored in GroundTruthCache for evaluation. */
 	private async createSeparatDatasets(
 		competitionId: number,
 		dataset: Dataset,
 		evaluationConfig: EvaluationConfig,
-	): Promise<SplitResult> {
+	): Promise<void> {
 		const datasetFilePath = dataset.file_path;
 		const inputCsvFilePath = DatasetPathResolver.getInputCsvPath(competitionId, dataset.id);
 		const groundTruthJsonPath = DatasetPathResolver.getGroundTruthJsonPath(competitionId, dataset.id);
@@ -94,7 +108,7 @@ export class EvaluationService {
 		let rowIndex = 1;
 		let headersValidated = false;
 
-		return new Promise<SplitResult>((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			const readStream = fs.createReadStream(datasetFilePath);
 			readStream
 				.pipe(fastCsv.parse({ headers: true, trim: true }))
@@ -146,7 +160,7 @@ export class EvaluationService {
 							await fs.promises.writeFile(groundTruthJsonPath, JSON.stringify(groundTruthObject, null, 2), "utf-8");
 							// Store ground truth in cache
 							groundTruthCache.set(competitionId, groundTruthMap);
-							resolve({ inputCsvFilePath, groundTruthJsonPath });
+							resolve();
 						} catch (error) {
 							reject(new Error("Error writing ground truth to JSON file: " + error));
 						}
@@ -155,7 +169,7 @@ export class EvaluationService {
 		});
 	}
 
-	private async callSubmissionApis(competitionId: number) {
+	private async callSubmissionApis(competitionId: number, datasetId: number) {
 		const submissions = await this.submissionRepo.getAllSubmissionsByCompetition(competitionId);
 		if (!submissions || submissions.length === 0) {
 			console.warn(`No submissions found for competition ID: ${competitionId}`);
@@ -166,11 +180,12 @@ export class EvaluationService {
 			submissionId: submission.id,
 			apiUrl: submission.apiUrl,
 			token: crypto.randomUUID(),
+			datasetId: datasetId,
 		}));
 
 		const createdEvaluations = await Promise.all(
 			preparedEvaluations.map(async (evalData) => {
-				const evaluation = await this.evaluationRepo.createEvaluation(evalData.submissionId, evalData.token);
+				const evaluation = await this.evaluationRepo.createEvaluation(evalData.submissionId, evalData.token, evalData.datasetId);
 				if (!evaluation) {
 					console.error(`Failed to create evaluation for submission ID: ${evalData.submissionId}`);
 					return null;

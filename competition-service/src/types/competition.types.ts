@@ -100,6 +100,7 @@ export type DatasetResponseDto = z.infer<typeof DatasetResponseSchema>;
 export interface Evaluation {
 	id: number;
 	submissionId: number;
+  datasetId: number;
 	token: string | null; // Token for users to download test data and submit predictions for evaluation
 	score: number | null;
 	detailed_scores: string | null; // JSON of detailed scores

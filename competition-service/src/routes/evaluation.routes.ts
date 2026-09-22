@@ -33,7 +33,7 @@ export function createEvaluationRouter(
 	const evaluationController = new EvaluationController(evaluationService);
 
 	evaluationRouter.post(
-		"/competitons/:id/start",
+		"/competitions/:id/start",
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireAdmin(),

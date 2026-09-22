@@ -1,5 +1,6 @@
 import { Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/competition.types";
 import { BaseRepo } from "./base.repository";
+import { SubmissionRepo } from "./submission.repository";
 
 export class EvaluationRepo extends BaseRepo<Evaluation> {
     
@@ -12,15 +13,26 @@ export class EvaluationRepo extends BaseRepo<Evaluation> {
         const row = await this.db.get(query, [token]);
         return row as Evaluation | null;
     }
-    
-    async createEvaluation(submissionId: number, token: string): Promise<Evaluation | null> {
+
+    async getEvaluationWithCompetitionByToken(token: string): Promise<(Evaluation & {competitionId: number}) | null> {
+        const query = `
+            SELECT e.*, s.competitionId
+            FROM ${this.tableName} e
+            JOIN ${SubmissionRepo.tableName} s ON e.submissionId = s.id
+            WHERE e.token = ?
+        `;
+        const row = await this.db.get(query, [token]);
+        return (row as (Evaluation & {competitionId: number})) || null;
+    }
+
+    async createEvaluation(submissionId: number, token: string, datasetId: number): Promise<Evaluation | null> {
         const status = EvaluationStatus.PENDING;
         const query = `
-        INSERT INTO ${this.tableName} (submissionId, token, status, created_at)
-        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        INSERT INTO ${this.tableName} (submissionId, token, status, created_at, datasetId)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
         RETURNING *;
         `;
-        const evaluation = await this.db.get(query, [submissionId, token, status]);
+        const evaluation = await this.db.get(query, [submissionId, token, status, datasetId]);
         return evaluation as Evaluation | null;
     }
 

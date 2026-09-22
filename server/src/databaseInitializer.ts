@@ -222,6 +222,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     CREATE TABLE IF NOT EXISTS competition_evaluations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       submissionId INTEGER NOT NULL,
+      datasetId INTEGER NOT NULL,
       token TEXT,
       score REAL,
       detailed_scores TEXT,
@@ -232,7 +233,8 @@ export async function initializeDB(filename: string, createAdmin = true) {
       inference_time_ms INTEGER,
       status TEXT NOT NULL DEFAULT 'PENDING',
       prediciton TEXT,
-      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id)
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id),
+      FOREIGN KEY (datasetId) REFERENCES competition_datasets(id)
     )
   `);
   //Create unique index for token to ensure token is unique and faster lookup by token in evaluation

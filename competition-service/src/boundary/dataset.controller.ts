@@ -8,6 +8,9 @@ import {
 } from "../types/competition.types";
 import fs from "fs";
 import { errorResponse, handleError } from "../errors/errorhandling.helper";
+import { BadRequestException } from "../errors/badrequest.error";
+import { ForbiddenException } from "../errors/forbidden.error";
+import { NotFoundException } from "../errors/notfound.error";
 
 export class DatasetController {
 	private datasetService: DatasetService;
@@ -58,6 +61,7 @@ export class DatasetController {
 		try {
 			const dataset = await this.authorizeAndGetDataset(req, res);
 
+
 			res.download(dataset.file_path, dataset.file_name, (err: any) => {
 				if (err) {
 					handleError(err, "Failed to send dataset file", res);
@@ -102,17 +106,17 @@ export class DatasetController {
 		const validatedDatasetType = datasetTypeSchema.parse(req.query); // query parameter for filtering by dataset type
 
 		if (!competition || !user) {
-			return errorResponse("Competition or user not found in request", 400, res);
+			throw new BadRequestException("Competition or user not found in request");
 		}
 
 		// users can only download TRAIN datasets. Validation and test datasets are only used for evaluation and can only be accessed by admins.
 		if (validatedDatasetType.type != DatasetType.TRAIN && user.userRole !== "ADMIN") {
-			return errorResponse("Not allowed to download this type of dataset.", 403, res);
+			throw new ForbiddenException("Not allowed to download this type of dataset.");
 		}
 
 		const dataset = await this.datasetService.getDatasetsForCompetition(competition.id, validatedDatasetType.type);
 		if (!dataset) {
-			return errorResponse("Dataset not found", 404, res);
+			throw new NotFoundException("Dataset not found for the specified type");
 		}
 		return dataset;
 	}

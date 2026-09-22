@@ -16,7 +16,7 @@ export function handleError(
 	res: any,
 	statusCode: number = 500,
 ) {
-	console.error("error: ", message, error);
+	console.error("error "+ message + ": ", error instanceof Error ? error.message : error, error);
 	if (error instanceof z.ZodError) {
 		return res.status(400).json({
 			statusCode: 400,
@@ -31,7 +31,7 @@ export function handleError(
 	res.status(statusCode).json({
 		statusCode: statusCode,
 		error: http.STATUS_CODES[statusCode],
-		message: message,
+		message: error instanceof Error ? error.message : message,
 	});
 }
 
