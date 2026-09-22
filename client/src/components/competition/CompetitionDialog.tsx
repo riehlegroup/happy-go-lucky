@@ -42,12 +42,14 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 	const [trainingDatasetMetadata, setTrainingDatasetMetadata] = useState<DatasetMetadata | null>(null);
 	const [testFile, setTestFile] = useState<File | null>(null);
 	const [testDatasetMetadata, setTestDatasetMetadata] = useState<DatasetMetadata | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const isEditMode = Boolean(competition?.id);
 
 	// initialize form data with existing competition data or default values
 	useEffect(() => {
 		if (isOpen) {
+            setErrorMessage(null);
 			if (competition) {
 				setFormData({
 					name: competition.name || "",
@@ -87,6 +89,22 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+        setErrorMessage(null);
+        if (!formData.name.trim()) {
+            setErrorMessage("Please provide a name for the competition.");
+            return;
+        }
+        if (!formData.description.trim()) {
+            setErrorMessage("Please provide a description for the competition.");
+            return;
+        }
+        if (formData.start_date && formData.end_date) {
+            if(new Date(formData.start_date) > new Date(formData.end_date)) {
+                setErrorMessage("Start date cannot be after end date.");
+                return;
+            }
+        }
+
 		try {
 			// create or update competition based on edit mode
 			if (isEditMode && competition?.id) {
@@ -107,8 +125,10 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			}
 			onSuccess?.();
 			onClose();
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Error saving competition:", error);
+            const errorMsg = error?.response?.data?.message  || error?.response?.error || error?.message || "An unknown error occurred while saving the competition.";
+            setErrorMessage(errorMsg);
 		}
 	};
 
@@ -117,6 +137,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			console.error("No competition found to delete dataset");
 			return;
 		}
+        setErrorMessage(null);
 		try {
 			if (window.confirm("Are you sure you want to delete this dataset? This action cannot be undone.")) {
 				await deleteDataset(datasetId);
@@ -126,8 +147,13 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
                     setTestDatasetMetadata(null);
                 }
 			}
-		} catch (error) {
+		} catch (error: any) {
 			console.error("Error deleting dataset:", error);
+            const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				"Failed to delete dataset. Please try again.";
+			setErrorMessage(message);
 		}
 	};
 
@@ -138,7 +164,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 					<DialogTitle>{isLoading ? "Loading..." : isEditMode ? "Edit Competition" : "Create Competition"}</DialogTitle>
 				</DialogHeader>
 
-				{/*TODO: handle loading state and error messages and form validation */}
 				<form
 					id="competitionForm"
 					onSubmit={handleSubmit}
@@ -151,12 +176,13 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							id="competitionName"
 							className="w-full box-border"
 							value={formData.name}
-							onChange={(e) =>
+							onChange={(e) => {
+                                setErrorMessage(null);
 								setFormData({
 									...formData,
 									name: e.target.value,
 								})
-							}
+                            }}
 						/>
 					</div>
 					<div className="w-full min-w-0 space-y-2">
@@ -165,12 +191,13 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							id="competitionDescription"
 							value={formData.description}
 							className="w-full box-border"
-							onChange={(e) =>
+							onChange={(e) => {
+                                setErrorMessage(null);
 								setFormData({
 									...formData,
 									description: e.target.value,
 								})
-							}
+							}}
 							rows={4}
 						/>
 					</div>
@@ -180,12 +207,13 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							<Label>Start date:</Label>
 							<DateInput
 								value={formData.start_date}
-								onChange={(e) =>
+								onChange={(e) => {
+                                    setErrorMessage(null);  
 									setFormData({
 										...formData,
 										start_date: e.toISOString().substring(0, 10),
 									})
-								}
+								}}
 								className="my-2"
 							/>
 						</div>
@@ -193,12 +221,13 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							<Label>End date:</Label>
 							<DateInput
 								value={formData.end_date}
-								onChange={(e) =>
+								onChange={(e) => {
+                                    setErrorMessage(null);
 									setFormData({
 										...formData,
 										end_date: e.toISOString().substring(0, 10),
 									})
-								}
+								}}
 								className="my-2"
 							/>
 						</div>
@@ -216,7 +245,10 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							type={DatasetType.TRAIN}
 							existingMetadata={trainingDatasetMetadata}
 							selectedFile={trainingFile}
-							onFileSelect={setTrainingFile}
+							onFileSelect={(file) => {
+                                setErrorMessage(null);
+                                setTrainingFile(file);
+                            }}
 							onDownload={() => {
 								downloadDataset(DatasetType.TRAIN);
 							}}
@@ -231,7 +263,10 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							type={DatasetType.TEST}
 							existingMetadata={testDatasetMetadata}
 							selectedFile={testFile}
-							onFileSelect={setTestFile}
+							onFileSelect={(file) => {
+                                setErrorMessage(null);
+                                setTestFile(file);
+                            }}
 							onDownload={() => {
 								downloadDataset(DatasetType.TEST);
 							}}
@@ -244,12 +279,19 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 					</div>
 				</form>
 				<DialogFooter className="flex justify-end gap-2">
+                    {errorMessage && (
+					<div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600 font-medium">
+						{errorMessage}
+					</div>
+                    )}
 					<Button variant="outline" onClick={onClose} disabled={isActionLoading}>
 						Close
 					</Button>
 					<Button type="submit" form="competitionForm" disabled={isActionLoading}>
 						{isActionLoading ? "Saving..." : isEditMode ? "Update Competition" : "Create Competition"}
 					</Button>
+                    
+
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
