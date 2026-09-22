@@ -220,7 +220,7 @@ const CourseParticipation: React.FC = () => {
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Enrolled Courses Section */}
-        <SectionCard title="Projects you are enrolled in">
+        <SectionCard title="SELECT course to SHOW projects you are enrolled in">
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {
@@ -293,7 +293,7 @@ const CourseParticipation: React.FC = () => {
         </SectionCard>
 
         {/* Available Courses Section */}
-        <SectionCard title="Available Projects">
+        <SectionCard title="SELECT course to JOIN projects you are not enrolled in">
           <div className="space-y-4">
             <Select
               onValueChange={(value) => {

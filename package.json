@@ -36,5 +36,9 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.12",
     "sqlite": "^5.1.1"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "sqlite@5.1.1": true
   }
 }

@@ -281,7 +281,7 @@ const ProjectConfig: React.FC = () => {
       <TopNavBar title="Project Configuration" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title="Select Course">
+        <SectionCard title="SELECT Course to JOIN or CREATE project">
           <div className="space-y-4">
             <Select onValueChange={handleCourseChange}>
               <SelectTrigger className="w-full">
@@ -301,7 +301,7 @@ const ProjectConfig: React.FC = () => {
         {selectedCourse && (
           <>
             {/* Enrolled Projects Section */}
-            <SectionCard title="Enrolled Projects">
+            <SectionCard title="LEAVE project you are enrolled in">
               <div className="space-y-2">
                 {enrolledProjects.length > 0 ? (
                   enrolledProjects.map((project) => (
@@ -387,7 +387,7 @@ const ProjectConfig: React.FC = () => {
             </SectionCard>
 
             {/* Available Projects Section */}
-            <SectionCard title="Available Projects">
+            <SectionCard title="SELECT project to JOIN">
               <div className="space-y-4">
                 <Select onValueChange={setSelectedAvailableProject}>
                   <SelectTrigger className="w-full">
@@ -441,7 +441,7 @@ const ProjectConfig: React.FC = () => {
             {/* Create Project Section */}
             {/* TODO: check if the user has permission to create a project in this course (studentsCanCreateProject Flag) */}
             {(userRole === "ADMIN" || selectedCourse.studentsCanCreateProject)?(
-            <SectionCard title="Create New Project">
+            <SectionCard title="CREATE project and JOIN automatically">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button>Create Project</Button>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import TopNavBar from "../common/TopNavBar";
+import SectionCard from '../common/SectionCard';
 import Table from "../common/Table";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
@@ -179,18 +180,20 @@ const UserAdmin = () => {
 
     return (
         <div className="min-h-screen">
-            <TopNavBar title="User Admin" showBackButton={true} showUserInfo={true} />
-            <div className="mx-auto max-w-6xl space-y-4 p-4">
-                <Table
-                    headings={["username", "email", "github username", "status", "userRole", "action"]}
-                    loading={loading}
-                    loadData={fetchUsers}
-                    data={tableData}
-                    rowsPerPage={9}
-                    filterOptions={{ key: 3, options: userStatus }}
-                />
-            </div>
-            {editing && <UserEdit user={editing} open={true} onClose={(update) => { setEditing(null); if(update) fetchUsers(); }} />}
+            <TopNavBar title="User Administration" showBackButton={true} showUserInfo={true} />
+            <SectionCard title="SELECT user to EDIT their properties">
+                <div className="mx-auto max-w-6xl space-y-4 p-4">
+                    <Table
+                        headings={["username", "email", "github username", "status", "userRole", "action"]}
+                        loading={loading}
+                        loadData={fetchUsers}
+                        data={tableData}
+                        rowsPerPage={9}
+                        filterOptions={{ key: 3, options: userStatus }}
+                    />
+                </div>
+                {editing && <UserEdit user={editing} open={true} onClose={(update) => { setEditing(null); if(update) fetchUsers(); }} />}
+            </SectionCard>
         </div>
     );
 }

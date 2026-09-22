@@ -116,7 +116,7 @@ const Dashboard: React.FC = () => {
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Projects Section */}
-        <SectionCard title="Projects">
+        <SectionCard title="My Projects">
           <div className="space-y-4">
             <Select
               value={activeProject?.id.toString() || ""}
@@ -171,23 +171,23 @@ const Dashboard: React.FC = () => {
         <SectionCard title="Configuration">
           <div className="flex flex-wrap gap-4">
             <Button onClick={goUserPanel} className="w-48">
-              User profile
+              Account Settings 1
             </Button>
             <Button onClick={goSettings} className="w-48">
-              Settings
+              Account Settings 2
             </Button>
             <Button onClick={goCourseParticipation} className="w-48">
               Course Participation
             </Button>
             <Button onClick={goProjectConfig} className="w-48">
-              Project Config
+              Project Configuration
             </Button>
           </div>
         </SectionCard>
 
-        {/* System Administration Section */}
+        {/* Administration Section */}
         {userRole === "ADMIN" && (
-          <SectionCard title="System Administration">
+          <SectionCard title="Administration">
             <div className="flex flex-wrap gap-4">
               <Button onClick={goUserAdmin} className="w-48">
                 User Admin

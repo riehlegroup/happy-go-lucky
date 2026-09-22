@@ -146,7 +146,7 @@ const CourseAdmin: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <TopNavBar title="Manage Courses" showBackButton={true} showUserInfo={true} />
+      <TopNavBar title="Course Administration" showBackButton={true} showUserInfo={true} />
 
       <div className="mx-auto max-w-6xl space-y-4 p-4">
         {/* Display message if present */}
@@ -198,7 +198,7 @@ const CourseAdmin: React.FC = () => {
         )}
 
         {/* Terms Section */}
-        <SectionCard title={`Terms (${terms.length})`}>
+        <SectionCard title={`CREATE/DELETE terms (${terms.length}) and ADD courses`}>
           <Table
             headings={["id", "termName", "displayName", "action"]}
             loading={isLoading}
@@ -213,7 +213,7 @@ const CourseAdmin: React.FC = () => {
         </SectionCard>
 
         {/* Course Section */}
-        <SectionCard title={`Courses (${courses.length})`}>
+        <SectionCard title={`CREATE/DELETE courses (${courses.length}) and ADD projects`}>
           <Table
             headings={["id", "term", "name", "action"]}
             loading={isLoading}
@@ -228,7 +228,7 @@ const CourseAdmin: React.FC = () => {
         </SectionCard>
 
         {/* Project Section */}
-        <SectionCard title={`Projects (${projects.length})`}>
+        <SectionCard title={`CREATE/DELETE projects (${projects.length})`}>
           {projects && projects.length > 0 ? (
             <Table
               headings={["id", "projectName", "courseId", "actions"]}
