@@ -5,7 +5,7 @@ export class SubmissionService {
     constructor(private submissionRepo: SubmissionRepo) {}
 
     async createOrUpdateCompetitionSubmission(submission: SubmissionInboundDto, competitionId: number, userId: number): Promise<Submission> {
-       //TODO: health check for the apiUrl before saving?
+       //TODO: health check for the apiUrl before saving -> implement after endpoint definition for health check is done
         return await this.submissionRepo.upsertSubmission(competitionId, userId, submission.apiUrl);
     }
 

@@ -12,14 +12,12 @@ export default defineConfig({
   },
   server: { // Confifure development server to proxy API requests to the backend and competition-service. Acts like caddy in production
     port: 5173,
-    proxy: {
-      // 1. Spezifischer Pfad zuerst!
+    proxy: { //TODO: is this still necessary or was it wrong caddy config?
       "/api/competition": {
         target: "http://localhost:8081",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/competition/, ""),
       },
-      // 2. Allgemeiner Fallback danach
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,

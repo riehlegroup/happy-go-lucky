@@ -7,6 +7,8 @@ export class AuthentificationRepo extends BaseRepo<DatabaseUser> {
     super(db, "users");
   }
 
+  //TODO: are these methods the same? if yes, remove one of them
+  
   async isUserInCourse(userId: number, courseId: number): Promise<boolean> {
     const sql = `SELECT COUNT(*) as count FROM user_courses WHERE user_id = ? AND course_id = ?`;
     const result = await this.db.get(sql, [userId, courseId]);

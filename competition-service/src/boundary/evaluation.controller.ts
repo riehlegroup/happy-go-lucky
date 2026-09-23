@@ -55,6 +55,8 @@ export class EvaluationController {
 			}
 
 			res.setHeader("Content-Type", "text/csv");
+            res.setHeader("Content-Disposition", `attachment; filename="test_dataset.csv"`);
+
 			fs.createReadStream(filePath).pipe(res);
 		} catch (error) {
 			handleError(error, "Failed to download input CSV", res);
@@ -63,11 +65,13 @@ export class EvaluationController {
 
 	async uploadStudentPrediction(req: any, res: any) {
 		try {
+            const receivedAt = Date.now(); // for more precise timing received at can be added to request with middleware 
 			const token = (req.params.token || req.query.token) as string | undefined;
 			if (!token) {
 				return errorResponse("Token is required", 400, res);
 			}
-
+			const evaluation = await this.evaluationService.requireEvaluationEntryExists(token, EvaluationStatus.PENDING);
+        
 			throw new Error("Not implemented yet");
 		} catch (error) {
 			handleError(error, "Failed to upload student predictions", res);
