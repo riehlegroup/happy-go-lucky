@@ -102,16 +102,6 @@ export const DatasetResponseSchema = z.object({
 
 export type DatasetResponseDto = z.infer<typeof DatasetResponseSchema>;
 
-export const SubmissionInboundDtoSchema = z.object({
-  competitionId: z.number().int().positive(),
-  userId: z.number().int().positive(),
-  apiUrl: z.url("apiUrl must be a valid URL"),
-});
-
-/**
- * Inbound DTO for a competition submission
- */
-export type SubmissionInboundDto = z.infer<typeof SubmissionInboundDtoSchema>;
 
 
 /**
