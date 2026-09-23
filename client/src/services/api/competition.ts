@@ -5,7 +5,7 @@ export const COMPETITION_ENDPOINT_ADDITION = "/competition/competitions";
 
 const competitionApi = {
 	getCompetitionById: async (competitionId: number): Promise<Competition | null> => {
-		return await ApiClient.getInstance().get<Competition>(`{COMPETITON_ENDPOINT_ADDITION}/${competitionId}`, undefined, true);
+		return await ApiClient.getInstance().get<Competition>(`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}`, undefined, true);
 	},
 
 	getCompetitionByCourse: async (courseId: number): Promise<Competition | null> => {
