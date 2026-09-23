@@ -40,8 +40,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 	const [formData, setFormData] = useState<CreateCompetitionDto>(DEFAULT_COMPETITION_FORM_DATA);
 	const [trainingFile, setTrainingFile] = useState<File | null>(null);
 	const [trainingDatasetMetadata, setTrainingDatasetMetadata] = useState<DatasetMetadata | null>(null);
-	const [testFile, setTestFile] = useState<File | null>(null);
-	const [testDatasetMetadata, setTestDatasetMetadata] = useState<DatasetMetadata | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const isEditMode = Boolean(competition?.id);
@@ -65,20 +63,11 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 						setTrainingDatasetMetadata(null);
 					}
 				});
-				getDatasetMetadata(DatasetType.TEST).then((testMetadata) => {
-					if (testMetadata) {
-						setTestDatasetMetadata(testMetadata);
-					} else {
-						setTestDatasetMetadata(null);
-					}
-				});
 			} else {
 				setFormData(DEFAULT_COMPETITION_FORM_DATA);
 				setTrainingFile(null);
 				setTrainingDatasetMetadata(null);
 
-				setTestDatasetMetadata(null);
-				setTestFile(null);
 			}
 		}
 	}, [isOpen, competition]);
@@ -117,9 +106,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			if (trainingFile) {
 				uploadPromises.push(uploadDataset(DatasetType.TRAIN, trainingFile));
 			}
-			if (testFile) {
-				uploadPromises.push(uploadDataset(DatasetType.TEST, testFile));
-			}
 			if (uploadPromises.length > 0) {
 				await Promise.all(uploadPromises);
 			}
@@ -143,8 +129,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 				await deleteDataset(datasetId);
                 if (datasetType === DatasetType.TRAIN) {
                     setTrainingDatasetMetadata(null);
-                } else if (datasetType === DatasetType.TEST) {
-                    setTestDatasetMetadata(null);
                 }
 			}
 		} catch (error: any) {
@@ -232,13 +216,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							/>
 						</div>
 					</div>
-					<p className="text-xs text-muted-foreground leading-relaxed break-words">
-						Choose training Dataset and evaluation dataset for the competition. Both must contain ground truth data.
-						The training dataset will be accessible by students to train their models, while the evaluation dataset
-						will be used for the final evaluation. To add evaluations before the final one, please create a schedule
-						where you can add additional validation datasets.
-					</p>
-					{/* Dataset upload for trainig and test datasets */}
+					{/* Dataset upload*/}
 					<div className="w-full min-w-0 space-y-4">
 						<DatasetUploader
 							label="Training Dataset"
@@ -255,24 +233,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 							onDelete={() => {
 								if (trainingDatasetMetadata) {
 									handleDeleteDataset(trainingDatasetMetadata.id, DatasetType.TRAIN);
-								}
-							}}
-						/>
-						<DatasetUploader
-							label="Dataset for final evaluation"
-							type={DatasetType.TEST}
-							existingMetadata={testDatasetMetadata}
-							selectedFile={testFile}
-							onFileSelect={(file) => {
-                                setErrorMessage(null);
-                                setTestFile(file);
-                            }}
-							onDownload={() => {
-								downloadDataset(DatasetType.TEST);
-							}}
-							onDelete={() => {
-								if (testDatasetMetadata) {
-									handleDeleteDataset(testDatasetMetadata.id, DatasetType.TEST);
 								}
 							}}
 						/>
