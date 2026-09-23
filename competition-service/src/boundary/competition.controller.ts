@@ -77,25 +77,6 @@ export class CompetitionController {
         } catch (error) {
             handleError(error, "Failed to fetch competition for the course", res);
         }
-    }
-
-    /**
-     * This endpoint is needed for the first fetch of competition data where only courseId is known. 
-     * It relies on the assumption that there is only one competition per course.
-     *  If there is the possibility of multiple competitions per course in the future, this endpoint must be changed.
-     */
-    async getCompetitionByCourseId(req: any, res: any) {
-        const { courseId } = req.params;
-        const parsedCourseId = parseInt(courseId, 10);
-        if (isNaN(parsedCourseId)) {
-            return errorResponse("Invalid course ID", 400, res);
-        }
-
-        try {
-            const competition = await this.competitionService.getCompetitionByCourseId(parsedCourseId);
-            res.status(200).json(competition );
-        } catch (error) {
-            handleError(error, "Failed to fetch competition for the course", res);
-        }
+    
     }
 }
