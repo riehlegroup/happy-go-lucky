@@ -8,6 +8,7 @@ import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
 
+
 async function ensureCourseFlagColumn(db: Awaited<ReturnType<typeof open>>) {
   const columns = await db.all<{ name: string }[]>(`PRAGMA table_info(courses)`);
   const hasStudentsCanCreateProject = columns.some(
@@ -191,18 +192,6 @@ export async function initializeDB(filename: string, createAdmin = true) {
   `);
 
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS competition_datasets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      competitionId INTEGER NOT NULL,
-      dataset_type TEXT NOT NULL,
-      file_path TEXT NOT NULL,
-      file_name TEXT NOT NULL,
-      FOREIGN KEY (competitionId) REFERENCES competitions(id)
-    )
-  `);
-
-
-  await db.exec(`
     CREATE TABLE IF NOT EXISTS competition_submissions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       competitionId INTEGER NOT NULL,
@@ -215,6 +204,42 @@ export async function initializeDB(filename: string, createAdmin = true) {
       UNIQUE (competitionId, userId)
     )
   `);
-  
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_datasets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      round INTEGER,
+      dataset_type TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id)
+    )
+  `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_evaluations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submissionId INTEGER NOT NULL,
+      datasetId INTEGER NOT NULL,
+      token TEXT,
+      score REAL,
+      error_message TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      started_at TEXT,
+      completed_at TEXT,
+      inference_time_ms INTEGER,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      prediciton TEXT,
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id),
+      FOREIGN KEY (datasetId) REFERENCES competition_datasets(id)
+    )
+  `);
+  //Create unique index for token to ensure token is unique and faster lookup by token in evaluation
+  await db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_competition_evaluations_token ON competition_evaluations(token)
+  `);
+
+
   return db;
 }
