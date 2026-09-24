@@ -17,6 +17,7 @@ import CourseAdmin from "./components/Administration/CourseAdmin";
 import { ActiveProjectProvider } from "./context/ActiveProjectContext";
 import { CourseFeature } from "./types/CourseFeature";
 import { FeatureGuard } from "./components/common/FeatureGuard";
+import Competition from "./components/competition/Competition";
 
 function App() {
   return (
@@ -51,6 +52,13 @@ function App() {
                 <CodeActivity /> 
               </FeatureGuard>
             } />
+          <Route 
+            path="/competition" 
+            element={
+              <FeatureGuard feature={CourseFeature.COMPETITION} fallback={<Navigate to="/dashboard" replace />}>
+                <Competition /> 
+              </FeatureGuard>
+            } />
           {/*other routes*/}
           <Route path="/settings" element={<AccountSettings2 />} />
           <Route path="/course-participation" element={<CourseParticipation />} />
@@ -59,6 +67,7 @@ function App() {
           <Route path="/project-config" element={<ProjectConfig />} />
           <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
           <Route path="/user-panel" element={<AccountSettings1 />} />
+          <Route path="/competition" element={<Competition />} />
         </Routes>
       </ActiveProjectProvider>
       </BrowserRouter>

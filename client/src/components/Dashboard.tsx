@@ -88,6 +88,12 @@ const Dashboard: React.FC = () => {
     }
   }
 
+  function goCompetition() {
+    if (activeProject) {
+      navigate("/competition");
+    }
+  }
+
   function goSettings() {
     navigate("/settings");
   }
@@ -109,6 +115,7 @@ const Dashboard: React.FC = () => {
   function goCourseAdmin() {
     navigate("/course-admin");
   }
+
 
   return (
     <div className="min-h-screen">
@@ -160,7 +167,17 @@ const Dashboard: React.FC = () => {
                   disabled={!activeProject}
                   className="w-48"
                 >
-                  Code Activity
+  
+                Code Activity
+                </Button>
+              </FeatureGuard>
+              <FeatureGuard feature={CourseFeature.COMPETITION}>
+                <Button
+                  onClick={goCompetition}
+                  disabled={!activeProject}
+                  className="w-48"
+                >
+                  Competition
                 </Button>
               </FeatureGuard>
             </div>

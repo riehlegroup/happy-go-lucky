@@ -97,8 +97,7 @@ describe("Dataset API Integrationtest", () => {
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(downloadResponse.status).toBe(400);
-		expect(downloadResponse.body).toHaveProperty("success", false);
-		expect(downloadResponse.body).toHaveProperty("error", "Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.");
+		expect(downloadResponse.body).toHaveProperty("message", "Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.");
 	});
 
 	it("should return 400 when uploading without a file", async () => {
@@ -109,9 +108,9 @@ describe("Dataset API Integrationtest", () => {
 			.post(`/competitions/${competitionId}/datasets`)
 			.set("Authorization", `Bearer ${token}`)
 			.field("type", "TRAIN"); // No file attached
-
+		console.log("Response body for no file upload:", response.body); // Log the response body for debugging
 		expect(response.status).toBe(400);
-		expect(response.body).toHaveProperty("error", "No file uploaded");
+		expect(response.body).toHaveProperty("message", "No file uploaded");
 	});
 
 	it("should return 400 when uploading with an invalid dataset type", async () => {
@@ -125,7 +124,9 @@ describe("Dataset API Integrationtest", () => {
 			.field("type", "INVALID_TYPE"); 
 
 		expect(response.status).toBe(400);
-		expect(response.body).toHaveProperty("success", false);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toContain("Validation failed");
+		expect(response.body).toHaveProperty("error", "Bad Request");
 	});
 
 });

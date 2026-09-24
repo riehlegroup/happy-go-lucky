@@ -15,10 +15,11 @@ export interface User {
 
 export interface Course {
   id: number;
-  semester: string;
+  termId: number;
   courseName: string;
   projects: Project[];
   studentsCanCreateProject: boolean;
+  enabledFeatures: CourseFeature[];
 }
 
 export interface Project {

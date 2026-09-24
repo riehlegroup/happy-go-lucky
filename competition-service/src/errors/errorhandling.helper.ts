@@ -1,4 +1,5 @@
 import { z } from "zod";
+import http from "http";
 
 /**
  * Logs errors and handles validationerrors and sends appropriate error responses
@@ -17,14 +18,15 @@ export function handleError(
 	console.error("error: ", message, error);
 	if (error instanceof z.ZodError) {
 		return res.status(400).json({
-			success: false,
-			message: "Validation failed",
-			errors: z.treeifyError(error),
+			statusCode: 400,
+			message: "Validation failed: " + z.treeifyError(error),
+			error: http.STATUS_CODES[400],
 		});
 	}
 	res.status(statusCode).json({
-		success: false,
-		error: message,
+		statusCode: statusCode,
+		error: http.STATUS_CODES[statusCode],
+		message: message,
 	});
 }
 
@@ -37,7 +39,8 @@ export function handleError(
  */
 export function errorResponse(message: string, statusCode: number, res: any) {
 	return res.status(statusCode).json({
-		success: false,
-		error: message,
+		statusCode: statusCode,
+		error: http.STATUS_CODES[statusCode],
+		message: message,
 	});
 }

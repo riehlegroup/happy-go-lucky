@@ -3,7 +3,7 @@ import SectionHeader from "./SectionHeader";
 import Card from "./Card";
 
 interface SectionCardProps {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
 }
 
