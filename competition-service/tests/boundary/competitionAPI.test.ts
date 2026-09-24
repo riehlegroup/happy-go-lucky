@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import express, { Express } from "express";
+import  { Application} from "express";
 import request from "supertest";
 import { Database } from "sqlite";
-import { createCompetitionRouter } from "../../src/routes/competition.routes";
+
 import {
   createTestDatabase,
   resetTestDatabase,
@@ -11,17 +11,16 @@ import {
 } from "./helpers/testDb.helper";
 import { generateTestToken } from "./helpers/auth.helper";
 import { CreateCompetitionDto } from "../../src/types/competition.types";
+import { createApp } from "../../src/createApp";
 
 describe("Competition API Integrationtest", () => {
   let db: Database;
-  let app: Express;
+  let app: Application;
 
   beforeAll(async () => {
     // Initialize the database and application here
     db = await createTestDatabase();
-    app = express();
-    app.use(express.json());
-    app.use("/competitions", createCompetitionRouter(db));
+    app = createApp(db);
   });
 
   afterAll(async () => {

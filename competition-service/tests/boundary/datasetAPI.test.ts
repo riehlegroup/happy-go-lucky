@@ -1,52 +1,44 @@
 import { Database } from "sqlite";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import express, { Express } from "express";
 import request from "supertest";
-import { createCompetitionRouter } from "../../src/routes/competition.routes";
-import {
-	createTestDatabase,
-	resetTestDatabase,
-	TEST_COMPETITIONS,
-	TEST_USERS,
-} from "./helpers/testDb.helper";
+import { createTestDatabase, resetTestDatabase, TEST_COMPETITIONS, TEST_USERS } from "./helpers/testDb.helper";
 import path from "path";
 import fs from "fs";
 import { generateTestToken } from "./helpers/auth.helper";
+import { createApp } from "../../src/createApp";
+import { Application } from "express";
 
 describe("Dataset API Integrationtest", () => {
 	let db: Database;
-	let app: Express;
-	const createdDatasetIds: number[] = []; // Store created dataset IDs for cleanup
-	const dummyFilePath = path.join(__dirname, "dummy_dataset.csv");
+	let app: Application;
+	const createdFilePaths: string[] = []; // Store created dataset file paths for cleanup
+
+	const validCsvPath = path.join(__dirname, "valid_dummy_dataset.csv");
+	const invalidCsvPath = path.join(__dirname, "invalid_dummy_dataset.csv");
+
+	const validCsvContent = [
+		"package_name,version,lines_of_code,has_cve",
+		"express,4.18.2,1500,false",
+		"lodash,4.17.21,8000,true",
+	].join("\n");
+
+	const invalidCsvContent = ["package_name,version", "express,4.18.2"].join("\n");
 
 	beforeAll(async () => {
 		// Initialize the database and application here
 		db = await createTestDatabase();
-		app = express();
-		app.use(express.json());
-		app.use("/competitions", createCompetitionRouter(db));
-		fs.writeFileSync(dummyFilePath, "id, name\n1, John\n2, Jane\n"); // Create a dummy file to test the upload
+		app = createApp(db);
+		fs.writeFileSync(validCsvPath, validCsvContent);
+		fs.writeFileSync(invalidCsvPath, invalidCsvContent);
 	});
 
 	afterAll(async () => {
-		if (fs.existsSync(dummyFilePath)) {
-			fs.unlinkSync(dummyFilePath); // Delete the dummy file after tests
-		}
+		if (fs.existsSync(validCsvPath)) fs.unlinkSync(validCsvPath);
+		if (fs.existsSync(invalidCsvPath)) fs.unlinkSync(invalidCsvPath);
 
-		for (const datasetId of createdDatasetIds) {
-			try {
-				const dataset = await db.get(
-					"SELECT file_path FROM competition_datasets WHERE id = ?",
-					[datasetId],
-				);
-				if (dataset && fs.existsSync(dataset.file_path)) {
-					fs.unlinkSync(dataset.file_path); // Delete the uploaded dataset file after tests
-				}
-			} catch (error) {
-				console.error(
-					`Error deleting dataset file for dataset ID in Cleanup ${datasetId}:`,
-					error,
-				);
+		for (const filePath of createdFilePaths) {
+			if (fs.existsSync(filePath)) {
+				fs.unlinkSync(filePath); // Delete the uploaded dataset file after tests
 			}
 		}
 		db.close();
@@ -65,18 +57,21 @@ describe("Dataset API Integrationtest", () => {
 		const uploadResponse = await request(app)
 			.post(`/competitions/${competitionId}/datasets`)
 			.set("Authorization", `Bearer ${token}`)
-			.attach("dataset", dummyFilePath)
+			.attach("dataset", validCsvPath)
 			.field("type", "TRAIN");
 
 		expect(uploadResponse.status).toBe(201);
 		expect(uploadResponse.body).toHaveProperty("id");
-		expect(uploadResponse.body).toHaveProperty(
-			"file_name",
-			"dummy_dataset.csv",
-		);
+		expect(uploadResponse.body).toHaveProperty("file_name", "valid_dummy_dataset.csv");
 		expect(uploadResponse.body.dataset_type).toBe("TRAIN");
 
-		createdDatasetIds.push(uploadResponse.body.id); // Store the created dataset ID for cleanup
+		const dbrecord = await db.get("SELECT * FROM competition_datasets WHERE id = ?", uploadResponse.body.id);
+		expect(dbrecord).toBeDefined();
+		expect(dbrecord.file_name).toBe("valid_dummy_dataset.csv");
+		expect(dbrecord.dataset_type).toBe("TRAIN");
+		if (dbrecord?.file_path) {
+			createdFilePaths.push(dbrecord.file_path); // Store the created dataset file path for cleanup
+		}
 
 		// Now test downloading the dataset
 		const downloadResponse = await request(app)
@@ -85,11 +80,27 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(downloadResponse.status).toBe(200);
 		expect(downloadResponse.header["content-type"]).toContain("text/csv");
-		expect(downloadResponse.text).toBe("id, name\n1, John\n2, Jane\n");
+		expect(downloadResponse.text).toBe(validCsvContent);
+	});
+
+	it("should return 400 when uploading a dataset with missing required columns", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("dataset", invalidCsvPath)
+			.field("type", "TRAIN");
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		// check that the message indicates missing required columns
+		expect(response.body.message.toLowerCase()).toContain("missing");
 	});
 
 	it("should return 400 when trying to download a TEST or VALIDATION dataset over general Endpoint as a non-admin user", async () => {
-		const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);	
+		const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 
 		const downloadResponseTEST = await request(app)
@@ -127,13 +138,12 @@ describe("Dataset API Integrationtest", () => {
 		const response = await request(app)
 			.post(`/competitions/${competitionId}/datasets`)
 			.set("Authorization", `Bearer ${token}`)
-			.attach("dataset", dummyFilePath)
-			.field("type", "INVALID_TYPE"); 
+			.attach("dataset", validCsvPath)
+			.field("type", "INVALID_TYPE");
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message");
 		expect(response.body.message).toContain("Validation failed");
 		expect(response.body).toHaveProperty("error", "Bad Request");
 	});
-
 });
