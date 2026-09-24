@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 interface CourseActionProps {
   label?: string;
-  type?: "course" | "project" | "schedule";
-  action: "add" | "edit" | "delete" | "schedule";
+  type?: "course" | "project" | "schedule" | "competition";
+  action: "add" | "edit" | "delete" | "schedule" | "competition";
   onClick: () => void;
   className?: string;
   dataCy?: string;

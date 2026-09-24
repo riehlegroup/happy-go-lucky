@@ -1,0 +1,260 @@
+import { useCompetition } from "@/hooks/useCompetition";
+import { Course } from "@/types/models";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { DateInput } from "../Administration/Course/components/CourseForm";
+import { useEffect, useState } from "react";
+import { CreateCompetitionDto, DatasetMetadata, DatasetType } from "@/types/competition.models";
+import { Textarea } from "../ui/textarea";
+import { DatasetUploader } from "./DatasetUploader";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import Label from "../common/Label";
+
+interface CompetitionDialogProps {
+	course: Course;
+	isOpen: boolean;
+	onClose: () => void;
+	onSuccess?: () => void;
+}
+const DEFAULT_COMPETITION_FORM_DATA = {
+	name: "",
+	description: "",
+	start_date: "",
+	end_date: "",
+};
+
+const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, onClose, onSuccess }) => {
+	const {
+		competition,
+		isLoading,
+		isActionLoading,
+		createCompetition,
+		updateCompetition,
+		uploadDataset,
+		getDatasetMetadata,
+		downloadDataset,
+		deleteDataset,
+	} = useCompetition(course.id, { fetchSubmission: false }); // fetchSubmission is set to false because we don't need to fetch the user's submission in this dialog and it will save an unnecessary API call when the dialog is opened.
+
+	// Local state for competition form
+	const [formData, setFormData] = useState<CreateCompetitionDto>(DEFAULT_COMPETITION_FORM_DATA);
+	const [trainingFile, setTrainingFile] = useState<File | null>(null);
+	const [trainingDatasetMetadata, setTrainingDatasetMetadata] = useState<DatasetMetadata | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	const isEditMode = Boolean(competition?.id);
+
+	// initialize form data with existing competition data or default values
+	useEffect(() => {
+		if (isOpen) {
+            setErrorMessage(null);
+			if (competition) {
+				setFormData({
+					name: competition.name || "",
+					description: competition.description || "",
+					start_date: competition.start_date ? competition.start_date.substring(0, 10) : "",
+					end_date: competition.end_date ? competition.end_date.substring(0, 10) : "",
+				});
+				//If competition exists, datasets should also exist. Try to fetch them and set them in state. If they don't exist, set to null
+				getDatasetMetadata(DatasetType.TRAIN).then((trainingMetadata) => {
+					if (trainingMetadata) {
+						setTrainingDatasetMetadata(trainingMetadata);
+					} else {
+						setTrainingDatasetMetadata(null);
+					}
+				});
+			} else {
+				setFormData(DEFAULT_COMPETITION_FORM_DATA);
+				setTrainingFile(null);
+				setTrainingDatasetMetadata(null);
+
+			}
+		}
+	}, [isOpen, competition]);
+
+	const handleOpenChange = (open: boolean) => {
+		if (!open) onClose();
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+        setErrorMessage(null);
+        if (!formData.name.trim()) {
+            setErrorMessage("Please provide a name for the competition.");
+            return;
+        }
+        if (!formData.description.trim()) {
+            setErrorMessage("Please provide a description for the competition.");
+            return;
+        }
+        if (formData.start_date && formData.end_date) {
+            if(new Date(formData.start_date) > new Date(formData.end_date)) {
+                setErrorMessage("Start date cannot be after end date.");
+                return;
+            }
+        }
+
+		try {
+			// create or update competition based on edit mode
+			if (isEditMode && competition?.id) {
+				await updateCompetition(formData.name, formData.description, formData.start_date, formData.end_date);
+			} else {
+				await createCompetition(formData.name, formData.description, formData.start_date, formData.end_date);
+			}
+			//upload datasets if new files are selected (parallel upload for training and test datasets)
+			const uploadPromises = [];
+			if (trainingFile) {
+				uploadPromises.push(uploadDataset(DatasetType.TRAIN, trainingFile));
+			}
+			if (uploadPromises.length > 0) {
+				await Promise.all(uploadPromises);
+			}
+			onSuccess?.();
+			onClose();
+		} catch (error: any) {
+			console.error("Error saving competition:", error);
+            const errorMsg = error?.response?.data?.message  || error?.response?.error || error?.message || "An unknown error occurred while saving the competition.";
+            setErrorMessage(errorMsg);
+		}
+	};
+
+	const handleDeleteDataset = async (datasetId: number, datasetType: DatasetType) => {
+		if (!competition?.id) {
+			console.error("No competition found to delete dataset");
+			return;
+		}
+        setErrorMessage(null);
+		try {
+			if (window.confirm("Are you sure you want to delete this dataset? This action cannot be undone.")) {
+				await deleteDataset(datasetId);
+                if (datasetType === DatasetType.TRAIN) {
+                    setTrainingDatasetMetadata(null);
+                }
+			}
+		} catch (error: any) {
+			console.error("Error deleting dataset:", error);
+            const message =
+				error?.response?.data?.message ||
+				error?.message ||
+				"Failed to delete dataset. Please try again.";
+			setErrorMessage(message);
+		}
+	};
+
+	return (
+		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
+			<DialogContent className="sm:max-w-2xl ">
+				<DialogHeader>
+					<DialogTitle>{isLoading ? "Loading..." : isEditMode ? "Edit Competition" : "Create Competition"}</DialogTitle>
+				</DialogHeader>
+
+				<form
+					id="competitionForm"
+					onSubmit={handleSubmit}
+					className="mt-4 w-full min-w-0 space-y-4 max-h-[70vh] overflow-y-auto"
+				>
+					<div className="w-full min-w-0 space-y-2">
+						<Label>Competition name</Label>
+						<Input
+							type="text"
+							id="competitionName"
+							className="w-full box-border"
+							value={formData.name}
+							onChange={(e) => {
+                                setErrorMessage(null);
+								setFormData({
+									...formData,
+									name: e.target.value,
+								})
+                            }}
+						/>
+					</div>
+					<div className="w-full min-w-0 space-y-2">
+						<Label>Competition description</Label>
+						<Textarea
+							id="competitionDescription"
+							value={formData.description}
+							className="w-full box-border"
+							onChange={(e) => {
+                                setErrorMessage(null);
+								setFormData({
+									...formData,
+									description: e.target.value,
+								})
+							}}
+							rows={4}
+						/>
+					</div>
+
+					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+						<div className="w-full min-w-0 space-y-2">
+							<Label>Start date:</Label>
+							<DateInput
+								value={formData.start_date}
+								onChange={(e) => {
+                                    setErrorMessage(null);  
+									setFormData({
+										...formData,
+										start_date: e.toISOString().substring(0, 10),
+									})
+								}}
+								className="my-2"
+							/>
+						</div>
+						<div className="w-full min-w-0 space-y-2">
+							<Label>End date:</Label>
+							<DateInput
+								value={formData.end_date}
+								onChange={(e) => {
+                                    setErrorMessage(null);
+									setFormData({
+										...formData,
+										end_date: e.toISOString().substring(0, 10),
+									})
+								}}
+								className="my-2"
+							/>
+						</div>
+					</div>
+					{/* Dataset upload*/}
+					<div className="w-full min-w-0 space-y-4">
+						<DatasetUploader
+							label="Training Dataset"
+							type={DatasetType.TRAIN}
+							existingMetadata={trainingDatasetMetadata}
+							selectedFile={trainingFile}
+							onFileSelect={(file) => {
+                                setErrorMessage(null);
+                                setTrainingFile(file);
+                            }}
+							onDownload={() => {
+								downloadDataset(DatasetType.TRAIN);
+							}}
+							onDelete={() => {
+								if (trainingDatasetMetadata) {
+									handleDeleteDataset(trainingDatasetMetadata.id, DatasetType.TRAIN);
+								}
+							}}
+						/>
+					</div>
+				</form>
+				<DialogFooter className="flex justify-end gap-2">
+                    {errorMessage && (
+					<div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600 font-medium">
+						{errorMessage}
+					</div>
+                    )}
+					<Button variant="outline" onClick={onClose} disabled={isActionLoading}>
+						Close
+					</Button>
+					<Button type="submit" form="competitionForm" disabled={isActionLoading}>
+						{isActionLoading ? "Saving..." : isEditMode ? "Update Competition" : "Create Competition"}
+					</Button>
+                    
+
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
+};
+export default CompetitionDialog;

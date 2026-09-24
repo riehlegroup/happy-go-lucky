@@ -10,87 +10,79 @@ import { CompetitionSkeleton } from "./CompetitionSkeleton";
 import { useDelayedLoading } from "@/hooks/useDelayedLoading";
 
 const Competition: React.FC = () => {
+	const { activeProject } = useActiveProject();
+	const { competition, mySubmission, isLoading, isActionLoading, error, downloadDataset, submitCompetitionSubmission } =
+		useCompetition(activeProject?.courseId);
 
-  const {activeProject} = useActiveProject();
-  const {
-    competition, 
-    mySubmission,
-    isLoading,
-    isActionLoading,
-    error,
-    downloadDataset,
-    submitCompetitionSubmission,
-  } = useCompetition(activeProject?.courseId); 
+	const showSkeleton = useDelayedLoading(isLoading, {
+		delay: 200,
+		minDuration: 400,
+	});
 
-  const showSkeleton = useDelayedLoading(isLoading, {
-    delay: 200,
-    minDuration: 400,
-  });
+	const submissionGuidelines = (
+		<div>
+			<p>
+				For each competition a Training and Validation dataset will be provided. The training dataset will be used to
+				train your model, while the validation dataset will be used to evaluate its performance before u submit your
+				solution for evaluation. Use it to get an idea of how well your model performs on unseen data.
+			</p>
+			<p>
+				Submit your solution by providing a link to your implementation. Your implementation must strictly follow this
+				format. ...
+			</p>
+			{/*TODO: add format/ schema for submission*/}
+			<p>
+				At the end of the competition the interface of your solution will be called with an unknown set of evaluation
+				data. Your predicitions will be evaluated based on their performance on this data. After Evaluation, a
+				leaderboards will be updated with the results.
+			</p>
+		</div>
+	);
 
-  const submissionGuidelines = (
-  <div>
-    <p>For each competition a Training and Validation dataset will be provided. The training dataset will be used to train your model, while the validation dataset will be used to evaluate its performance before u submit your solution for evaluation. Use it to get an idea of how well your model performs on unseen data.</p>
-    <p>Submit your solution by providing a link to your implementation. Your implementation must strictly follow this format. ...</p> 
-    {/*TODO: add format/ schema for submission*/ }
-    <p>At the end of the competition the interface of your solution will be called with an unknown set of evaluation data. Your predicitions will be evaluated based on their performance on this data. After Evaluation, a leaderboards will be updated with the results.</p>
-    </div>
-  )
+	// Show skeleton if loading or if competition data is not yet available
+	if (showSkeleton || (isLoading && !competition)) {
+		return <CompetitionSkeleton />;
+	}
 
-  // Show skeleton if loading or if competition data is not yet available
-  if (showSkeleton || (isLoading && !competition)) {
-    return <CompetitionSkeleton />;
-  }
+	//Handle error state if no competition is found but loading is complete
+	if (!competition) {
+		return <div>No competition found or an error occurred: {error}</div>; //TODO: Add reusable error page component
+	}
 
-  //Handle error state if no competition is found but loading is complete
-  if(!competition) {
-    return <div>No competition found or an error occurred: {error}</div>; //TODO: Add reusable error page component
-  }
+	return (
+		<div className="min-h-screen">
+			<TopNavBar title="Competition" showBackButton={true} showUserInfo={true} />
 
-  return (
-    <div className="min-h-screen">
-      <TopNavBar
-        title="Competition"
-        showBackButton={true}
-        showUserInfo={true}
-      />
-      
-      <div className="mx-auto max-w-6xl space-y-4 p-4">
-        <SectionCard title={competition.name}>
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold">Description</h3>
-              <Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
-                Download Training Dataset
-              </Button>
-            
-          </div>
-          <div className="text-left">
-            {competition.description}
-          </div>
-         
-          <details className="my-4 text-left">
-            <summary className="cursor-pointer font-bold hover:text-blue-600">
-              Submission Guidelines
-            </summary>
-            <div className="mt-2">
-              <p>
-               {submissionGuidelines}
-              </p>
-            </div>
-          </details>
-        </SectionCard>
-        <SectionCard title="Solution Submission">
-          <div>
-            <SubmissionLinkUploader 
-              existingSubmissionLink={mySubmission?.apiUrl}
-              lastUpdated={mySubmission?.updatedAt}
-              isSubmitting={isActionLoading}
-              onSubmit={(link: string) => submitCompetitionSubmission(link)}
-            />
-          </div>
-        </SectionCard>
-      </div>
-    </div>
-  );
+			<div className="mx-auto max-w-6xl space-y-4 p-4">
+				<SectionCard title={competition.name}>
+					<div className="mb-3 flex items-center justify-between gap-4">
+						<h3 className="text-lg font-semibold">Description</h3>
+						<Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
+							Download Training Dataset
+						</Button>
+					</div>
+					<div className="text-left">{competition.description}</div>
+
+					<details className="my-4 text-left">
+						<summary className="cursor-pointer font-bold hover:text-blue-600">Submission Guidelines</summary>
+						<div className="mt-2">
+							<p>{submissionGuidelines}</p>
+						</div>
+					</details>
+				</SectionCard>
+				<SectionCard title="Solution Submission">
+					<div>
+						<SubmissionLinkUploader
+							existingSubmissionLink={mySubmission?.apiUrl}
+							lastUpdated={mySubmission?.updatedAt}
+							isSubmitting={isActionLoading}
+							onSubmit={(link: string) => submitCompetitionSubmission(link)}
+						/>
+					</div>
+				</SectionCard>
+			</div>
+		</div>
+	);
 };
 
 export default Competition;
