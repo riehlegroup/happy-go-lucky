@@ -6,7 +6,7 @@ export class SubmissionService {
 
     async createOrUpdateCompetitionSubmission(submission: SubmissionInboundDto, competitionId: number, userId: number): Promise<Submission> {
        //TODO: health check for the apiUrl before saving?
-        return await this.submissionRepo.upsertSubmission(competitionId, userId, submission.apiUrl);
+        return await this.submissionRepo.upsertSubmission(competitionId, userId, submission.apiUrl, submission.pseudonym);
     }
 
     async getMyCompetitionSubmission(competitionId: number, userId: number): Promise<Submission | null> {

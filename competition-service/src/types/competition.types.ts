@@ -45,6 +45,10 @@ export interface CompetitionResponseDto {
 
 export const SubmissionInboundDtoSchema = z.object({
 	apiUrl: z.url("apiUrl must be a valid URL"),
+	pseudonym: z
+		.string()
+		.min(1, "pseudonym must be at least 1 character long")
+		.max(40, "pseudonym must be at most 40 characters long"),
 });
 
 /**
@@ -89,11 +93,11 @@ export const datasetTypeSchema = z.object({
 });
 
 export const SingleDatasetResponseSchema = z.object({
-  id: z.number(),
-  competitionId: z.number(),
-  round: z.number().nullable(),
-  dataset_type: z.enum(DatasetType),
-  file_name: z.string(),
+	id: z.number(),
+	competitionId: z.number(),
+	round: z.number().nullable(),
+	dataset_type: z.enum(DatasetType),
+	file_name: z.string(),
 });
 
 export const RoundDatasetResponseSchema = z.object({
@@ -106,11 +110,11 @@ export type RoundDatasetResponseDto = z.infer<typeof RoundDatasetResponseSchema>
 export interface Evaluation {
 	id: number;
 	submissionId: number;
-  round: number;
+	round: number;
 	token: string | null; // Token for users to download test data and submit predictions for evaluation
 	score: number | null;
 	error_message: string | null;
-  created_at: string;
+	created_at: string;
 	completed_at: string | null;
 	started_at: string;
 	inference_time_ms: number | null;
@@ -118,13 +122,23 @@ export interface Evaluation {
 	prediction: string | null; // JSON of raw prediction
 }
 export interface UpdateEvaluationDto {
-  status?: EvaluationStatus | null;
-  score?: number | null;
-  started_at?: Date | string | null;
-  inference_time_ms?: number | null;
-  error_message?: string | null;
-  prediction?: string | null;
-  completed_at?: Date | string | null;
+	status?: EvaluationStatus | null;
+	score?: number | null;
+	started_at?: Date | string | null;
+	inference_time_ms?: number | null;
+	error_message?: string | null;
+	prediction?: string | null;
+	completed_at?: Date | string | null;
+}
+
+export interface EvaluationResultDto {
+	submissionId: number;
+	round: number;
+	score: number | null;
+	error_message: string | null;
+	completed_at: string | null;
+	inference_time_ms: number | null;
+	status: EvaluationStatus;
 }
 
 export enum EvaluationStatus {
@@ -134,3 +148,44 @@ export enum EvaluationStatus {
 	DELAYED = "DELAYED",
 }
 
+export const PaginationQuerySchema = z.object({
+	page: z.coerce.number().int().positive().default(1),
+	limit: z.coerce.number().int().positive().max(100).default(20),
+});
+export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
+
+export interface PaginatedResult<T> {
+	data: T[];
+	pagination: {
+		page: number;
+		limit: number;
+		totalItems: number;
+		totalPages: number;
+		hasNextPage: boolean;
+		hasPrevPage: boolean;
+	};
+}
+
+export interface PaginationDatabaseResult<T> {
+	data: T[];
+	totalItems: number;
+}
+
+export interface LeaderboardEntry {
+	pseudonym: string;
+	score: number;
+	inference_time_ms: number | null;
+	completed_at: string | null;
+}
+export interface LeaderboardResponseDto extends LeaderboardEntry {
+  rank: number;
+}
+
+export interface RoundResultForUserDto {
+  round: number;
+  score: number | null;
+  inference_time_ms: number | null;
+  completed_at: string | null;
+  status: EvaluationStatus;
+  error_message: string | null;
+}
