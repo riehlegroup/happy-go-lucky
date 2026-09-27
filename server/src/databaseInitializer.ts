@@ -197,6 +197,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
       competitionId INTEGER NOT NULL,
       userId INTEGER NOT NULL,
       apiUrl TEXT NOT NULL,
+      pseudonym TEXT NOT NULL,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (competitionId) REFERENCES competitions(id),

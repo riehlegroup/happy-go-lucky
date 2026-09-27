@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { CompetitionService } from "../services/competition.service";
-import { CompetitionRepo } from "../repositories/competition.repository";
 import { CompetitionController } from "../boundary/competition.controller";
-import { Database } from "sqlite";
 import { AuthentificationRepo } from "../repositories/authentification.repository";
 import {
 	requireAdmin,
@@ -19,8 +17,13 @@ import { SubmissionRepo } from "../repositories/submission.repository";
 import { SubmissionService } from "../services/submission.service";
 import { SubmissionController } from "../boundary/submission.controller";
 import { DatasetUploadMiddleware } from "../middleware/upload.middleware";
+import { LeaderboardController } from "../boundary/leaderboard.controller";
+import { LeaderboardService } from "../services/leaderboard.service";
+import { LeaderboardRepo } from "../repositories/leaderboard.repository";
+import { Database } from "sqlite";
 
 export function createCompetitionRouter(
+  db: Database,
 	authRepo: AuthentificationRepo,
 	datasetRepo: DatasetRepo,
 	submissionRepo: SubmissionRepo,
@@ -41,6 +44,9 @@ export function createCompetitionRouter(
 	const submissionService = new SubmissionService(submissionRepo);
 	const submissionController = new SubmissionController(submissionService);
 
+	const leaderboardService = new LeaderboardService(new LeaderboardRepo(db));
+	const leaderboardController = new LeaderboardController(leaderboardService);
+
 	competitionRouter.get("/", requireAuth(authRepo), requireAdmin(), controller.getAllCompetitions.bind(controller));
 	competitionRouter.get(
 		"/:id",
@@ -60,6 +66,7 @@ export function createCompetitionRouter(
 		requireCompetitionActive(),
 		controller.getCompetitionByCourseId.bind(controller),
 	);
+	// --- Submission routes -- //
 
 	competitionRouter.put(
 		"/:id/submissions",
@@ -78,6 +85,8 @@ export function createCompetitionRouter(
 		requireCompetitionActive(),
 		submissionController.getMyCompetitionSubmission.bind(submissionController),
 	);
+
+	// --- Dataset routes -- //
 
 	competitionRouter.post(
 		"/:id/datasets/train",
@@ -125,6 +134,24 @@ export function createCompetitionRouter(
 		requireAdmin(),
 		datasetController.deleteDataset.bind(datasetController),
 	);
+
+	//--Leaderboard routes--//
+
+	competitionRouter.get(
+		"/:id/leaderboard",
+		requireAuth(authRepo),
+		requireCompetitionExists(competitionService),
+		requireCourseMember(authRepo),
+		leaderboardController.getLeaderboardForRound.bind(leaderboardController),
+	);
+
+  competitionRouter.get(
+    "/:id/results/me",
+    requireAuth(authRepo),
+    requireCompetitionExists(competitionService),
+    requireCourseMember(authRepo),
+    leaderboardController.getAllRoundResultsForUser.bind(leaderboardController),
+  );
 
 	return competitionRouter;
 }

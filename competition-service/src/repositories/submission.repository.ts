@@ -3,10 +3,10 @@ import { Submission } from "../types/competition.types";
 import { BaseRepo } from "./base.repository";
 
 export class SubmissionRepo extends BaseRepo<Submission> {
-	public static readonly tableName = "competition_submissions";
-    
+	public static readonly TABLE_NAME = "competition_submissions";
+
 	constructor(db: Database) {
-		super(db, SubmissionRepo.tableName);
+		super(db, SubmissionRepo.TABLE_NAME);
 	}
 
 	async getSubmissionByCompetitionAndUser(competitionId: number, userId: number): Promise<Submission | null> {
@@ -21,14 +21,14 @@ export class SubmissionRepo extends BaseRepo<Submission> {
 		return rows as Submission[];
 	}
 
-	async upsertSubmission(competitionId: number, userId: number, apiUrl: string): Promise<Submission> {
+	async upsertSubmission(competitionId: number, userId: number, apiUrl: string, pseudonym: string): Promise<Submission> {
 		const query = `
-            INSERT INTO ${this.tableName} (competitionId, userId, apiUrl, updatedAt)
-            VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+            INSERT INTO ${this.tableName} (competitionId, userId, apiUrl, updatedAt, pseudonym)
+            VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
             ON CONFLICT (competitionId, userId) 
             DO UPDATE SET apiUrl = EXCLUDED.apiUrl, updatedAt = CURRENT_TIMESTAMP
             RETURNING *;
         `;
-		return (await this.db.get(query, [competitionId, userId, apiUrl])) as Submission;
+		return (await this.db.get(query, [competitionId, userId, apiUrl, pseudonym])) as Submission;
 	}
 }

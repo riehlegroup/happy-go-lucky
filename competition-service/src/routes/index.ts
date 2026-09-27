@@ -23,7 +23,7 @@ export function createApiRouter(db: Database): Router {
 
   const competitionService = new CompetitionService(competitionRepo);
 
-  apiRouter.use("/competitions", createCompetitionRouter(authRepo, datasetRepo, submissionRepo, competitionService, datasetUploader));
+  apiRouter.use("/competitions", createCompetitionRouter(db, authRepo, datasetRepo, submissionRepo, competitionService, datasetUploader));
   apiRouter.use("/evaluations", createEvaluationRouter(authRepo, competitionService, datasetRepo, submissionRepo, competitionRepo, evaluationRepo, datasetUploader));
   
   return apiRouter;
