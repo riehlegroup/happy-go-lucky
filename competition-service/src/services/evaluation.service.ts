@@ -1,28 +1,32 @@
 import { BadRequestException } from "../errors/badrequest.error";
-import { CompetitionRepo } from "../repositories/competition.repository";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import { SubmissionRepo } from "../repositories/submission.repository";
 import { Competition, DatasetType, Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/competition.types";
-import fs from "fs";
 import fastCsv from "fast-csv";
 
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
+import { DatasetRoundCache } from "./datasetround.cache";
+
 
 export class EvaluationService {
 	private datasetRepo: DatasetRepo;
 	private submissionRepo: SubmissionRepo;
 	private evaluationRepo: EvaluationRepo;
+	private datasetRoundCache: DatasetRoundCache;
+
+    private static readonly DEADLINE_LIMIT_MS = 10 * 60 * 1000; // 15 minutes in milliseconds
 
 	constructor(
 		datasetRepo: DatasetRepo,
 		submissionRepo: SubmissionRepo,
-		competitionRepo: CompetitionRepo,
 		evaluationRepo: EvaluationRepo,
+		datasetRoundCache: DatasetRoundCache,
 	) {
 		this.datasetRepo = datasetRepo;
 		this.submissionRepo = submissionRepo;
 		this.evaluationRepo = evaluationRepo;
+		this.datasetRoundCache = datasetRoundCache;
 	}
 
 	async startEvaluation(competition: Competition, round: number) {
@@ -55,8 +59,6 @@ export class EvaluationService {
 		// call asynchrounously the requests to student apis
 		console.log(`Starting evaluation for competition ID and round: ${competition.id}`);
 		this.callSubmissionApis(competition.id, round);
-
-		//TODO: Timer to start background job to check for delayed evaluations and mark them as failed after a certain time limit. And maybe delete prepared datasets?
 	}
 
 	async requireEvaluationEntryExists(
@@ -92,29 +94,21 @@ export class EvaluationService {
 		csvString: string,
 		receivedAt: number,
 	): Promise<number> {
-		// Get Ground Truth Dataset for the competition and round
-		const roundDatasets = await this.datasetRepo.getDatasetsForCompetitionRound(competitionId, evaluation.round);
-		const groundTruthDataset = roundDatasets.find((d) => d.dataset_type === DatasetType.GROUND_TRUTH);
-		const inputDataset = roundDatasets.find((d) => d.dataset_type === DatasetType.INPUT);
-		if (!groundTruthDataset || !inputDataset) {
-			await this.updateEvaluation(evaluation.id, {
-				status: EvaluationStatus.FAILED,
-				error_message: `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`,
-				completed_at: new Date(receivedAt),
-			});
-			throw new NotFoundException(
-				`No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`,
-			);
-		}
+        const createdAtMs = new Date(evaluation.created_at).getTime();
+        const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
+        const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
+        
 		try {
-			const [groundTruthCsv, inputCsv] = await Promise.all([
-				fs.promises.readFile(groundTruthDataset.file_path, "utf-8"),
-				fs.promises.readFile(inputDataset.file_path, "utf-8"),
-			]);
-			const score = await this.calculateScore(groundTruthCsv, csvString, inputCsv);
+			// Get Datasets from Cache
+			const { groundTruthRows, inputRows } = await this.datasetRoundCache.getOrLoadDatasets(
+				competitionId,
+				evaluation.round,
+			);
+
+			const score = await this.calculateScore(groundTruthRows, csvString, inputRows);
 			const inferenceTimeMs = receivedAt - new Date(evaluation.started_at).getTime();
 			const updateSuccess = await this.updateEvaluation(evaluation.id, {
-				status: EvaluationStatus.EVALUATED,
+				status: status,
 				score: score,
 				completed_at: new Date(receivedAt),
 				inference_time_ms: inferenceTimeMs,
@@ -125,16 +119,29 @@ export class EvaluationService {
 			return score;
 		} catch (error) {
 			console.error(`Error calculating score: ${error}`);
+			let errorMessage;
+			let exceptionToThrow;
+			if (error instanceof NotFoundException) {
+				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
+				exceptionToThrow = new NotFoundException(errorMessage);
+			} else {
+				errorMessage = `Error calculating score: ${error instanceof Error ? error.message : String(error)}`;
+				exceptionToThrow = new Error(errorMessage);
+			}
 			await this.updateEvaluation(evaluation.id, {
 				status: EvaluationStatus.FAILED,
-				error_message: `Error calculating score: ${error instanceof Error ? error.message : String(error)}`,
+				error_message: errorMessage,
 				completed_at: new Date(receivedAt),
 			});
-			throw new Error(`Error calculating score`);
+			throw exceptionToThrow;
 		}
 	}
 
-	private async calculateScore(groundTruthCsv: string, studentPredictionCsv: string, inputCsv: string): Promise<number> {
+	private async calculateScore(
+		groundTruthRows: string[][],
+		studentPredictionCsv: string,
+		inputRows: string[][],
+	): Promise<number> {
 		// assumes that both CSVs have the same number of rows and columns, and that they are aligned (i.e., the first row of the ground truth corresponds to the first row of the student's prediction, etc.)
 		const parseCsv = async (csvString: string): Promise<string[][]> => {
 			const rows: string[][] = [];
@@ -147,11 +154,7 @@ export class EvaluationService {
 			});
 			return rows;
 		};
-		const [groundTruthRows, studentPredictionRows, inputRows] = await Promise.all([
-			parseCsv(groundTruthCsv),
-			parseCsv(studentPredictionCsv),
-			parseCsv(inputCsv),
-		]);
+		const [studentPredictionRows] = await parseCsv(studentPredictionCsv);
 		if (groundTruthRows.length !== studentPredictionRows.length || groundTruthRows.length !== inputRows.length) {
 			throw new Error(
 				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows, and input has ${inputRows.length} rows.`,

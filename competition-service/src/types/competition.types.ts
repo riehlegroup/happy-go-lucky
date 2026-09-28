@@ -119,7 +119,6 @@ export interface Evaluation {
 	started_at: string;
 	inference_time_ms: number | null;
 	status: EvaluationStatus;
-	prediction: string | null; // JSON of raw prediction
 }
 export interface UpdateEvaluationDto {
 	status?: EvaluationStatus | null;
