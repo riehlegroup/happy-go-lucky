@@ -10,6 +10,7 @@ import { AuthentificationRepo } from "../repositories/authentification.repositor
 import { requireAdmin, requireAuth, requireCompetitionExists } from "../middleware/auth.middleware";
 import { CompetitionService } from "../services/competition.service";
 import { DatasetUploadMiddleware } from "../middleware/upload.middleware";
+import { DatasetRoundCache } from "../services/datasetround.cache";
 
 export function createEvaluationRouter(
 	authRepo: AuthentificationRepo,
@@ -22,7 +23,7 @@ export function createEvaluationRouter(
 ): Router {
 	const evaluationRouter = Router();
 
-	const evaluationService = new EvaluationService(datasetRepo, submissionRepo, competitionRepo, evaluationRepo);
+	const evaluationService = new EvaluationService(datasetRepo, submissionRepo, evaluationRepo, new DatasetRoundCache(datasetRepo));
 
 	const evaluationController = new EvaluationController(evaluationService);
 

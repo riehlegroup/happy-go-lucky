@@ -50,6 +50,9 @@ export async function initializeDB(filename: string, createAdmin = true) {
 
   const oh = new ObjectHandler();
 
+  await db.exec(`PRAGMA journal_mode = WAL;`); // Enable Write-Ahead Logging for better concurrency
+  await db.exec(`PRAGMA busy_timeout = 5000;`); // Set busy timeout to 5 seconds
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -222,7 +225,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
     CREATE TABLE IF NOT EXISTS competition_evaluations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       submissionId INTEGER NOT NULL,
-      datasetId INTEGER NOT NULL,
+      round INTEGER NOT NULL,
       token TEXT,
       score REAL,
       error_message TEXT,
@@ -231,7 +234,6 @@ export async function initializeDB(filename: string, createAdmin = true) {
       completed_at TEXT,
       inference_time_ms INTEGER,
       status TEXT NOT NULL DEFAULT 'PENDING',
-      prediciton TEXT,
       FOREIGN KEY (submissionId) REFERENCES competition_submissions(id),
       FOREIGN KEY (datasetId) REFERENCES competition_datasets(id)
     )
@@ -240,6 +242,8 @@ export async function initializeDB(filename: string, createAdmin = true) {
   await db.exec(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_competition_evaluations_token ON competition_evaluations(token)
   `);
+
+  
 
 
   return db;
