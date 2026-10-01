@@ -2,6 +2,8 @@ import multer, { Field } from "multer";
 import path from "path";
 import fs from "fs";
 import { Request, Response, NextFunction } from "express";
+import { BadRequestException } from "../errors/badrequest.error";
+import { errorResponse, handleError } from "../errors/errorhandling.helper";
 
 export const createUploader = (
 	sub_folder_name: string = "datasets",
@@ -37,8 +39,11 @@ export const createUploader = (
 		filename: (req, file, cb) => {
 			// clean names with filename and timestamp to avoid collisions
 			const fileExt = path.extname(file.originalname);
-			const fileName =
-				file.originalname.replace(fileExt, "").toLowerCase().split(" ").join("-") + "-" + Date.now() + fileExt;
+			// clean filename by removing special characters and spaces
+			const baseName = file.originalname.replace(fileExt, "").toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+			// random 8Bit string to avoid collisions
+			const uniqueSuffix = crypto.randomUUID().slice(0, 8);
+			const fileName = `${file.fieldname}-${baseName}-${Date.now()}-${uniqueSuffix}${fileExt}`;
 			cb(null, fileName);
 		},
 	});
@@ -55,7 +60,7 @@ export const createUploader = (
 			if (isExtAllowed && isMimeAllowed) {
 				cb(null, true);
 			} else {
-				cb(new Error("This file format is not allowed. Please upload only CSV files."));
+				cb(new BadRequestException("This file format is not allowed. Please upload only CSV files."));
 			}
 		},
 	});
@@ -71,7 +76,7 @@ export const createUploader = (
 			if (isExtAllowed && isMimeAllowed) {
 				cb(null, true);
 			} else {
-				cb(new Error("This file format is not allowed. Please upload only CSV files."));
+				cb(new BadRequestException("This file format is not allowed. Please upload only CSV files."));
 			}
 		},
 	});
@@ -84,11 +89,14 @@ export const createUploader = (
 				roundUpload.single(fieldName)(req, res, (err: any) => {
 					if (err instanceof multer.MulterError) {
 						if (err.code === "LIMIT_FILE_SIZE") {
-							return res.status(400).json({ error: "File size exceeds the limit of 200MB." });
+							return errorResponse("File size exceeds the limit of 200MB.", 400, res);
 						}
-						return res.status(400).json({ error: `Upload-error: ${err.message}` });
+						if (err.code === "LIMIT_UNEXPECTED_FILE") {
+							return errorResponse(`Unexpected file field: ${err.field}. Please check the field names.`, 400, res);
+						}
+						return handleError(err, "Upload-error", res);
 					} else if (err) {
-						return res.status(400).json({ error: err.message });
+						return handleError(err, "Upload-error", res);
 					}
 					next();
 				});
@@ -99,11 +107,14 @@ export const createUploader = (
 				roundUpload.fields(fields)(req, res, (err: any) => {
 					if (err instanceof multer.MulterError) {
 						if (err.code === "LIMIT_FILE_SIZE") {
-							return res.status(400).json({ error: "File size exceeds the limit of 200MB." });
+							return errorResponse("File size exceeds the limit of 200MB.", 400, res);
 						}
-						return res.status(400).json({ error: `Upload-error: ${err.message}` });
+						if (err.code === "LIMIT_UNEXPECTED_FILE") {
+							return errorResponse(`Unexpected file field: ${err.field}. Please check the field names.`, 400, res);
+						}
+						return handleError(err, "Upload-error", res);
 					} else if (err) {
-						return res.status(400).json({ error: err.message });
+						return handleError(err, "Upload-error", res);
 					}
 					next();
 				});
@@ -114,11 +125,14 @@ export const createUploader = (
         studentPredictionUpload.single(fieldName)(req, res, (err: any) => {
           if (err instanceof multer.MulterError) {
             if (err.code === "LIMIT_FILE_SIZE") {
-              return res.status(400).json({ error: "File size exceeds the limit of 20MB." });
+              return errorResponse("File size exceeds the limit of 20MB.", 400, res);
             }
-            return res.status(400).json({ error: `Upload-error: ${err.message}` });
+            if (err.code === "LIMIT_UNEXPECTED_FILE") {
+              return errorResponse(`Unexpected file field: ${err.field}. Please check the field names.`, 400, res);
+            }
+            return handleError(err, "Upload-error", res);
           } else if (err) {
-            return res.status(400).json({ error: err.message });
+            return handleError(err, "Upload-error", res);
           }
           next();
         });

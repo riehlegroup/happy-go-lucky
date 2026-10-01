@@ -126,7 +126,6 @@ export interface UpdateEvaluationDto {
 	started_at?: Date | string | null;
 	inference_time_ms?: number | null;
 	error_message?: string | null;
-	prediction?: string | null;
 	completed_at?: Date | string | null;
 }
 

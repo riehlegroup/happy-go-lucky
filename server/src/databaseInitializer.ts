@@ -234,8 +234,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
       completed_at TEXT,
       inference_time_ms INTEGER,
       status TEXT NOT NULL DEFAULT 'PENDING',
-      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id),
-      FOREIGN KEY (datasetId) REFERENCES competition_datasets(id)
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id)
     )
   `);
   //Create unique index for token to ensure token is unique and faster lookup by token in evaluation

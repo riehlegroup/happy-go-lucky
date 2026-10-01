@@ -139,28 +139,46 @@ export async function createTestDatabase(): Promise<Database> {
   `);
 
   await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      apiUrl TEXT NOT NULL,
+      pseudonym TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (competitionId, userId)
+    )
+  `);
+
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS competition_datasets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       competitionId INTEGER NOT NULL,
+      round INTEGER,
       dataset_type TEXT NOT NULL,
       file_path TEXT NOT NULL,
       file_name TEXT NOT NULL,
       FOREIGN KEY (competitionId) REFERENCES competitions(id)
     )
   `);
-   
 
-   await db.exec(`
-    CREATE TABLE IF NOT EXISTS competition_submissions (
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_evaluations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      competitionId INTEGER NOT NULL,
-      userId INTEGER NOT NULL,
-      apiUrl TEXT NOT NULL,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (competitionId) REFERENCES competitions(id),
-      FOREIGN KEY (userId) REFERENCES users(id),
-      UNIQUE (competitionId, userId)
+      submissionId INTEGER NOT NULL,
+      round INTEGER NOT NULL,
+      token TEXT,
+      score REAL,
+      error_message TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      started_at TEXT,
+      completed_at TEXT,
+      inference_time_ms INTEGER,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id)
     )
   `);
 
@@ -243,9 +261,9 @@ export async function generateTestData(db: Database): Promise<void> {
     `);
 }
 
-export async function createTestSubmissionForUser(db: Database, competitionId: number, userId: number, apiUrl: string): Promise<void> {
+export async function createTestSubmissionForUser(db: Database, competitionId: number, userId: number, apiUrl: string, pseudonym: string): Promise<void> {
     await db.run(`
-      INSERT INTO competition_submissions (competitionId, userId, apiUrl) VALUES
-      (?, ?, ?)
-    `, [competitionId, userId, apiUrl]);
+      INSERT INTO competition_submissions (competitionId, userId, apiUrl, pseudonym) VALUES
+      (?, ?, ?, ?)
+    `, [competitionId, userId, apiUrl, pseudonym]);
 }

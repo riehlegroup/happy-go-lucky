@@ -42,6 +42,7 @@ describe('Submission API integration test', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           apiUrl: sentApiUrl,
+          pseudonym: 'test-pseudonym', 
         });
 
       expect(response.status).toBe(200);
@@ -49,15 +50,16 @@ describe('Submission API integration test', () => {
       expect(response.body).toHaveProperty('competitionId', competitionId);
       expect(response.body).toHaveProperty('userId', userId);
       expect(response.body).toHaveProperty('apiUrl', sentApiUrl);
+      expect(response.body).toHaveProperty('pseudonym', 'test-pseudonym');
     });
 
-    it('should update an existing submission for a competition', async () => {
+    it('should update an existing submission url for a competition', async () => {
       const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
       const userId = TEST_USERS.USER_PROJECT_1.id;
       const token = generateTestToken(userId);
 
       // First, create a submission
-      await createTestSubmissionForUser(db, competitionId, userId, 'http://example.com/api');
+      await createTestSubmissionForUser(db, competitionId, userId, 'http://example.com/api', 'test-pseudonym');
 
       // Now, update the submission
       const updateResponse = await request(app)
@@ -65,6 +67,7 @@ describe('Submission API integration test', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({
           apiUrl: 'http://example.com/updated-api',
+          pseudonym: 'test-pseudonym',
         });
 
       expect(updateResponse.status).toBe(200);
@@ -72,6 +75,32 @@ describe('Submission API integration test', () => {
       expect(updateResponse.body).toHaveProperty('competitionId', competitionId);
       expect(updateResponse.body).toHaveProperty('userId', userId);
       expect(updateResponse.body).toHaveProperty('apiUrl', 'http://example.com/updated-api');
+      expect(updateResponse.body).toHaveProperty('pseudonym', 'test-pseudonym');
+    });
+
+    it('should update an existing submission with new pseudonym for a competition', async () => {
+      const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+      const userId = TEST_USERS.USER_PROJECT_1.id;
+      const token = generateTestToken(userId);
+
+      // First, create a submission
+      await createTestSubmissionForUser(db, competitionId, userId, 'http://example.com/api', 'test-pseudonym');
+
+      // Now, update the submission
+      const updateResponse = await request(app)
+        .put(`/competitions/${competitionId}/submissions`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          apiUrl: 'http://example.com/api',
+          pseudonym: 'test-pseudonym-updated',
+        });
+
+      expect(updateResponse.status).toBe(200);
+      expect(updateResponse.body).toHaveProperty('id');
+      expect(updateResponse.body).toHaveProperty('competitionId', competitionId);
+      expect(updateResponse.body).toHaveProperty('userId', userId);
+      expect(updateResponse.body).toHaveProperty('apiUrl', 'http://example.com/api');
+      expect(updateResponse.body).toHaveProperty('pseudonym', 'test-pseudonym-updated');
     });
 
     it('should return 404 for non existing competition ID', async () => {
@@ -143,7 +172,7 @@ describe('Submission API integration test', () => {
       const token = generateTestToken(userId);
 
       // First, create a submission for the user
-      await createTestSubmissionForUser(db, competitionId, userId, 'http://example.com/api');
+      await createTestSubmissionForUser(db, competitionId, userId, 'http://example.com/api', 'test-pseudonym');
 
       const response = await request(app)
         .get(`/competitions/${competitionId}/submissions/me`)
@@ -154,6 +183,7 @@ describe('Submission API integration test', () => {
       expect(response.body).toHaveProperty('competitionId', competitionId);
       expect(response.body).toHaveProperty('userId', userId);
       expect(response.body).toHaveProperty('apiUrl', 'http://example.com/api');
+      expect(response.body).toHaveProperty('pseudonym', 'test-pseudonym');
     });
 
     it('should return 404 if the user has no submission for the competition', async () => {
