@@ -26,7 +26,7 @@ export class SubmissionRepo extends BaseRepo<Submission> {
             INSERT INTO ${this.tableName} (competitionId, userId, apiUrl, updatedAt, pseudonym)
             VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
             ON CONFLICT (competitionId, userId) 
-            DO UPDATE SET apiUrl = EXCLUDED.apiUrl, updatedAt = CURRENT_TIMESTAMP
+            DO UPDATE SET apiUrl = EXCLUDED.apiUrl, pseudonym = EXCLUDED.pseudonym, updatedAt = CURRENT_TIMESTAMP
             RETURNING *;
         `;
 		return (await this.db.get(query, [competitionId, userId, apiUrl, pseudonym])) as Submission;
