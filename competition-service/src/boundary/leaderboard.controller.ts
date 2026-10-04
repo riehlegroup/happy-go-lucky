@@ -8,7 +8,7 @@ export class LeaderboardController {
 	async getLeaderboardForRound(req: any, res: any) {
 		try {
 			const competition: Competition = req.competition;
-			const round: number | null = req.query.round ? parseInt(req.query.round, 10) : null;
+			const round: number | null = req.params.round ? parseInt(req.params.round, 10) : null;
 			const pagination = PaginationQuerySchema.parse(req.query);
 
 			if (!competition) {
@@ -27,6 +27,20 @@ export class LeaderboardController {
 			res.status(200).json(paginatedResult);
 		} catch (error) {
 			handleError(error, "Failed to retrieve leaderboard", res);
+		}
+	}
+
+	async getFinishedRounds(req: any, res: any) {
+		try {
+			const competition: Competition = req.competition;
+			if (!competition) {
+				return errorResponse("Competition not found in request", 400, res);
+			}
+
+			const rounds = await this.leaderboardService.getFinishedRounds(competition.id);
+			res.status(200).json(rounds);
+		} catch (error) {
+			handleError(error, "Failed to retrieve finished round count", res);
 		}
 	}
 

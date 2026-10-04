@@ -138,12 +138,28 @@ export function createCompetitionRouter(
 	//--Leaderboard routes--//
 
 	competitionRouter.get(
-		"/:id/leaderboard",
+		"/:id/leaderboard/rounds/:round",
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
 		leaderboardController.getLeaderboardForRound.bind(leaderboardController),
 	);
+
+  competitionRouter.get(
+    "/:id/leaderboard",
+    requireAuth(authRepo),
+    requireCompetitionExists(competitionService),
+    requireCourseMember(authRepo),
+    leaderboardController.getLeaderboardForAllFinishedRounds.bind(leaderboardController),
+  );
+
+  competitionRouter.get(
+    "/:id/leaderboard/rounds",
+    requireAuth(authRepo),
+    requireCompetitionExists(competitionService),
+    requireCourseMember(authRepo),
+    leaderboardController.getFinishedRounds.bind(leaderboardController),
+  );
 
   competitionRouter.get(
     "/:id/results/me",

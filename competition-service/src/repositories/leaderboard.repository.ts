@@ -27,7 +27,8 @@ export class LeaderboardRepo {
             ORDER BY e.score ASC, e.inference_time_ms ASC
             LIMIT ? OFFSET ?;
         `;
-        const data = await this.db.all(query, [competitionId, round, limit, offset]) as LeaderboardEntry[];
+        const rows = await this.db.all(query, [competitionId, round, limit, offset]);
+        const data = rows.map((row: any) => this.mapToLeaderboardEntry(row));
         return { data, totalItems };
     }
 
@@ -39,7 +40,15 @@ export class LeaderboardRepo {
             WHERE s.competitionId = ? AND s.userId = ?
             ORDER BY e.round;
         `;
-        return await this.db.all(query, [competitionId, userId]) as RoundResultForUserDto[];
+        const rows = await this.db.all(query, [competitionId, userId]);
+        return rows.map((row: any) => ({
+            round: row.round,
+            score: row.score,
+            inference_time_ms: row.inference_time_ms,
+            completed_at: row.completed_at ?? null,
+            status: row.status,
+            error_message: row.error_message ?? null,
+        }));
     }
 
     async getPaginatedLeaderboardForAllFinishedRounds(competitionId: number, pagination: PaginationQuery): Promise<PaginationDatabaseResult<LeaderboardEntry>> {
@@ -62,16 +71,40 @@ export class LeaderboardRepo {
                 WHEN e.status = 'EVALUATED' THEN e.score * e.round
                 ELSE (SELECT MAX(score) * 1.1 FROM ${EvaluationRepo.TABLE_NAME} WHERE round = e.round AND status = 'EVALUATED') * e.round
             END
-            ) as total_score,
-            SUM(COALESCE(e.inference_time_ms, 900000)) as total_inference_time
+            ) as score,
+            SUM(COALESCE(e.inference_time_ms, 900000)) as inference_time_ms
             FROM ${EvaluationRepo.TABLE_NAME} e
             LEFT JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
             WHERE s.competitionId = ?
             GROUP BY s.id, s.pseudonym
-            ORDER BY total_score ASC, total_inference_time ASC
+            ORDER BY score ASC, inference_time_ms ASC
             LIMIT ? OFFSET ?;
         `;
-        const data = await this.db.all(leaderboardQuery, [competitionId, limit, offset]) as LeaderboardEntry[];
+        const rows = await this.db.all(leaderboardQuery, [competitionId, limit, offset]);
+        const data = rows.map((row: any) => this.mapToLeaderboardEntry(row));
         return { data, totalItems };
+    }
+
+
+    async getEvaluatedRounds(competitionId: number): Promise<number[]> {
+        const query = `
+            SELECT DISTINCT e.round
+            FROM ${EvaluationRepo.TABLE_NAME} e
+            JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
+            WHERE s.competitionId = ? AND e.status = 'EVALUATED'
+            ORDER BY e.round ASC;
+        `;
+        const rows = await this.db.all(query, [competitionId]);
+        return rows.map((r: { round: number }) => r.round);
+    }
+
+
+    private mapToLeaderboardEntry(row: any): LeaderboardEntry {
+        return {
+            pseudonym: row.pseudonym,
+            score: row.score,
+            inference_time_ms: row.inference_time_ms,
+            completed_at: row.completed_at ?? null,
+        };
     }
 }
