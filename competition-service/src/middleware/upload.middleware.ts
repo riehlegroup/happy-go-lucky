@@ -14,7 +14,8 @@ export const createUploader = (
 	],
 	allowed_file_extensions: string[] = [".csv"],
 ) => {
-	const UPLOAD_FOLDER = path.join("uploads", sub_folder_name); // "uploads" has to be consistent with volume mapping in docker-compose.yml
+	const BASE_UPLOAD_DIR = process.env.UPLOAD_DIR || "uploads"; // Default to "uploads" if not set in environment
+	const UPLOAD_FOLDER = path.join(BASE_UPLOAD_DIR, sub_folder_name); // has to be consistent with volume mapping in docker-compose.yml
 
 	const createFolderIfNotExist = (folderPath: string) => {
 		if (!fs.existsSync(folderPath)) {
@@ -26,8 +27,9 @@ export const createUploader = (
 		destination: (req, file, cb) => {
 			const competitionId = req.params.id || req.body.competitionId;
 			const round = req.query.round;
-
-			let folderPath = path.join(process.cwd(), UPLOAD_FOLDER, `competition_${String(competitionId)}`);
+			
+			const baseDestination = path.isAbsolute(UPLOAD_FOLDER) ? UPLOAD_FOLDER : path.join(process.cwd(), UPLOAD_FOLDER);
+			let folderPath = path.join(baseDestination, `competition_${String(competitionId)}`);
 
 			if (round !== undefined && round !== null && round !== "") {
 				folderPath = path.join(folderPath, `round_${String(round)}`);
