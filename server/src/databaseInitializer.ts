@@ -205,7 +205,8 @@ export async function initializeDB(filename: string, createAdmin = true) {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (competitionId) REFERENCES competitions(id),
       FOREIGN KEY (userId) REFERENCES users(id),
-      UNIQUE (competitionId, userId)
+      UNIQUE (competitionId, userId),
+      UNIQUE (competitionId, pseudonym)
     )
   `);
 
