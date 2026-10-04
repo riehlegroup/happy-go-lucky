@@ -236,8 +236,8 @@ export class EvaluationService {
 		const predictionUploadEndpoint = `${clientUrl}/api/competition/evaluations/${evaluationToken}/upload`;
 
 		const body = {
-			TestDataDownloadEndpoint: testDataDownloadEndpoint,
-			PredictionUploadEndpoint: predictionUploadEndpoint,
+			testdata_download_endpoint: testDataDownloadEndpoint,
+			prediction_upload_endpoint: predictionUploadEndpoint,
 		};
 		try {
 			const response = await fetch(`${apiUrl}`, {
