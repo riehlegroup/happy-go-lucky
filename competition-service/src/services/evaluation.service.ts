@@ -31,8 +31,8 @@ export class EvaluationService {
 
 	async startEvaluation(competition: Competition, round: number) {
 		// check if the current date is within the competition's start and end dates
-		const now = new Date();
-		if (now < competition.startDate || now > competition.endDate) {
+		const now = new Date().getTime();
+		if (now < competition.startDate.getTime() || now > competition.endDate.getTime()) {
 			throw new BadRequestException("Competition is not currently active");
 		}
 
@@ -58,7 +58,7 @@ export class EvaluationService {
 
 		// call asynchrounously the requests to student apis
 		console.log(`Starting evaluation for competition ID and round: ${competition.id}`);
-		this.callSubmissionApis(competition.id, round);
+		await this.callSubmissionApis(competition.id, round);
 	}
 
 	async requireEvaluationEntryExists(
@@ -93,7 +93,7 @@ export class EvaluationService {
 		evaluation: Evaluation,
 		csvString: string,
 		receivedAt: number,
-	): Promise<number> {
+	): Promise<{ score: number; status: EvaluationStatus }> {
         const createdAtMs = new Date(evaluation.created_at).getTime();
         const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
         const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
@@ -116,7 +116,7 @@ export class EvaluationService {
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
-			return score;
+			return { score, status };
 		} catch (error) {
 			console.error(`Error calculating score: ${error}`);
 			let errorMessage;
@@ -124,6 +124,9 @@ export class EvaluationService {
 			if (error instanceof NotFoundException) {
 				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
 				exceptionToThrow = new NotFoundException(errorMessage);
+			} else if (error instanceof BadRequestException) {
+				errorMessage = `Invalid request: ${error.message}`;
+				exceptionToThrow = new BadRequestException(errorMessage);
 			} else {
 				errorMessage = `Error calculating score: ${error instanceof Error ? error.message : String(error)}`;
 				exceptionToThrow = new Error(errorMessage);
@@ -154,9 +157,9 @@ export class EvaluationService {
 			});
 			return rows;
 		};
-		const [studentPredictionRows] = await parseCsv(studentPredictionCsv);
+		const studentPredictionRows = await parseCsv(studentPredictionCsv);
 		if (groundTruthRows.length !== studentPredictionRows.length || groundTruthRows.length !== inputRows.length) {
-			throw new Error(
+			throw new BadRequestException(
 				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows, and input has ${inputRows.length} rows.`,
 			);
 		}
@@ -167,7 +170,7 @@ export class EvaluationService {
 			const studentPredictionRow = studentPredictionRows[i];
 			const inputRow = inputRows[i];
 			if (groundTruthRow.length !== studentPredictionRow.length || groundTruthRow.length !== inputRow.length) {
-				throw new Error(
+				throw new BadRequestException(
 					`Column count mismatch in row ${i}: Ground truth has ${groundTruthRow.length} columns, student prediction has ${studentPredictionRow.length} columns, and input has ${inputRow.length} columns.`,
 				);
 			}
@@ -231,9 +234,9 @@ export class EvaluationService {
 	}
 
 	private async callStudentApi(evaluationId: number, apiUrl: string, evaluationToken: string) {
-		const clientUrl = process.env.CLIENT_URL || "http://localhost"; //TODO: is client url the right env.variable? is it accessible for the students or must this be caddy url??
-		const testDataDownloadEndpoint = `${clientUrl}/api/competition/evaluations/${evaluationToken}/download`;
-		const predictionUploadEndpoint = `${clientUrl}/api/competition/evaluations/${evaluationToken}/upload`;
+		const baseUrl = process.env.PUBLIC_COMPETITION_API_URL || (process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/competition` : null) || `${process.env.CLIENT_URL}/api/competition`;
+		const testDataDownloadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/download`;
+		const predictionUploadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/upload`;
 
 		const body = {
 			testdata_download_endpoint: testDataDownloadEndpoint,

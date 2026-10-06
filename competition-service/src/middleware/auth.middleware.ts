@@ -58,8 +58,8 @@ export const requireCompetitionExists = (competitionService: CompetitionService)
 			if (competitionId) {
 				competition = await competitionService.getCompetitionById(competitionId);
 			} else if (courseId) {
-        competition = await competitionService.getCompetitionByCourseId(courseId);
-      }
+				competition = await competitionService.getCompetitionByCourseId(courseId);
+			}
 			if (!competition) {
 				return errorResponse("Competition not found", 404, res);
 			}

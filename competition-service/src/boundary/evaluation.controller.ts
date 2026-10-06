@@ -82,11 +82,11 @@ export class EvaluationController {
 
 			const csvString = req.file.buffer.toString("utf-8");
 
-			const score = await this.evaluationService.evaluateStudentPrediction(evaluation.competitionId, evaluation, csvString, receivedAt);
+			const result = await this.evaluationService.evaluateStudentPrediction(evaluation.competitionId, evaluation, csvString, receivedAt);
 
 			return res.status(200).json({
-				status: "SUCCESS",
-				score: score,
+				status: result.status,
+				score: result.score,
 			});
 		} catch (error) {
 			handleError(error, "Failed to upload student predictions", res);
