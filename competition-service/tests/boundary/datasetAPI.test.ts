@@ -11,7 +11,7 @@ import { Application } from "express";
 describe("Dataset API Integrationtest", () => {
 	let db: Database;
 	let app: Application;
-	const TEST_DATASET_DIR = path.join(__dirname, "temp_test_datasets");
+	const TEST_DATASET_DIR = path.join(__dirname, "temp_test_datasets_dataset_api");
 	const validCsvPath = path.join(__dirname, "valid_dummy_dataset.csv");
 	const invalidCsvPath = path.join(__dirname, "invalid_dummy_dataset.csv");
 

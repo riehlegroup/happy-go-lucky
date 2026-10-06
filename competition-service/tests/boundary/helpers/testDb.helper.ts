@@ -1,5 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
+import fs from 'fs';
+import path from 'path';
 
 // Testdata constants to be used in the tests
 
@@ -149,7 +151,8 @@ export async function createTestDatabase(): Promise<Database> {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (competitionId) REFERENCES competitions(id),
       FOREIGN KEY (userId) REFERENCES users(id),
-      UNIQUE (competitionId, userId)
+      UNIQUE (competitionId, userId),
+      UNIQUE (competitionId, pseudonym)
     )
   `);
 
@@ -253,17 +256,59 @@ export async function generateTestData(db: Database): Promise<void> {
     // Test competitions
     await db.run(`
       INSERT INTO competitions (id, name, description, start_date, end_date, courseId) VALUES
-      (1,'Test Competition 1', 'Description for Competition 1', strftime('%s','now'), strftime('%s','now','+7 days'), 1)
+      (1,'Test Competition 1', 'Description for Competition 1', date('now', '-7 days'), date('now','+7 days'), 1)
     `);
     await db.run(`
       INSERT INTO competitions (id, name, description, start_date, end_date, courseId) VALUES
-      (2, 'Test Competition 2', 'Description for Competition 2', strftime('%s','now'), strftime('%s','now','+7 days'), 2)
+      (2, 'Test Competition 2', 'Description for Competition 2', date('now', '-7 days'), date('now','+7 days'), 2)
     `);
 }
 
-export async function createTestSubmissionForUser(db: Database, competitionId: number, userId: number, apiUrl: string, pseudonym: string): Promise<void> {
-    await db.run(`
+export async function createTestSubmissionForUser(db: Database, competitionId: number, userId: number, apiUrl: string, pseudonym: string): Promise<number> {
+    const result = await db.get(`
       INSERT INTO competition_submissions (competitionId, userId, apiUrl, pseudonym) VALUES
-      (?, ?, ?, ?)
+      (?, ?, ?, ?) RETURNING id
     `, [competitionId, userId, apiUrl, pseudonym]);
+    return result.id;
+}
+/**
+ * Creates test datasets for a specific competition round. creates both ground truth and input datasets and inserts their metadata into the database.
+ * @param db The database connection.
+ * @param competitionId The ID of the competition.
+ * @param round The round number.
+ * @param basePath The base path where the datasets will be stored.
+ * @param fileName The name of the dataset file.
+ */
+export async function createDatasetsForCompetitionRound(db: Database, competitionId: number, round: number,  basePath: string): Promise<void> {
+  const groundTruthDataset = [
+		"package_name,version,lines_of_code,has_cve",
+		"express,4.18.2,1500,false",
+		"lodash,4.17.21,8000,true",
+	].join("\n");
+  const inputDataset = [
+    "package_name,version,lines_of_code,has_cve",
+    "express,4.18.2,1500,",
+    "lodash,4.17.21,8000,",
+  ].join("\n");
+
+  const roundPath = path.join(basePath, `competition_${competitionId}`, `round_${round}`,);
+  if (!fs.existsSync(roundPath)) {
+    fs.mkdirSync(roundPath, { recursive: true });
+  }
+
+  const groundTruthFilePath = path.join(roundPath, `ground_truth_round_${round}.csv`);
+  const inputFilePath = path.join(roundPath, `input_round_${round}.csv`);
+
+  fs.writeFileSync(groundTruthFilePath, groundTruthDataset);
+  fs.writeFileSync(inputFilePath, inputDataset);
+
+  await db.run(`
+    INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name) VALUES
+    (?, ?, 'GROUND_TRUTH', ?, ?)
+  `, [competitionId, round, groundTruthFilePath, `ground_truth_round_${round}.csv`]);
+  
+  await db.run(`
+    INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name) VALUES
+    (?, ?, 'INPUT', ?, ?)
+  `, [competitionId, round, inputFilePath, `input_round_${round}.csv`]);
 }

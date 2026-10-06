@@ -10,6 +10,38 @@ export interface Competition {
 	startDate: Date;
 	endDate: Date;
 }
+/**
+ * Outbound DTO Schema for a competition
+ */
+export const CompetitionOutboundDtoSchema = z
+	.object({
+		id: z.number(),
+		name: z.string(),
+		courseId: z.number(),
+		description: z.string(),
+		startDate: z.coerce.date(),
+		endDate: z.coerce.date(),
+	
+	})
+	.transform((comp) => {
+		const now = new Date().getTime();
+		const startMs = comp.startDate.getTime();
+		const endMs = comp.endDate.getTime();
+	
+		const isActive = now >= startMs && now <= endMs;
+
+		return {
+			id: comp.id,
+			name: comp.name,
+			courseId: comp.courseId,
+			description: comp.description,
+			start_date: comp.startDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+			end_date: comp.endDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+			isActive,
+		};
+	});
+
+export type CompetitionOutboundDto = z.infer<typeof CompetitionOutboundDtoSchema>;
 
 /**
  * validation Schema for creating a competition
@@ -21,7 +53,7 @@ export const CreateCompetitionSchema = z.object({
 	start_date: z.iso.date(),
 	end_date: z.iso.date(),
 });
-/**
+/*
  * DTO for creating a competition
  */
 export type CreateCompetitionDto = z.infer<typeof CreateCompetitionSchema>;
@@ -64,6 +96,7 @@ export interface Submission {
 	competitionId: number;
 	userId: number;
 	apiUrl: string;
+	pseudonym: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -176,14 +209,14 @@ export interface LeaderboardEntry {
 	completed_at: string | null;
 }
 export interface LeaderboardResponseDto extends LeaderboardEntry {
-  rank: number;
+	rank: number;
 }
 
 export interface RoundResultForUserDto {
-  round: number;
-  score: number | null;
-  inference_time_ms: number | null;
-  completed_at: string | null;
-  status: EvaluationStatus;
-  error_message: string | null;
+	round: number;
+	score: number | null;
+	inference_time_ms: number | null;
+	completed_at: string | null;
+	status: EvaluationStatus;
+	error_message: string | null;
 }
