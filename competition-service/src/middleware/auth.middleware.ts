@@ -141,3 +141,15 @@ export const requireCompetitionActive = () => {
 		next();
 	};
 };
+
+export const requireInternalSecret = () => {
+	return async (req: Request, res: Response, next: NextFunction) => {
+		const providedSecret = req.headers["x-internal-secret"];
+		const expectedSecret = process.env.INTERNAL_API_SECRET;
+
+		if (!providedSecret || providedSecret !== expectedSecret) {
+			return errorResponse("Invalid or missing internal secret", 401, res);
+		}
+		next();
+	};
+};

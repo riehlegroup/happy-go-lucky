@@ -11,6 +11,30 @@ export class EvaluationController {
 		this.evaluationService = evaluationService;
 	}
 
+	async startEvaluationForCourse(req: any, res: any) {
+		try {
+			const courseId = Number(req.params.courseId);
+			if (isNaN(courseId) || courseId < 0) {
+				return errorResponse("Invalid course ID", 400, res);
+			}
+			const round = Number(req.query.round);
+			if (isNaN(round) || round < 1) {
+				return errorResponse("Invalid round number", 400, res);
+			}
+			
+			const competition = req.competition;
+			if (!competition) {
+				return errorResponse("No information about the competition in request", 400, res);
+			}
+
+			await this.evaluationService.startEvaluation(competition, round);
+
+			res.status(200).json({ message: "Evaluation started successfully" });
+		} catch (error) {
+			handleError(error, "Failed to start evaluation for course", res);
+		}
+	}
+
 	async startEvaluationForCompetition(req: any, res: any) {
 		try {
 			const competition = req.competition;
@@ -22,7 +46,6 @@ export class EvaluationController {
 				return errorResponse("Invalid round number", 400, res);
 			}
 
-			// Call the service to start the evaluation for the competition asynchronously
 			await this.evaluationService.startEvaluation(competition, round);
 
 			res.status(200).json({ message: "Evaluation started successfully" });
