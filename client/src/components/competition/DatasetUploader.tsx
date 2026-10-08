@@ -59,10 +59,6 @@ export const DatasetUploader: React.FC<DatasetUploaderProps> = ({
 					<div className="flex items-center gap-2 truncate">
 						<span className="font-bold text-emerald-600">✓</span>
 						<span className="truncate font-medium">{existingMetadata.file_name}</span>
-						<span className="text-slate-400">
-							(uploaded on{" "}
-							{existingMetadata.createdAt ? new Date(existingMetadata.createdAt).toLocaleString() : "unknown"})
-						</span>
 					</div>
 					<Button type="button" className="bg-red-500 hover:bg-red-600" onClick={onDelete} disabled={disabled}>
 						Delete
