@@ -81,7 +81,7 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 	};
 
 	const getCompetitionById = async (competitionId: number) => {
-		setIsActionLoading(true);
+		setIsLoading(true);
 		setError(null);
 		try {
 			const competition = await competitionApi.getCompetitionById(competitionId);
@@ -91,7 +91,7 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 			setError(extractErrorMessage(error, "Failed to fetch competition by ID"));
 			throw error;
 		} finally {
-			setIsActionLoading(false);
+			setIsLoading(false);
 		}
 	};
 
@@ -119,15 +119,16 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		}
 	};
 
-	const uploadDataset = async (type: DatasetType, file: File) => {
-		if (!competition?.id) {
+	const uploadTrainingDataset = async (file: File, competitionId?: number) => {
+		const compId = competitionId ?? competition?.id;
+		if (!compId) {
 			setError("No competition found to upload dataset");
 			return;
 		}
 		setIsActionLoading(true);
 		setError(null);
 		try {
-			await competitionApi.uploadDataset(competition.id, type, file);
+			await competitionApi.uploadTrainingDataset(compId, file);
 		} catch (error) {
 			setError(extractErrorMessage(error, "Failed to upload dataset"));
 			throw error;
@@ -135,8 +136,25 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 			setIsActionLoading(false);
 		}
 	};
+	const uploadRoundDataset = async (round: number, inputFile: File, groundTruthFile: File, competitionId?: number) => {
+		const compId = competitionId ?? competition?.id;
+		if (!compId) {
+			setError("No competition found to upload round dataset");
+			return;
+		}
+		setIsActionLoading(true);
+		setError(null);
+		try {
+			await competitionApi.uploadRoundDatasets(compId, round, inputFile, groundTruthFile);
+		} catch (error) {
+			setError(extractErrorMessage(error, "Failed to upload round dataset"));
+			throw error;
+		} finally {
+			setIsActionLoading(false);
+		}
+	};
 
-	const downloadDataset = async (type: DatasetType) => {
+	const downloadDataset = async (datasetId: number, filename?: string) => {
 		if (!competition?.id) {
 			setError("No competition found to download dataset");
 			return;
@@ -144,13 +162,13 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		setIsActionLoading(true);
 		setError(null);
 		try {
-			const blob = await competitionApi.downloadDatasetByType(competition.id, type);
+			const blob = await competitionApi.downloadDataset(competition.id, datasetId);
 			if (blob) {
 				// Create a temporary link to download the blob
 				const url = window.URL.createObjectURL(blob);
 				const link = document.createElement("a");
 				link.href = url;
-				link.download = `${type.toLowerCase()}_dataset_${competition.name}.csv`; // Title the file with the competition name and dataset type to show user which dataset they are downloading
+				link.download = filename || `dataset_${competition.name}.csv`; 
 				document.body.appendChild(link);
 				link.click();
 				link.remove();
@@ -167,45 +185,42 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		}
 	};
 
-    const getDatasetMetadata = async (type: DatasetType) => {
-        if (!competition?.id) {
-            setError("No competition found to get dataset metadata");
-            return;
-        }
-        setIsActionLoading(true);
-        setError(null);
-        try {
-            const datasetMetadata: DatasetMetadata = await competitionApi.getDatasetMetadataByType(competition.id, type);
-            if (!datasetMetadata) {
-                setError("No dataset metadata found for the specified type");
-            }
-            return datasetMetadata;
-        } catch (error) {
-            setError(extractErrorMessage(error, "Failed to get dataset metadata"));
-            throw error;
-        } finally {
-            setIsActionLoading(false);
-        }
-    }
+	const getDatasetMetadata = async (type?: DatasetType, round?: number) => {
+		if (!competition?.id) {
+			setError("No competition found to get dataset metadata");
+			return;
+		}
+		setIsLoading(true);
+		setError(null);
+		try {
+			const datasetMetadata: DatasetMetadata[] = await competitionApi.getDatasetsMetadataForCompetition(competition.id, type, round);
+			return datasetMetadata;
+		} catch (error) {
+			setError(extractErrorMessage(error, "Failed to get dataset metadata"));
+			throw error;
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-    const deleteDataset = async (datasetId: number) => {
-        if (!competition?.id) {
-            setError("No competition found to delete dataset");
-            return;
-        }
-        setIsActionLoading(true);
-        setError(null);
-        try {
-            await competitionApi.deleteDataset(competition.id, datasetId);
-        } catch (error) {
-            setError(extractErrorMessage(error, "Failed to delete dataset"));
-            throw error;
-        } finally {
-            setIsActionLoading(false);
-        }
-    }
+	const deleteDataset = async (datasetId: number) => {
+		if (!competition?.id) {
+			setError("No competition found to delete dataset");
+			return;
+		}
+		setIsActionLoading(true);
+		setError(null);
+		try {
+			await competitionApi.deleteDataset(competition.id, datasetId);
+		} catch (error) {
+			setError(extractErrorMessage(error, "Failed to delete dataset"));
+			throw error;
+		} finally {
+			setIsActionLoading(false);
+		}
+	};
 
-	const submitCompetitionSubmission = async (submissionLink: string) => {
+	const submitCompetitionSubmission = async (submissionLink: string, pseudonym: string) => {
 		if (!competition?.id) {
 			setError("No competition found to submit submission link");
 			return;
@@ -213,7 +228,7 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		setIsActionLoading(true);
 		setError(null);
 		try {
-			const submission = await competitionApi.submitCompetitionSubmission(competition.id, submissionLink);
+			const submission = await competitionApi.submitCompetitionSubmission(competition.id, submissionLink, pseudonym);
 			setMySubmission(submission);
 			return submission;
 		} catch (error) {
@@ -234,10 +249,11 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		createCompetition,
 		getCompetitionById,
 		updateCompetition,
-		uploadDataset,
+		uploadTrainingDataset,
+		uploadRoundDataset,
 		downloadDataset,
-        getDatasetMetadata,
-        deleteDataset,
+		getDatasetMetadata,
+		deleteDataset,
 		submitCompetitionSubmission,
 	};
 };
