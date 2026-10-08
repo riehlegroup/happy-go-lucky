@@ -243,7 +243,8 @@ export class EvaluationService {
 			prediction_upload_endpoint: predictionUploadEndpoint,
 		};
 		try {
-			const response = await fetch(`${apiUrl}`, {
+			const studentPredictionEndpoint = apiUrl.endsWith("/") ? `${apiUrl}predict` : `${apiUrl}/predict`;
+			const response = await fetch(`${studentPredictionEndpoint}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),

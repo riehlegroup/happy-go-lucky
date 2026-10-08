@@ -24,7 +24,7 @@ describe("Evaluation API integration test", () => {
 	let lastReceivedPayload: any = null;
 
 	const MOCK_STUDENT_SERVER_PORT = 9999;
-	const MOCK_STUDENT_SERVER_URL = `http://127.0.0.1:${MOCK_STUDENT_SERVER_PORT}/api/predict`;
+	const MOCK_STUDENT_SERVER_URL = `http://127.0.0.1:${MOCK_STUDENT_SERVER_PORT}/api`;
 	const ADMIN_TOKEN = generateTestToken(TEST_USERS.ADMIN.id);
 
 	const TEST_DATASET_DIR = path.join(__dirname, "temp_test_datasets_evaluation_api");
@@ -49,8 +49,8 @@ describe("Evaluation API integration test", () => {
 					res.end(JSON.stringify({ status: "accepted" }));
 				});
 			} else if (req.method === "GET" && req.url === "/api/health") {
-				res.writeHead(200, { "Content-Type": "application/json" });
-				res.end(JSON.stringify({ status: "healthy" }));
+                    res.writeHead(200, { "Content-Type": "application/json" });
+				    res.end(JSON.stringify({ health: "up" }));
 			} else {
 				res.writeHead(404);
 				res.end();
