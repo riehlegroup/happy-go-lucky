@@ -23,7 +23,7 @@ import { LeaderboardRepo } from "../repositories/leaderboard.repository";
 import { Database } from "sqlite";
 
 export function createCompetitionRouter(
-  db: Database,
+	db: Database,
 	authRepo: AuthentificationRepo,
 	datasetRepo: DatasetRepo,
 	submissionRepo: SubmissionRepo,
@@ -98,7 +98,7 @@ export function createCompetitionRouter(
 	);
 
 	competitionRouter.post(
-		"/:id/datasets",
+		"/:id/datasets/rounds/:round",
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireAdmin(),
@@ -110,12 +110,12 @@ export function createCompetitionRouter(
 	);
 
 	competitionRouter.get(
-		"/:id/datasets/download",
+		"/:id/datasets/:datasetId/download",
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
 		requireCompetitionActive(),
-		datasetController.downloadDatasetsForCompetition.bind(datasetController),
+		datasetController.downloadDataset.bind(datasetController),
 	);
 
 	competitionRouter.get(
@@ -124,7 +124,7 @@ export function createCompetitionRouter(
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
 		requireCompetitionActive(),
-		datasetController.getDatasetsMetadataForCompetition.bind(datasetController),
+		datasetController.getAllDatasetMetadataFilteredByParams.bind(datasetController),
 	);
 
 	competitionRouter.delete(
@@ -145,29 +145,29 @@ export function createCompetitionRouter(
 		leaderboardController.getLeaderboardForRound.bind(leaderboardController),
 	);
 
-  competitionRouter.get(
-    "/:id/leaderboard",
-    requireAuth(authRepo),
-    requireCompetitionExists(competitionService),
-    requireCourseMember(authRepo),
-    leaderboardController.getLeaderboardForAllFinishedRounds.bind(leaderboardController),
-  );
+	competitionRouter.get(
+		"/:id/leaderboard",
+		requireAuth(authRepo),
+		requireCompetitionExists(competitionService),
+		requireCourseMember(authRepo),
+		leaderboardController.getLeaderboardForAllFinishedRounds.bind(leaderboardController),
+	);
 
-  competitionRouter.get(
-    "/:id/leaderboard/rounds",
-    requireAuth(authRepo),
-    requireCompetitionExists(competitionService),
-    requireCourseMember(authRepo),
-    leaderboardController.getFinishedRounds.bind(leaderboardController),
-  );
+	competitionRouter.get(
+		"/:id/leaderboard/rounds",
+		requireAuth(authRepo),
+		requireCompetitionExists(competitionService),
+		requireCourseMember(authRepo),
+		leaderboardController.getFinishedRounds.bind(leaderboardController),
+	);
 
-  competitionRouter.get(
-    "/:id/results/me",
-    requireAuth(authRepo),
-    requireCompetitionExists(competitionService),
-    requireCourseMember(authRepo),
-    leaderboardController.getAllRoundResultsForUser.bind(leaderboardController),
-  );
+	competitionRouter.get(
+		"/:id/results/me",
+		requireAuth(authRepo),
+		requireCompetitionExists(competitionService),
+		requireCourseMember(authRepo),
+		leaderboardController.getAllRoundResultsForUser.bind(leaderboardController),
+	);
 
 	return competitionRouter;
 }

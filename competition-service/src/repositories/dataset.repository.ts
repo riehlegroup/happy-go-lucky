@@ -15,7 +15,7 @@ export class DatasetRepo extends BaseRepo<Dataset> {
         let result;
 		if (dataset.round !== null && dataset.round > 0) {
 			const sql = `
-            INSERT INTO competition_datasets (competitionId, dataset_type, file_name, file_path, round)
+            INSERT INTO ${this.tableName} (competitionId, dataset_type, file_name, file_path, round)
             VALUES (?, ?, ?, ?, ?)
             RETURNING *
         `;
@@ -28,7 +28,7 @@ export class DatasetRepo extends BaseRepo<Dataset> {
 			]);
 		} else {
 			const sql = `
-            INSERT INTO competition_datasets (competitionId, dataset_type, file_name, file_path)
+            INSERT INTO ${this.tableName} (competitionId, dataset_type, file_name, file_path)
             VALUES (?, ?, ?, ?)
             RETURNING *
         `;
@@ -48,7 +48,7 @@ export class DatasetRepo extends BaseRepo<Dataset> {
 
 	async getDatasetsForCompetitionRound(competitionId: number, round: number): Promise<Dataset[]> {
 		const sql = `
-            SELECT * FROM competition_datasets
+            SELECT * FROM ${this.tableName}
             WHERE competitionId = ? AND round = ?
         `;
 		const datasets = await this.db.all(sql, [competitionId, round]);
@@ -57,24 +57,19 @@ export class DatasetRepo extends BaseRepo<Dataset> {
 
     async getDatasetForCompetitionRoundAndType(competitionId: number, round: number, datasetType: DatasetType): Promise<Dataset | null> {
         const sql = `
-            SELECT * FROM competition_datasets
+            SELECT * FROM ${this.tableName}
             WHERE competitionId = ? AND round = ? AND dataset_type = ?
         `;
         const dataset = await this.db.get(sql, [competitionId, round, datasetType]);
         return dataset as Dataset | null;
     }
     
-    async getTrainingDatasetForCompetition(competitionId: number): Promise<Dataset | null> {
+    async getDatasetsForCompetition(competitionId: number): Promise<Dataset[]> {
         const sql = `
-            SELECT * FROM competition_datasets
-            WHERE competitionId = ? AND dataset_type = ?
+            SELECT * FROM ${this.tableName}
+            WHERE competitionId = ?
         `;
-        const dataset = await this.db.get(sql, [competitionId, DatasetType.TRAIN]);
-
-        if(dataset && dataset.round !== null) {
-            throw new Error(`Training dataset for competition ID ${competitionId} has an invalid round number: ${dataset.round}`);
-        }
-
-        return dataset as Dataset | null;
+        const datasets = await this.db.all(sql, [competitionId]);
+        return datasets as Dataset[];
     }
 }

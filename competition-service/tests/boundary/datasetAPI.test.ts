@@ -1,7 +1,13 @@
 import { Database } from "sqlite";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
-import { createTestDatabase, resetTestDatabase, TEST_COMPETITIONS, TEST_USERS } from "./helpers/testDb.helper";
+import {
+	createDatasetsForCompetitionRound,
+	createTestDatabase,
+	resetTestDatabase,
+	TEST_COMPETITIONS,
+	TEST_USERS,
+} from "./helpers/testDb.helper";
 import path from "path";
 import fs from "fs";
 import { generateTestToken } from "./helpers/auth.helper";
@@ -36,7 +42,7 @@ describe("Dataset API Integrationtest", () => {
 		if (fs.existsSync(validCsvPath)) fs.unlinkSync(validCsvPath);
 		if (fs.existsSync(invalidCsvPath)) fs.unlinkSync(invalidCsvPath);
 
-		if(fs.existsSync(TEST_DATASET_DIR)) {
+		if (fs.existsSync(TEST_DATASET_DIR)) {
 			fs.rmSync(TEST_DATASET_DIR, { recursive: true, force: true });
 		}
 		delete process.env.UPLOAD_DIR;
@@ -46,6 +52,11 @@ describe("Dataset API Integrationtest", () => {
 	beforeEach(async () => {
 		// Reset the database state before each test
 		await resetTestDatabase(db);
+		// Ensure the test dataset directory is clean before each test
+		if (fs.existsSync(TEST_DATASET_DIR)) {
+			fs.rmSync(TEST_DATASET_DIR, { recursive: true, force: true });
+		}
+		fs.mkdirSync(TEST_DATASET_DIR, { recursive: true });
 	});
 
 	// ----- Test cases for the Dataset API endpoints will go here -----
@@ -70,7 +81,7 @@ describe("Dataset API Integrationtest", () => {
 
 		// Now test downloading the dataset
 		const downloadResponse = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=TRAIN`)
+			.get(`/competitions/${competitionId}/datasets/${uploadResponse.body.id}/download`)
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(downloadResponse.status).toBe(200);
@@ -78,27 +89,33 @@ describe("Dataset API Integrationtest", () => {
 		expect(downloadResponse.text).toBe(validCsvContent);
 	});
 
-	it("should allow admin users to download INPUT and GROUND_TRUTH datasets", async () => {
+	it("should allow admin users to upload and download INPUT and GROUND_TRUTH datasets", async () => {
 		const token = generateTestToken(TEST_USERS.ADMIN.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 
 		// upload round datasets for round 1
-		await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=1`)
+		const uploadResponse = await request(app)
+			.post(`/competitions/${competitionId}/datasets/rounds/1`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
 			.attach("groundTruthFile", validCsvPath);
-
+		expect(uploadResponse.status).toBe(201);
+		expect(uploadResponse.body).toHaveProperty("datasets");
+		expect(uploadResponse.body.datasets).toHaveLength(2);
+		expect(uploadResponse.body.datasets[0]).toHaveProperty("dataset_type");
+		expect(uploadResponse.body.datasets[1]).toHaveProperty("dataset_type");
+		const inputDatasetID = uploadResponse.body.datasets.find((d: any) => d.dataset_type === "INPUT").id;
+		const groundTruthDatasetID = uploadResponse.body.datasets.find((d: any) => d.dataset_type === "GROUND_TRUTH").id;
 		// get INPUT Dataset
 		const inputRes = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=INPUT&round=1`)
+			.get(`/competitions/${competitionId}/datasets/${inputDatasetID}/download`)
 			.set("Authorization", `Bearer ${token}`);
 		expect(inputRes.status).toBe(200);
 		expect(inputRes.text).toBe(validCsvContent);
 
 		//get GROUND_TRUTH Dataset
 		const gtRes = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=GROUND_TRUTH&round=1`)
+			.get(`/competitions/${competitionId}/datasets/${groundTruthDatasetID}/download`)
 			.set("Authorization", `Bearer ${token}`);
 		expect(gtRes.status).toBe(200);
 		expect(gtRes.text).toBe(validCsvContent);
@@ -107,13 +124,22 @@ describe("Dataset API Integrationtest", () => {
 	it("should return 403 when trying to download a INPUT or GROUND_TRUTH dataset over general Endpoint as a non-admin user", async () => {
 		const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		const datasetIds: { inputDatasetId: number; groundTruthDatasetId: number } = await createDatasetsForCompetitionRound(
+			db,
+			competitionId,
+			1,
+			TEST_DATASET_DIR,
+		);
+
+		const inputDatasetId = datasetIds.inputDatasetId;
+		const groundTruthDatasetId = datasetIds.groundTruthDatasetId;
 
 		const downloadResponseINPUT = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=INPUT&round=1`)
+			.get(`/competitions/${competitionId}/datasets/${inputDatasetId}/download`)
 			.set("Authorization", `Bearer ${token}`);
 
 		const downloadResponseGROUND_TRUTH = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=GROUND_TRUTH&round=1`)
+			.get(`/competitions/${competitionId}/datasets/${groundTruthDatasetId}/download`)
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(downloadResponseINPUT.status).toBe(403);
@@ -135,36 +161,20 @@ describe("Dataset API Integrationtest", () => {
 		expect(response.body).toHaveProperty("message", "No file uploaded");
 	});
 
-	it("should return 400 when downloading with an invalid dataset type", async () => {
+	it("should return 404 when downloading with an invalid dataset ID", async () => {
 		const token = generateTestToken(TEST_USERS.ADMIN.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		const invalidDatasetId = 999;
 
 		const response = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=INVALID_TYPE`)
+			.get(`/competitions/${competitionId}/datasets/${invalidDatasetId}/download`)
 			.set("Authorization", `Bearer ${token}`);
 
-		expect(response.status).toBe(400);
+		expect(response.status).toBe(404);
 		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("Validation failed");
-		expect(response.body).toHaveProperty("error", "Bad Request");
-	});
-
-	it("should return 400 when admin downloads INPUT dataset without valid round", async () => {
-		const token = generateTestToken(TEST_USERS.ADMIN.id);
-		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
-
-		// without round parameter
-		const resNoRound = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=INPUT`)
-			.set("Authorization", `Bearer ${token}`);
-		expect(resNoRound.status).toBe(400);
-		expect(resNoRound.body.message).toContain("round request parameter is required");
-
-		// with invalid round (<= 0)
-		const resInvalidRound = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=INPUT&round=0`)
-			.set("Authorization", `Bearer ${token}`);
-		expect(resInvalidRound.status).toBe(400);
+		expect(response.body.message).toContain(`No dataset found for ID ${invalidDatasetId}`);
+		expect(response.body).toHaveProperty("error", "Not Found");
 	});
 
 	it("should upload both INPUT and GROUND_TRUTH datasets for a competition round and verify no filename collision", async () => {
@@ -173,7 +183,7 @@ describe("Dataset API Integrationtest", () => {
 		const round = 1;
 
 		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
 			.attach("groundTruthFile", validCsvPath);
@@ -202,7 +212,7 @@ describe("Dataset API Integrationtest", () => {
 		const competitionId = TEST_COMPETITIONS.COMPETITION_2.id; // No datasets uploaded for this competition yet
 
 		const response = await request(app)
-			.get(`/competitions/${competitionId}/datasets/download?type=TRAIN`)
+			.get(`/competitions/${competitionId}/datasets/1234/download`)
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(404);
@@ -214,7 +224,7 @@ describe("Dataset API Integrationtest", () => {
 		const round = 1;
 
 		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("wrongInputFile", validCsvPath)
 			.attach("wrongGroundTruthFile", validCsvPath);
@@ -231,7 +241,7 @@ describe("Dataset API Integrationtest", () => {
 		const round = 1;
 
 		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
 			.attach("groundTruthFile", validCsvPath);
@@ -247,7 +257,7 @@ describe("Dataset API Integrationtest", () => {
 		const round = 1;
 
 		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath);
 
@@ -262,7 +272,7 @@ describe("Dataset API Integrationtest", () => {
 		const round = 1;
 
 		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("groundTruthFile", validCsvPath);
 
@@ -281,7 +291,7 @@ describe("Dataset API Integrationtest", () => {
 			.attach("dataset", validCsvPath);
 
 		const uploadResponseRound = await request(app)
-			.post(`/competitions/${invalidCompetitionId}/datasets?round=1`)
+			.post(`/competitions/${invalidCompetitionId}/datasets/rounds/1`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
 			.attach("groundTruthFile", validCsvPath);
@@ -291,22 +301,6 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(uploadResponseRound.status).toBe(404);
 		expect(uploadResponseRound.body).toHaveProperty("message", "Competition not found");
-	});
-
-	it("should return 400 if round is not specified when uploading round datasets (INPUT, GROUND_TRUTH)", async () => {
-		const token = generateTestToken(TEST_USERS.ADMIN.id);
-		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
-
-		const response = await request(app)
-			.post(`/competitions/${competitionId}/datasets`) // No round specified
-			.set("Authorization", `Bearer ${token}`)
-			.attach("inputFile", validCsvPath)
-			.attach("groundTruthFile", validCsvPath);
-
-		expect(response.status).toBe(400);
-		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("Invalid round number");
-		expect(response.body).toHaveProperty("error", "Bad Request");
 	});
 
 	it("should delete a training dataset by ID and verify it is removed from the database", async () => {
@@ -321,6 +315,8 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(uploadResponse.status).toBe(201);
 		expect(uploadResponse.body).toHaveProperty("id");
+		// Store path to the uploaded file
+		const filePath = await db.get("SELECT file_path FROM competition_datasets WHERE id = ?", uploadResponse.body.id);
 
 		// Now, delete the uploaded dataset
 		const deleteResponse = await request(app)
@@ -331,6 +327,7 @@ describe("Dataset API Integrationtest", () => {
 		// Verify that the dataset is removed from the database
 		const dbrecord = await db.get("SELECT * FROM competition_datasets WHERE id = ?", uploadResponse.body.id);
 		expect(dbrecord).toBeUndefined();
+		expect(fs.existsSync(filePath.file_path)).toBe(false); // Ensure the file is deleted from the filesystem
 	});
 
 	it("should delete a round dataset by ID and verify it is removed from the database but other round dataset is not affected", async () => {
@@ -340,7 +337,7 @@ describe("Dataset API Integrationtest", () => {
 
 		// First, upload both INPUT and GROUND_TRUTH datasets for a round
 		const uploadResponse = await request(app)
-			.post(`/competitions/${competitionId}/datasets?round=${round}`)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
 			.attach("groundTruthFile", validCsvPath);
@@ -354,6 +351,15 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(inputDataset).toBeDefined();
 		expect(groundTruthDataset).toBeDefined();
+		// Store paths to the uploaded files
+		const inputFilePath = await db.get("SELECT file_path FROM competition_datasets WHERE id = ?", inputDataset.id);
+		const groundTruthFilePath = await db.get(
+			"SELECT file_path FROM competition_datasets WHERE id = ?",
+			groundTruthDataset.id,
+		);
+
+		expect(fs.existsSync(inputFilePath.file_path)).toBe(true);
+		expect(fs.existsSync(groundTruthFilePath.file_path)).toBe(true);
 
 		// Now, delete the INPUT dataset
 		const deleteResponse = await request(app)
@@ -365,10 +371,12 @@ describe("Dataset API Integrationtest", () => {
 		// Verify that the INPUT dataset is removed from the database
 		const dbrecordInput = await db.get("SELECT * FROM competition_datasets WHERE id = ?", inputDataset.id);
 		expect(dbrecordInput).toBeUndefined();
+		expect(fs.existsSync(inputFilePath.file_path)).toBe(false); // Ensure the INPUT file is deleted from the filesystem
 
 		// Verify that the GROUND_TRUTH dataset is still present in the database
 		const dbrecordGroundTruth = await db.get("SELECT * FROM competition_datasets WHERE id = ?", groundTruthDataset.id);
 		expect(dbrecordGroundTruth).toBeDefined();
+		expect(fs.existsSync(groundTruthFilePath.file_path)).toBe(true); // Ensure the file is still present in the filesystem
 	});
 
 	it("should return 400 when trying to delete with a non-numeric dataset ID", async () => {
@@ -440,5 +448,165 @@ describe("Dataset API Integrationtest", () => {
 		if (fs.existsSync(dummyFilePath)) {
 			fs.unlinkSync(dummyFilePath);
 		}
+	});
+
+	//============ Metadate Tests ==============
+	it("should return 200 and a list of all datasets for a competition", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		// First, upload a TRAIN dataset to have a dataset to retrieve
+		await request(app)
+			.post(`/competitions/${competitionId}/datasets/train`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("dataset", validCsvPath);
+		// create round datasets for round 1
+		const ids = await createDatasetsForCompetitionRound(db, competitionId, 1, TEST_DATASET_DIR);
+		//create round datasets for round 2
+		await createDatasetsForCompetitionRound(db, competitionId, 2, TEST_DATASET_DIR);
+
+		const response = await request(app)
+			.get(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toBeInstanceOf(Array);
+		expect(response.body.length).toBe(5); // 5 datasets should be present (1 TRAIN + 2 rounds * 2 datasets each)
+		expect(response.body).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					id: expect.any(Number),
+					competitionId: competitionId,
+					round: null,
+					dataset_type: "TRAIN",
+					file_name: expect.any(String),
+				}),
+				expect.objectContaining({
+					id: expect.any(Number),
+					competitionId: competitionId,
+					round: 1,
+					dataset_type: "INPUT",
+					file_name: expect.any(String),
+				}),
+				expect.objectContaining({
+					id: expect.any(Number),
+					competitionId: competitionId,
+					round: 1,
+					dataset_type: "GROUND_TRUTH",
+					file_name: expect.any(String),
+				}),
+				expect.objectContaining({
+					id: expect.any(Number),
+					competitionId: competitionId,
+					round: 2,
+					dataset_type: "INPUT",
+					file_name: expect.any(String),
+				}),
+				expect.objectContaining({
+					id: expect.any(Number),
+					competitionId: competitionId,
+					round: 2,
+					dataset_type: "GROUND_TRUTH",
+					file_name: expect.any(String),
+				}),
+			]),
+		);
+	});
+
+	it("should return 200 and an empty array when no datasets are available", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		const response = await request(app)
+			.get(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toBeInstanceOf(Array);
+		expect(response.body.length).toBe(0); // No datasets should be present
+		expect(response.body).toEqual([]);
+	});
+
+	it("should filter datasets by type and round when query parameters are provided", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		// First, upload a TRAIN dataset to have a dataset to retrieve
+		await request(app)
+			.post(`/competitions/${competitionId}/datasets/train`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("dataset", validCsvPath);
+
+		// create round datasets for round 1
+		await createDatasetsForCompetitionRound(db, competitionId, 1, TEST_DATASET_DIR);
+		//create round datasets for round 2
+		await createDatasetsForCompetitionRound(db, competitionId, 2, TEST_DATASET_DIR);
+
+		const responseInputRound1 = await request(app)
+			.get(`/competitions/${competitionId}/datasets?type=INPUT&round=1`)
+			.set("Authorization", `Bearer ${token}`);
+		
+		const responseOnlyRound1 = await request(app)
+			.get(`/competitions/${competitionId}/datasets?round=1`)
+			.set("Authorization", `Bearer ${token}`);
+		
+		const responseOnlyGroundTruth = await request(app)
+			.get(`/competitions/${competitionId}/datasets?type=GROUND_TRUTH`)
+			.set("Authorization", `Bearer ${token}`);
+		
+		const responseNoMatch = await request(app)
+			.get(`/competitions/${competitionId}/datasets?type=INPUT&round=3`)
+			.set("Authorization", `Bearer ${token}`);
+		
+		const responseTrainOnly = await request(app)
+			.get(`/competitions/${competitionId}/datasets?type=TRAIN`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(responseInputRound1.status).toBe(200);
+		expect(responseOnlyRound1.status).toBe(200);
+		expect(responseOnlyGroundTruth.status).toBe(200);
+		expect(responseNoMatch.status).toBe(200);
+		expect(responseTrainOnly.status).toBe(200);
+
+		console.log("responseInputRound1.body:", responseInputRound1.body);
+		expect(responseInputRound1.body.length).toBe(1);
+		expect(responseInputRound1.body[0].dataset_type).toBe("INPUT");
+		expect(responseInputRound1.body[0].round).toBe(1);
+
+		expect(responseOnlyRound1.body.length).toBe(2); // INPUT and GROUND_TRUTH for round 1
+		expect(responseOnlyRound1.body.every((d: any) => d.round === 1)).toBe(true);
+
+		expect(responseOnlyGroundTruth.body.length).toBe(2); // GROUND_TRUTH for round 1 and 2
+		expect(responseOnlyGroundTruth.body.every((d: any) => d.dataset_type === "GROUND_TRUTH")).toBe(true);
+
+		expect(responseNoMatch.body.length).toBe(0); // No datasets for round 3
+
+		expect(responseTrainOnly.body.length).toBe(1);
+		expect(responseTrainOnly.body[0].dataset_type).toBe("TRAIN");
+		expect(responseTrainOnly.body[0].round).toBe(null);
+	});
+
+	it("should only return training dataset for student users and not round datasets", async () => {
+		const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		// create round datasets for round 1
+		await createDatasetsForCompetitionRound(db, competitionId, 1, TEST_DATASET_DIR);
+		//create round datasets for round 2
+		await createDatasetsForCompetitionRound(db, competitionId, 2, TEST_DATASET_DIR);
+
+		// Upload a TRAIN dataset
+		await request(app)
+			.post(`/competitions/${competitionId}/datasets/train`)
+			.set("Authorization", `Bearer ${generateTestToken(TEST_USERS.ADMIN.id)}`)
+			.attach("dataset", validCsvPath);
+
+		const response = await request(app)
+			.get(`/competitions/${competitionId}/datasets`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toBeInstanceOf(Array);
+		expect(response.body.length).toBe(1); // Only the TRAIN dataset should be visible to student users
+		expect(response.body[0].dataset_type).toBe("TRAIN");
+		expect(response.body[0].round).toBe(null);
 	});
 });

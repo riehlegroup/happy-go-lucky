@@ -31,52 +31,43 @@ export class DatasetService {
     }
 
     /**
-     * gets the datasets (input and ground truth) for a given competition and round number.
-     * @param id 
-     * @param round 
-     * @returns Dataset for the given competition round
-     * @throws Error if no dataset is found or if multiple datasets are found for the same competition and type.
-     * @throws Error if the file for the dataset does not exist on the filesystem.
-     */
-     async getDatasetsForCompetitionRound(id: number, round: number): Promise<Dataset[] | null> {
-
-        const dbResults = await this.datasetRepo.getDatasetsForCompetitionRound(id, round);
-        if (!dbResults || dbResults.length === 0) {
-            throw new NotFoundException(`No dataset found for competition ID ${id} and round ${round}`);
-        }
-        if (dbResults.length !== 2) {
-            throw new Error(`Expected 2 datasets for competition ID ${id} and round ${round}, but found ${dbResults.length}`);
-        }
-
-        return dbResults;
-    }
-
-    /**
-     * gets the dataset for a given competition, round number and dataset type.
+     * gets the dataset for a given competition with optional round and dataset type filter. UserRole is used to determine if the user has access to the requested dataset.
      * @param competitionId competition id of the requested dataset
-     * @param round round number of the requested dataset
-     * @param datasetType type of the requested dataset
-     * @returns Dataset for the given competition round and type
+     * @param userRole role of the user requesting the datasets
+     * @param round optional round number filter
+     * @param datasetType optional dataset type filter
+     * @returns Datasets (metadata) for given competition and with filter applied. Contains only datasets that the user has access to based on their role.
      * @throws NotFoundException if no dataset is found for the given competition, round and type.
      */
-    async getDatasetForCompetitionRoundAndType(competitionId: number, round: number, datasetType: DatasetType): Promise<Dataset> {
-        if(datasetType === DatasetType.TRAIN) {
-            return this.getTrainingDatasetForCompetition(competitionId);
+    async getDatasetsForCompetition(competitionId: number, userRole: string, round?: number, datasetType?: DatasetType): Promise<Dataset[]> {
+        let datasets = await this.datasetRepo.getDatasetsForCompetition(competitionId);
+        if (!datasets || datasets.length === 0) {
+            return [];
         }
-        const dataset = await this.datasetRepo.getDatasetForCompetitionRoundAndType(competitionId, round, datasetType);
+        if (userRole !== "ADMIN") {
+            datasets = datasets.filter(d => d.dataset_type === DatasetType.TRAIN);
+        }
+        if(round !== undefined && round !== null && round > 0) {
+            datasets = datasets.filter(d => d.round === round);
+        }
+        if(datasetType !== undefined && datasetType !== null) {
+            datasets = datasets.filter(d => d.dataset_type === datasetType);
+        }
+        return datasets;
+    }
+
+    async getDatasetById(id: number): Promise<Dataset> {
+        const dataset = await this.datasetRepo.getById(id);
         if (!dataset) {
-            throw new NotFoundException(`No dataset found for competition ID ${competitionId}, round ${round}, and type ${datasetType}`);
+            throw new NotFoundException(`No dataset found for ID ${id}`);
         }
+
+        if (!fs.existsSync(dataset.file_path)) {
+				throw new Error(`File for dataset ID ${id} does not exist on disk`);
+		}
         return dataset;
     }
 
-    async getTrainingDatasetForCompetition(competitionId: number): Promise<Dataset> {
-        const dataset = await this.datasetRepo.getTrainingDatasetForCompetition(competitionId);
-        if (!dataset) {
-            throw new NotFoundException(`No training dataset found for competition ID ${competitionId}`);
-        }
-        return dataset;
-    }
 
     async deleteDatasetById(id: number): Promise<Dataset | null> {
         const dataset = await this.datasetRepo.getById(id);
