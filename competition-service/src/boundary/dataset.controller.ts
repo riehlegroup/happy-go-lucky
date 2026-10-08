@@ -1,7 +1,6 @@
 import { DatasetService } from "../services/dataset.service";
 import {
 	Competition,
-	Dataset,
 	DatasetType,
 	datasetTypeSchema as datasetTypeSchema,
 	RoundDatasetResponseSchema,
@@ -10,8 +9,8 @@ import {
 import fs from "fs";
 import { errorResponse, handleError } from "../errors/errorhandling.helper";
 import { BadRequestException } from "../errors/badrequest.error";
-import { ForbiddenException } from "../errors/forbidden.error";
-import { NotFoundException } from "../errors/notfound.error";
+import { z } from "zod";
+
 
 export class DatasetController {
 	private datasetService: DatasetService;
@@ -57,7 +56,7 @@ export class DatasetController {
 
 	async uploadDatasetsForCompetitionRound(req: any, res: any) {
 		try {
-			const roundNumber = Number(req.query.round || req.body.round);
+			const roundNumber = Number(req.params.round || req.body.round);
 			const competition = req.competition as Competition;
 
 			const inputFile = req.files?.inputFile?.[0];
@@ -105,10 +104,27 @@ export class DatasetController {
 		}
 	}
 
-	async downloadDatasetsForCompetition(req: any, res: any) {
+	async downloadDataset(req: any, res: any) {
 		try {
-			const dataset = await this.authorizeAndGetDataset(req);
+			const competition = req.competition as Competition
+			const datasetId = Number(req.params.datasetId);
+			const user = req.user;
+			if (isNaN(datasetId) || datasetId < 0) {
+				return errorResponse("Invalid dataset ID", 400, res);
+			}
+			if (!user || !competition) {
+				return errorResponse("Missing user or competition information", 400, res);
+			}
+			const dataset = await this.datasetService.getDatasetById(datasetId);
 
+			if(dataset.competitionId !== competition.id) {
+				return errorResponse("Dataset does not belong to this competition", 403, res);
+			}
+
+			if(dataset.dataset_type !== DatasetType.TRAIN && user.userRole !== "ADMIN") {
+				return errorResponse("Not allowed to download this type of dataset.", 403, res);
+			}
+			
 			res.download(dataset.file_path, dataset.file_name, (err: any) => {
 				if (err) {
 					handleError(err, "Failed to send dataset file", res);
@@ -119,11 +135,32 @@ export class DatasetController {
 		}
 	}
 
-	async getDatasetsMetadataForCompetition(req: any, res: any) {
+	async getAllDatasetMetadataFilteredByParams(req: any, res: any) {
 		try {
-			const dataset = await this.authorizeAndGetDataset(req);
+			const competition = req.competition as Competition;
+			const user = req.user;
+			if (!competition || !user) {
+				return errorResponse("Competition or user not found in request", 400, res);
+			}
+			let round = undefined;
+			let datasetType = undefined;
+			if(req.query.round !== undefined && req.query.round !== null && req.query.round !== "") {
+				round = Number(req.query.round);
+				if (isNaN(round) || round < 1) {
+					return errorResponse("Invalid round number", 400, res);
+				}
+			}
+			if(req.query.type !== undefined && req.query.type !== null && req.query.type !== "") {
+				let parsedDatasetType = z.enum(DatasetType).safeParse(req.query.type);
+				if (!parsedDatasetType.success) {
+					return errorResponse("Invalid dataset type", 400, res);
+				}
+				datasetType = parsedDatasetType.data;
+			}
 
-			const responseDataset = SingleDatasetResponseSchema.parse(dataset);
+			const datasets = await this.datasetService.getDatasetsForCompetition(competition.id, user.userRole, round, datasetType);
+			
+			const responseDataset = datasets.map(dataset => SingleDatasetResponseSchema.parse(dataset));
 
 			return res.status(200).json(responseDataset);
 		} catch (error) {
@@ -145,49 +182,5 @@ export class DatasetController {
 		} catch (error) {
 			handleError(error, "Failed to delete dataset", res);
 		}
-	}
-
-	/**
-	 * helper method to validate request and get the appropriate dataset.
-	 * Datasettype must be provided as query parameter. Round number must be added as query parameter for INPUT and GROUND_TRUTH datasets, but not for TRAIN datasets.
-	 * Input and Ground Truth datasets can only be downloaded by admins, while TRAIN datasets can be downloaded by all users.
-	 * @param req req with competition and user attached by previous middleware, query parameters for dataset type and round number for INPUT and GROUND_TRUTH datasets.
-	 * @returns Dataset object for the requested dataset type and round number.
-	 * @throws BadRequestException if competition or user is not found in request, if round number is not provided for INPUT and GROUND_TRUTH datasets, or if round number is not a positive integer.
-	 * @throws ForbiddenException if user is not an admin and tries to download INPUT or GROUND_TRUTH datasets.
-	 * @throws NotFoundException if no dataset is found for the given parameters.
-	 */
-	private async authorizeAndGetDataset(req: any): Promise<Dataset> {
-		const competition = req.competition as Competition; // Takes the competition from the previous middleware
-		const user = req.user; // Takes the user from the previous middleware
-		const validatedDatasetType = datasetTypeSchema.parse(req.query); // ignores round parameter if it is present but parses datatype to DatasetType enum
-
-		if (!competition || !user) {
-			throw new BadRequestException("Competition or user not found in request");
-		}
-
-		if (validatedDatasetType.type === DatasetType.TRAIN) {
-			// round query parameter is not needed for TRAIN datasets
-			const dataset = await this.datasetService.getTrainingDatasetForCompetition(competition.id); // throws NotFoundException if no dataset is found
-			return dataset;
-		}
-		// For INPUT and GROUND_TRUTH datasets, only admins are allowed to download them
-		if (user.userRole !== "ADMIN") {
-			throw new ForbiddenException("Not allowed to download this type of dataset.");
-		}
-		// round query parameter is needed for INPUT and GROUND_TRUTH datasets, but not for TRAIN datasets
-		const round = Number(req.query.round);
-		if (isNaN(round) || round < 1) {
-			throw new BadRequestException(
-				"round request parameter is required for INPUT and GROUND_TRUTH datasets and must be a positive integer",
-			);
-		}
-		const dataset = await this.datasetService.getDatasetForCompetitionRoundAndType(
-			competition.id,
-			round,
-			validatedDatasetType.type,
-		);
-
-		return dataset;
 	}
 }

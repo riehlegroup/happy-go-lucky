@@ -191,6 +191,8 @@ export async function createTestDatabase(): Promise<Database> {
 
 export async function resetTestDatabase(db: Database): Promise<void> {
     await db.exec(`
+    DELETE FROM competition_evaluations;
+    DELETE FROM competition_datasets;
     DELETE FROM competition_submissions;
     DELETE FROM competitions;
     DELETE FROM user_projects;
@@ -279,7 +281,7 @@ export async function createTestSubmissionForUser(db: Database, competitionId: n
  * @param basePath The base path where the datasets will be stored.
  * @param fileName The name of the dataset file.
  */
-export async function createDatasetsForCompetitionRound(db: Database, competitionId: number, round: number,  basePath: string): Promise<void> {
+export async function createDatasetsForCompetitionRound(db: Database, competitionId: number, round: number,  basePath: string): Promise<{inputDatasetId: number, groundTruthDatasetId: number}> {
   const groundTruthDataset = [
 		"package_name,version,lines_of_code,has_cve",
 		"express,4.18.2,1500,false",
@@ -306,9 +308,13 @@ export async function createDatasetsForCompetitionRound(db: Database, competitio
     INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name) VALUES
     (?, ?, 'GROUND_TRUTH', ?, ?)
   `, [competitionId, round, groundTruthFilePath, `ground_truth_round_${round}.csv`]);
+  const groundTruthDatasetId = await db.get("SELECT last_insert_rowid() as id");
   
   await db.run(`
     INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name) VALUES
     (?, ?, 'INPUT', ?, ?)
   `, [competitionId, round, inputFilePath, `input_round_${round}.csv`]);
+  const inputDatasetId = await db.get("SELECT last_insert_rowid() as id");
+
+  return { inputDatasetId: inputDatasetId.id, groundTruthDatasetId: groundTruthDatasetId.id };
 }
