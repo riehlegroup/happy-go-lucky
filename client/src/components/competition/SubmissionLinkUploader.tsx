@@ -5,13 +5,15 @@ import { createCompetitionSubmissionValidation, useForm } from "@/hooks/useForm"
 
 interface SubmissinLinkUploaderProps {
 	existingSubmissionLink?: string;
+	existingPseudonym?: string;
 	lastUpdated?: string;
 	isSubmitting?: boolean;
-	onSubmit: (submissionLink: string) => void;
+	onSubmit: (submissionLink: string, pseudonym: string) => void;
 }
 
 export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 	existingSubmissionLink = "",
+	existingPseudonym = "",
 	lastUpdated,
 	isSubmitting,
 	onSubmit,
@@ -22,7 +24,7 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 	const isSubmissionLinkExisting = Boolean(existingSubmissionLink);
 
 	const { data, errors, isValid, handleChanges } = useForm(
-		{ submissionLink: existingSubmissionLink },
+		{ submissionLink: existingSubmissionLink, pseudonym: existingPseudonym },
 		createCompetitionSubmissionValidation(),
 	);
 
@@ -31,7 +33,10 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 		if (existingSubmissionLink && existingSubmissionLink !== data.submissionLink) {
 			handleChanges("submissionLink", existingSubmissionLink);
 		}
-	}, [existingSubmissionLink]);
+		if( existingPseudonym && existingPseudonym !== data.pseudonym) {
+			handleChanges("pseudonym", existingPseudonym);
+		}
+	}, [existingSubmissionLink, existingPseudonym]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -41,7 +46,7 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 		setSubmitError(null);
 		setSubmitSuccess(false);
 		try {
-			await onSubmit(data.submissionLink);
+			await onSubmit(data.submissionLink, data.pseudonym);
 			setSubmitSuccess(true);
 		} catch (error) {
 			if (error instanceof Error) {
@@ -55,7 +60,27 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 	return (
 		<div>
 			<form onSubmit={handleSubmit}>
-				<div className="grid grid-cols-[minmax(0,1fr)_auto] gap-12">
+				<div className="flex flex-col gap-4 mr-4">
+					<div>
+						<Input
+							type="text"
+							name="pseudonym"
+							id="pseudonymInput"
+							value={data.pseudonym}
+							onChange={(e) => {
+								handleChanges("pseudonym", e.target.value);
+								setIsTouched(true);
+								if (submitSucess) setSubmitSuccess(false);
+								if (submitError) setSubmitError(null);
+							}}
+							className="w-full"
+							placeholder="Enter your pseudonym"
+							disabled={isSubmitting}
+						/>
+						<div className="text-left">
+							{isTouched && errors.pseudonym && <p className="text-red-500">{errors.pseudonym}</p>}
+						</div>
+					</div>
 					<div className="">
 						<Input
 							type="url"
@@ -80,18 +105,22 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 									Solution {isSubmissionLinkExisting ? "updated" : "submitted"} successfully.
 								</p>
 							)}
+						</div>
+					</div>
+          </div>
+
+					<div className="text-right col-span-2 mt-4">
+						<Button type="submit" className="h-14" disabled={!isValid || isSubmitting}>
+							{isSubmitting ? "Submitting..." : isSubmissionLinkExisting ? "Update Solution" : "Submit Solution"}
+						</Button>
+						<div className="">
 							{isSubmissionLinkExisting && lastUpdated && (
-								<p className="mt-1 text-left text-xs text-gray-500">
-									Last submitted: {new Date(lastUpdated).toLocaleString()}
+								<p className="mt-1 text-xs text-gray-500">
+									Last update: {new Date(lastUpdated).toLocaleString()}
 								</p>
 							)}
 						</div>
 					</div>
-
-					<Button type="submit" className="h-14" disabled={!isValid || isSubmitting}>
-						{isSubmitting ? "Submitting..." : isSubmissionLinkExisting ? "Update Solution" : "Submit Solution"}
-					</Button>
-				</div>
 			</form>
 		</div>
 	);

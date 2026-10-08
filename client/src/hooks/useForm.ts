@@ -96,6 +96,13 @@ export const createCompetitionSubmissionValidation = () => ({
       "Please enter a valid URL"
     ),
   ],
+  pseudonym: [
+    rules.required("Pseudonym"),
+    rules.pattern(
+      /^[a-zA-Z0-9\s-]+$/,
+      "Pseudonym can only contain letters, numbers, spaces, and hyphens"
+    ),
+  ],
 });
 
 export const useForm = <T extends object>(
