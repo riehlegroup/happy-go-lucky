@@ -8,6 +8,7 @@ import { DatabaseWriter } from './Serializer/DatabaseWriter';
 import { Email } from './ValueTypes/Email';
 import { DEFAULT_USER } from './Config/database';
 
+
 async function ensureCourseFlagColumn(db: Awaited<ReturnType<typeof open>>) {
   const columns = await db.all<{ name: string }[]>(`PRAGMA table_info(courses)`);
   const hasStudentsCanCreateProject = columns.some(
@@ -48,6 +49,9 @@ export async function initializeDB(filename: string, createAdmin = true) {
   });
 
   const oh = new ObjectHandler();
+
+  await db.exec(`PRAGMA journal_mode = WAL;`); // Enable Write-Ahead Logging for better concurrency
+  await db.exec(`PRAGMA busy_timeout = 5000;`); // Set busy timeout to 5 seconds
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -191,9 +195,26 @@ export async function initializeDB(filename: string, createAdmin = true) {
   `);
 
   await db.exec(`
+    CREATE TABLE IF NOT EXISTS competition_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      competitionId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      apiUrl TEXT NOT NULL,
+      pseudonym TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (competitionId) REFERENCES competitions(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (competitionId, userId),
+      UNIQUE (competitionId, pseudonym)
+    )
+  `);
+
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS competition_datasets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       competitionId INTEGER NOT NULL,
+      round INTEGER,
       dataset_type TEXT NOT NULL,
       file_path TEXT NOT NULL,
       file_name TEXT NOT NULL,
@@ -201,20 +222,29 @@ export async function initializeDB(filename: string, createAdmin = true) {
     )
   `);
 
-
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS competition_submissions (
+    CREATE TABLE IF NOT EXISTS competition_evaluations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      competitionId INTEGER NOT NULL,
-      userId INTEGER NOT NULL,
-      apiUrl TEXT NOT NULL,
-      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (competitionId) REFERENCES competitions(id),
-      FOREIGN KEY (userId) REFERENCES users(id),
-      UNIQUE (competitionId, userId)
+      submissionId INTEGER NOT NULL,
+      round INTEGER NOT NULL,
+      token TEXT,
+      score REAL,
+      error_message TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      started_at TEXT,
+      completed_at TEXT,
+      inference_time_ms INTEGER,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      FOREIGN KEY (submissionId) REFERENCES competition_submissions(id)
     )
   `);
+  //Create unique index for token to ensure token is unique and faster lookup by token in evaluation
+  await db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_competition_evaluations_token ON competition_evaluations(token)
+  `);
+
   
+
+
   return db;
 }

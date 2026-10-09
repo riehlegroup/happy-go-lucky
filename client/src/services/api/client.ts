@@ -78,6 +78,10 @@ class ApiClient {
       if (options?.responseType === "blob") {
         return (await response.blob()) as unknown as T;
       }
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        return {} as T;
+      }
+
 
       return (await response.json()) as T;
     } catch (error) {

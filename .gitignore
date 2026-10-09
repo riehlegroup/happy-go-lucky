@@ -41,6 +41,8 @@ dist
 # User files
 /server/database.sqlite
 /server/happyGoLucky.db
+/server/happyGoLucky.db-shm
+/server/happyGoLucky.db-wal
 /competition-service/uploads
 
 # AI agents

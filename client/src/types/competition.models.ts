@@ -24,9 +24,8 @@ export interface DatasetMetadata {
 	id: number;
 	competitionId: number;
 	type: DatasetType;
-	filename: string;
-	createdAt: string;
-	updatedAt: string;
+	file_name: string;
+	createdAt: string; // TODO: not yet implemented in backend, but should be added to track when the dataset was uploaded
 }
 
 export interface CompetitionSubmission {

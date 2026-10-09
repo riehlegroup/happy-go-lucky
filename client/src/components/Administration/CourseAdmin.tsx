@@ -9,6 +9,7 @@ import { useTerm } from "@/hooks/useTerm";
 import { Course, Project } from "./Course/types";
 import CourseMessage from "./Course/components/CourseMessage";
 import TermMessage from "./Term/components/TermMessage";
+import { CourseFeature } from "@/types/CourseFeature";
 
 /**
  * Course Admin panel for managing courses and their projects.
@@ -85,6 +86,7 @@ const CourseAdmin: React.FC = () => {
   const tableCourse = useMemo(() => {
     return courses.map((course) => {
       const term = terms.find((t) => t.id === course.termId);
+      const isCompetitionFeatureEnabled = course.enabledFeatures?.includes(CourseFeature.COMPETITION);
       return [
         course.id,
         term?.termName || course.termId,
@@ -97,6 +99,15 @@ const CourseAdmin: React.FC = () => {
             action="schedule"
             course={course}
           />
+          {/* Only show competition widget if the feature is enabled for the course */}
+          {isCompetitionFeatureEnabled && (
+            <CourseWidget
+              type="competition"
+              label="competition"
+              action="competition"
+              course={course}
+            />
+          )}
           <CourseWidget
             type="course"
             label="delete"

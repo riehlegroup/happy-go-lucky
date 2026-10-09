@@ -1,4 +1,6 @@
+import { NotFoundException } from "../errors/notfound.error";
 import { CompetitionRepo } from "../repositories/competition.repository";
+import { UpdateCompetitionDto } from "../types/competition.types";
 import { CreateCompetitionDto } from "../types/competition.types";
 
 /**
@@ -20,10 +22,14 @@ export class CompetitionService {
         return this.competitionRepo.createCompetition(competitionData);
     }
 
+    async updateCompetition(id: number, competitionData: UpdateCompetitionDto) {
+        return this.competitionRepo.updateCompetition(id, competitionData);
+    }
+
     async getCompetitionByCourseId(courseId: number) {
        const competitions = await this.competitionRepo.getByCourseId(courseId);
        if (!competitions || competitions.length === 0) {
-           throw new Error(`No competitions found for course ID ${courseId}`);
+           throw new NotFoundException(`No competitions found for course ID ${courseId}`); 
        }
        if(competitions.length > 1) {
            throw new Error(`Multiple competitions found for course ID ${courseId}. Expected only one.`);

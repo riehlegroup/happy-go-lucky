@@ -8,11 +8,12 @@ import { useTerm } from "@/hooks/useTerm";
 import { useDialog } from "@/hooks/useDialog";
 import CourseSchedule from "./components/CourseSchedule";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import CompetitionDialog from "@/components/competition/CompetitionDialog";
 
 interface CourseProps {
   label?: string;
-  action: "add" | "edit" | "delete" | "schedule";
-  type?: "course" | "project" | "schedule";
+  action: "add" | "edit" | "delete" | "schedule" | "competition";
+  type?: "course" | "project" | "schedule" | "competition";
   course?: Course | null;
   project?: Project | null;
   onFetch?: () => void;
@@ -37,6 +38,7 @@ const CourseWidget: React.FC<CourseProps> = ({
   const { message, DEFAULT, createCourse, updateCourse, addProject, updateProject, deleteProject, deleteCourse: deleteCourseFromHook } = useCourse();
   const { terms, getTerms } = useTerm();
   const [showSchedule, setShowSchedule] = useState(false);
+  const [showCompetition, setShowCompetition] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const {
     dialogState,
@@ -62,6 +64,9 @@ const CourseWidget: React.FC<CourseProps> = ({
     switch (action) {
       case "schedule":
         setShowSchedule((prev) => !prev);
+        break;
+      case "competition":
+        setShowCompetition((prev) => !prev);
         break;
       case "edit":
         if (type === "project" && project) {
@@ -165,6 +170,33 @@ const CourseWidget: React.FC<CourseProps> = ({
       </>
     );
   }
+
+  // Early conditional rendering for competition action
+  if (action === "competition" && course) {
+    return (
+      <>
+        <CourseAction
+          label={label ?? "competition"}
+          type="competition"
+          action= "add"
+          onClick={handleStateDialog}
+          dataCy="competition-course-trigger"
+        />
+        {showCompetition && (
+          <CompetitionDialog
+            course={course}
+            isOpen={showCompetition}
+            onClose={() => setShowCompetition(false)}
+            onSuccess={() => {
+              setShowCompetition(false);
+              onFetch?.();
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
 
   /**
    * Main Dialog-based UI for course/project operations

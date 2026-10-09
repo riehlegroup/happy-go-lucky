@@ -117,6 +117,7 @@ const Dashboard: React.FC = () => {
   }
 
 
+
   return (
     <div className="min-h-screen">
       <TopNavBar title="Dashboard" showBackButton={false} showUserInfo={true} />
@@ -167,8 +168,7 @@ const Dashboard: React.FC = () => {
                   disabled={!activeProject}
                   className="w-48"
                 >
-  
-                Code Activity
+                  Code Activity
                 </Button>
               </FeatureGuard>
               <FeatureGuard feature={CourseFeature.COMPETITION}>
