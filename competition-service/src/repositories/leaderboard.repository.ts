@@ -34,7 +34,7 @@ export class LeaderboardRepo {
 
     async getAllRoundResultsForUser(competitionId: number, userId: number): Promise<RoundResultForUserDto[]> {
         const query = `
-            SELECT e.round, e.score, e.inference_time_ms, e.completed_at, e.status, e.error_message
+            SELECT e.round, e.score, e.inference_time_ms, e.started_at, e.completed_at, e.status, e.error_message
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
             WHERE s.competitionId = ? AND s.userId = ?
@@ -46,6 +46,7 @@ export class LeaderboardRepo {
             score: row.score,
             inference_time_ms: row.inference_time_ms,
             completed_at: row.completed_at ?? null,
+            started_at: row.started_at ?? null,
             status: row.status,
             error_message: row.error_message ?? null,
         }));

@@ -216,6 +216,7 @@ export interface RoundResultForUserDto {
 	round: number;
 	score: number | null;
 	inference_time_ms: number | null;
+	started_at: string | null;
 	completed_at: string | null;
 	status: EvaluationStatus;
 	error_message: string | null;

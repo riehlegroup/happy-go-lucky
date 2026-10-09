@@ -239,6 +239,24 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		}
 	};
 
+	const getMyEvaluationResults = async () => {
+		if (!competition?.id) {
+			setError("No competition found to get evaluation results");
+			return;
+		}
+		setIsLoading(true);
+		setError(null);
+		try {
+			const results = await competitionApi.getMyEvaluationResults(competition.id);
+			return results;
+		} catch (error) {
+			setError(extractErrorMessage(error, "Failed to get evaluation results"));
+			throw error;
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
 	return {
 		competition,
 		mySubmission,
@@ -255,5 +273,6 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 		getDatasetMetadata,
 		deleteDataset,
 		submitCompetitionSubmission,
+		getMyEvaluationResults,
 	};
 };

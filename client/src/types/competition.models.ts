@@ -57,3 +57,13 @@ export interface LeaderboardEntry{
   inference_time_ms: number | null;
   completed_at: string | null;
 }
+
+export interface RoundResultForUserDto {
+	round: number;
+	score: number | null;
+	inference_time_ms: number | null;
+	started_at: string | null;
+	completed_at: string | null;
+	status: string;
+	error_message: string | null;
+}
