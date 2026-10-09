@@ -5,6 +5,7 @@ import {
 	DatasetType,
 	LeaderboardEntry,
 	PaginationResult,
+	RoundResultForUserDto,
 } from "@/types/competition.models";
 import ApiClient from "./client";
 
@@ -111,6 +112,14 @@ const competitionApi = {
 	getMySubmission: async (competitionId: number) => {
 		return await ApiClient.getInstance().get<CompetitionSubmission>(
 			`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/submissions/me`,
+			undefined,
+			true,
+		);
+	},
+
+	getMyEvaluationResults: async (competitionId: number) => {
+		return await ApiClient.getInstance().get<RoundResultForUserDto[]>(
+			`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/results/me`,
 			undefined,
 			true,
 		);
