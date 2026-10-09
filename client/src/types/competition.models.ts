@@ -16,23 +16,54 @@ export interface CreateCompetitionDto {
 
 export enum DatasetType {
 	TRAIN = "TRAIN",
-	TEST = "TEST",
-	VALIDATION = "VALIDATION",
+	INPUT = "INPUT",
+	GROUND_TRUTH = "GROUND_TRUTH",
 }
 
 export interface DatasetMetadata {
 	id: number;
 	competitionId: number;
-	type: DatasetType;
+	round: number | null;
+	dataset_type: DatasetType;
 	file_name: string;
-	createdAt: string; // TODO: not yet implemented in backend, but should be added to track when the dataset was uploaded
 }
 
 export interface CompetitionSubmission {
 	id: number;
 	competitionId: number;
+	pseudonym: string;
 	userId: number;
 	apiUrl: string;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface PaginationResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface LeaderboardEntry{
+  rank: number;
+  pseudonym: string;
+  score: number;
+  inference_time_ms: number | null;
+  completed_at: string | null;
+}
+
+export interface RoundResultForUserDto {
+	round: number;
+	score: number | null;
+	inference_time_ms: number | null;
+	started_at: string | null;
+	completed_at: string | null;
+	status: string;
+	error_message: string | null;
 }

@@ -18,6 +18,7 @@ import { ActiveProjectProvider } from "./context/ActiveProjectContext";
 import { CourseFeature } from "./types/CourseFeature";
 import { FeatureGuard } from "./components/common/FeatureGuard";
 import Competition from "./components/competition/Competition";
+import Leaderboard from "./components/competition/Leaderboard";
 
 function App() {
   return (
@@ -59,6 +60,11 @@ function App() {
                 <Competition /> 
               </FeatureGuard>
             } />
+          <Route path="/competition/:competitionId/leaderboard" element={
+            <FeatureGuard feature={CourseFeature.COMPETITION} fallback={<Navigate to="/dashboard" replace />}>
+              <Leaderboard /> 
+            </FeatureGuard>
+          } />
           {/*other routes*/}
           <Route path="/settings" element={<AccountSettings2 />} />
           <Route path="/course-participation" element={<CourseParticipation />} />
@@ -67,7 +73,6 @@ function App() {
           <Route path="/project-config" element={<ProjectConfig />} />
           <Route path="/confirmedEmail" element={<ConfirmedEmail />} />
           <Route path="/user-panel" element={<AccountSettings1 />} />
-          <Route path="/competition" element={<Competition />} />
         </Routes>
       </ActiveProjectProvider>
       </BrowserRouter>

@@ -175,6 +175,14 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
     });
   };
 
+  const isDateInPast = (date: Date): boolean => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() < now.getTime();
+  }
+
   // Sort submission dates ascending
   const sortedSubmissions = [...submission].sort((a, b) => a.getTime() - b.getTime());
 
@@ -232,6 +240,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ course, onClose }) => {
                   <Button
                     className="text-sm"
                     variant="destructive"
+                    disabled={isDateInPast(slot)} // Disable if the date is in the past
                     onClick={() => removeSubmission(slot)}
                   >
                     Remove

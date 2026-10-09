@@ -1,40 +1,87 @@
-import React from "react";
+import React, { useEffect } from "react";
 import TopNavBar from "../common/TopNavBar";
 import SectionCard from "../common/SectionCard";
 import SubmissionLinkUploader from "./SubmissionLinkUploader";
 import { useCompetition } from "@/hooks/useCompetition";
-import { DatasetType } from "@/types/competition.models";
+import { DatasetMetadata, DatasetType, RoundResultForUserDto } from "@/types/competition.models";
 import Button from "../common/Button";
 import { useActiveProject } from "@/context/ActiveProjectContext";
 import { CompetitionSkeleton } from "./CompetitionSkeleton";
 import { useDelayedLoading } from "@/hooks/useDelayedLoading";
+import { useNavigate } from "react-router";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 const Competition: React.FC = () => {
+	const navigate = useNavigate();
 	const { activeProject } = useActiveProject();
-	const { competition, mySubmission, isLoading, isActionLoading, error, downloadDataset, submitCompetitionSubmission } =
-		useCompetition(activeProject?.courseId);
-
+	const {
+		competition,
+		mySubmission,
+		isLoading,
+		isActionLoading,
+		error,
+		downloadDataset,
+		getDatasetMetadata,
+		submitCompetitionSubmission,
+		getMyEvaluationResults,
+	} = useCompetition(activeProject?.courseId);
+	const [trainingDatasetMetadata, setTrainingDatasetMetadata] = React.useState<DatasetMetadata | null>(null);
+	const [evaluationResults, setEvaluationResults] = React.useState<RoundResultForUserDto[]>([]);
 	const showSkeleton = useDelayedLoading(isLoading, {
 		delay: 200,
 		minDuration: 400,
 	});
 
+	const fetchTrainingDatasetMetadata = async () => {
+		if (competition) {
+			try {
+				const metadata = await getDatasetMetadata(DatasetType.TRAIN);
+				if (metadata && metadata.length === 1) {
+					setTrainingDatasetMetadata(metadata[0]);
+				} else {
+					setTrainingDatasetMetadata(null);
+				}
+			} catch (error) {
+				console.error("Error fetching training dataset metadata:", error);
+			}
+		}
+	};
+	const fetchEvaluationResultsforUser = async () => {
+		if (competition) {
+			try {
+				const results = await getMyEvaluationResults();
+				if (results) {
+					setEvaluationResults(results);
+				} else {
+					setEvaluationResults([]);
+				}
+			} catch (error) {
+				setEvaluationResults([]);
+				console.error("Error fetching user evaluation results:", error);
+			}
+		}
+	};
+
+	useEffect(() => {
+		fetchTrainingDatasetMetadata();
+		fetchEvaluationResultsforUser();
+	}, [competition]);
+
+	const goToLeaderboard = () => {
+		if (competition?.id) {
+			navigate(`/competition/${competition.id}/leaderboard`, { state: { competitionName: competition.name } });
+		}
+	};
+
+	//TODO: add example Link
 	const submissionGuidelines = (
 		<div>
 			<p>
-				For each competition a Training and Validation dataset will be provided. The training dataset will be used to
-				train your model, while the validation dataset will be used to evaluate its performance before u submit your
-				solution for evaluation. Use it to get an idea of how well your model performs on unseen data.
-			</p>
-			<p>
-				Submit your solution by providing a link to your implementation. Your implementation must strictly follow this
-				format. ...
-			</p>
-			{/*TODO: add format/ schema for submission*/}
-			<p>
-				At the end of the competition the interface of your solution will be called with an unknown set of evaluation
-				data. Your predicitions will be evaluated based on their performance on this data. After Evaluation, a
-				leaderboards will be updated with the results.
+				To participate in the competition, you need to submit a link to your solution. Your solution must be hosted in the
+				rrze clound and must implent the basic API structure as this example. For each competition a trainings dataset
+				will be provided to you to train your model. After training your model, different rounds with different evaluation
+				datasets will be evaluated. Your own score will be calculated based on the performance of your model on the
+				evaluation datasets and displayed on this page and on the leaderboards (under your pseudonym).
 			</p>
 		</div>
 	);
@@ -57,9 +104,17 @@ const Competition: React.FC = () => {
 				<SectionCard title={competition.name}>
 					<div className="mb-3 flex items-center justify-between gap-4">
 						<h3 className="text-lg font-semibold">Description</h3>
-						<Button onClick={() => downloadDataset(DatasetType.TRAIN)} disabled={isActionLoading}>
-							Download Training Dataset
-						</Button>
+						<div className="flex gap-4">
+							<Button
+								onClick={() => (trainingDatasetMetadata ? downloadDataset(trainingDatasetMetadata?.id) : null)}
+								disabled={isActionLoading || !trainingDatasetMetadata}
+							>
+								Download Training Dataset
+							</Button>
+							<Button onClick={() => goToLeaderboard()} disabled={isActionLoading}>
+								Leaderboard
+							</Button>
+						</div>
 					</div>
 					<div className="text-left">{competition.description}</div>
 
@@ -74,12 +129,47 @@ const Competition: React.FC = () => {
 					<div>
 						<SubmissionLinkUploader
 							existingSubmissionLink={mySubmission?.apiUrl}
+							existingPseudonym={mySubmission?.pseudonym}
 							lastUpdated={mySubmission?.updatedAt}
 							isSubmitting={isActionLoading}
-							onSubmit={(link: string) => submitCompetitionSubmission(link)}
+							onSubmit={(link: string, pseudonym: string) => submitCompetitionSubmission(link, pseudonym)}
 						/>
 					</div>
 				</SectionCard>
+				{evaluationResults.length > 0 && (
+				<SectionCard title="Results of evaluated rounds">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Round</TableHead>
+								<TableHead>Score (RSME)</TableHead>
+								<TableHead>Inference time (ms)</TableHead>
+								<TableHead>started at</TableHead>
+								<TableHead>Completed at</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead>Error message</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{evaluationResults.sort((a, b) => a.round - b.round).map((entry) => (
+								<TableRow key={entry.round}>
+									<TableCell>{entry.round}</TableCell>
+									<TableCell>{Number(entry.score).toFixed(4)}</TableCell>
+									<TableCell>{entry.inference_time_ms}</TableCell>
+									<TableCell>
+										{entry.started_at ? new Date(entry.started_at).toLocaleString() : "N/A"}
+									</TableCell>
+									<TableCell>
+										{entry.completed_at ? new Date(entry.completed_at).toLocaleString() : "N/A"}
+									</TableCell>
+									<TableCell>{entry.status}</TableCell>
+									<TableCell>{entry.error_message}</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</SectionCard>
+				)}
 			</div>
 		</div>
 	);
