@@ -80,7 +80,7 @@ describe("Dataset API Integrationtest", () => {
 
 		// Now test downloading the dataset
 		const downloadResponse = await request(app)
-			.get(`/competitions/${competitionId}/datasets?type=TRAIN`)
+			.get(`/competitions/${competitionId}/datasets/download?type=TRAIN`)
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(downloadResponse.status).toBe(200);
@@ -88,16 +88,23 @@ describe("Dataset API Integrationtest", () => {
 		expect(downloadResponse.text).toBe("id, name\n1, John\n2, Jane\n");
 	});
 
-	it("should return 400 when trying to download a TEST dataset over general Enpoint", async () => {
-		const token = generateTestToken(TEST_USERS.ADMIN.id);	
+	it("should return 400 when trying to download a TEST or VALIDATION dataset over general Endpoint as a non-admin user", async () => {
+		const token = generateTestToken(TEST_USERS.USER_PROJECT_1.id);	
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 
-		const downloadResponse = await request(app)
-			.get(`/competitions/${competitionId}/datasets?type=TEST`)
+		const downloadResponseTEST = await request(app)
+			.get(`/competitions/${competitionId}/datasets/download?type=TEST`)
 			.set("Authorization", `Bearer ${token}`);
 
-		expect(downloadResponse.status).toBe(400);
-		expect(downloadResponse.body).toHaveProperty("message", "Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.");
+		const downloadResponseVALIDATION = await request(app)
+			.get(`/competitions/${competitionId}/datasets/download?type=VALIDATION`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(downloadResponseTEST.status).toBe(403);
+		expect(downloadResponseTEST.body).toHaveProperty("message", "Not allowed to download this type of dataset.");
+
+		expect(downloadResponseVALIDATION.status).toBe(403);
+		expect(downloadResponseVALIDATION.body).toHaveProperty("message", "Not allowed to download this type of dataset.");
 	});
 
 	it("should return 400 when uploading without a file", async () => {

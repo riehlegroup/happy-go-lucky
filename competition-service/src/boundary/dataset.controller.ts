@@ -1,12 +1,16 @@
 import { DatasetService } from "../services/dataset.service";
 import {
 	Competition,
+	Dataset,
 	DatasetResponseSchema,
 	DatasetType,
 	datasetTypeSchema as datasetTypeSchema,
 } from "../types/competition.types";
 import fs from "fs";
 import { errorResponse, handleError } from "../errors/errorhandling.helper";
+import { BadRequestException } from "../errors/badrequest.error";
+import { ForbiddenException } from "../errors/forbidden.error";
+import { NotFoundException } from "../errors/notfound.error";
 
 export class DatasetController {
 	private datasetService: DatasetService;
@@ -34,13 +38,12 @@ export class DatasetController {
 			const filePath = req.file.path;
 
 			// Call the service to handle the database entry. Dataset file ist already saved by multer in the upload middleware.
-			const createdDataset =
-				await this.datasetService.createDatabaseEntryForUploadedFile(
-					competitionId,
-					datasetType,
-					fileName,
-					filePath,
-				);
+			const createdDataset = await this.datasetService.createDatabaseEntryForUploadedFile(
+				competitionId,
+				datasetType,
+				fileName,
+				filePath,
+			);
 
 			const responseDataset = DatasetResponseSchema.parse(createdDataset);
 
@@ -54,20 +57,9 @@ export class DatasetController {
 		}
 	}
 
-	async getDatasetsForCompetition(req: any, res: any) {
+	async downloadDatasetsForCompetition(req: any, res: any) {
 		try {
-			const competition = req.competition as Competition; // Takes the competition from the previous middleware
-
-			const validatedDatasetType = datasetTypeSchema.parse(req.query); // query parameter for filtering by dataset type
-
-			if (validatedDatasetType.type === DatasetType.TEST) {
-				return errorResponse("Invalid dataset type. Must be 'TRAIN' or 'VALIDATION'.", 400, res);
-			}
-
-			const dataset = await this.datasetService.getDatasetsForCompetition(
-				competition.id,
-				validatedDatasetType.type,
-			);
+			const dataset = await this.authorizeAndGetDataset(req, res);
 
 			res.download(dataset.file_path, dataset.file_name, (err: any) => {
 				if (err) {
@@ -79,5 +71,55 @@ export class DatasetController {
 		}
 	}
 
-	//TODO: Implement way to get test data to student submissions for evaluation. Depending on evaluation strategy, this might be a separate endpoint or handled differently.
+	async getDatasetsMetadataForCompetition(req: any, res: any) {
+		try {
+			const dataset = await this.authorizeAndGetDataset(req, res);
+			if (!dataset) {
+				return errorResponse("Dataset not found", 404, res);
+			}
+
+			const responseDataset = DatasetResponseSchema.parse(dataset);
+
+			return res.status(200).json(responseDataset);
+		} catch (error) {
+			handleError(error, "Failed to fetch datasets metadata for competition", res);
+		}
+	}
+
+	async deleteDataset(req: any, res: any) {
+		try {
+			const datasetId = Number(req.params.datasetId);
+			if (isNaN(datasetId)) {
+				return errorResponse("Invalid dataset ID", 400, res);
+			}
+			const deleted = await this.datasetService.deleteDatasetById(datasetId);
+			if (!deleted) {
+				return errorResponse("Dataset not found", 404, res);
+			}
+			res.status(204).send();
+		} catch (error) {
+			handleError(error, "Failed to delete dataset", res);
+		}
+	}
+
+	private async authorizeAndGetDataset(req: any, res: any): Promise<Dataset> {
+		const competition = req.competition as Competition; // Takes the competition from the previous middleware
+		const user = req.user; // Takes the user from the previous middleware
+		const validatedDatasetType = datasetTypeSchema.parse(req.query); // query parameter for filtering by dataset type
+
+		if (!competition || !user) {
+			throw new BadRequestException("Competition or user not found in request");
+		}
+
+		// users can only download TRAIN datasets.
+		if (validatedDatasetType.type != DatasetType.TRAIN && user.userRole !== "ADMIN") {
+			throw new ForbiddenException("Not allowed to download this type of dataset.");
+		}
+
+		const dataset = await this.datasetService.getDatasetsForCompetition(competition.id, validatedDatasetType.type);
+		if (!dataset) {
+			throw new NotFoundException("Dataset not found");
+		}
+		return dataset;
+	}
 }

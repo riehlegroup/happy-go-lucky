@@ -3,7 +3,7 @@ import { CompetitionService } from "../services/competition.service";
 import {
 	Competition,
 	CreateCompetitionDto,
-	CreateCompetitionSchema,
+	CreateCompetitionSchema, UpdateCompetitionDto, UpdateCompetitionSchema,
 } from "../types/competition.types";
 
 /**
@@ -37,11 +37,27 @@ export class CompetitionController {
 		try {
 			const competitionData: CreateCompetitionDto = CreateCompetitionSchema.parse(req.body);
 			const newCompetition = await this.competitionService.createCompetition(competitionData);
-			res.status(201).json(newCompetition);
+			res.status(201).json(newCompetition );
 		} catch (error) {
 			handleError(error, "Failed to create competition", res);
 		}
 	}
+
+    async updateCompetition(req: any, res: any) {
+        const { id } = req.params;
+        const competitionId = parseInt(id, 10);
+        if (isNaN(competitionId)) {
+            return errorResponse('Invalid competition ID', 400, res);
+        }
+
+        try {
+            const competitionData: UpdateCompetitionDto = UpdateCompetitionSchema.parse(req.body);
+            const updatedCompetition = await this.competitionService.updateCompetition(competitionId, competitionData);
+            res.status(200).json(updatedCompetition );
+        } catch (error) {
+            handleError(error, "Failed to update competition", res);
+        }
+    }
 
     /**
      * This endpoint is needed for the first fetch of competition data where only courseId is known. 
@@ -61,5 +77,6 @@ export class CompetitionController {
         } catch (error) {
             handleError(error, "Failed to fetch competition for the course", res);
         }
+    
     }
 }

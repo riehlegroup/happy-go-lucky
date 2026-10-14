@@ -35,11 +35,11 @@ export class DatasetService {
      * @throws Error if no dataset is found or if multiple datasets are found for the same competition and type.
      * @throws Error if the file for the dataset does not exist on the filesystem.
      */
-     async getDatasetsForCompetition(id: number, datasetType: DatasetType): Promise<Dataset> {
+     async getDatasetsForCompetition(id: number, datasetType: DatasetType): Promise<Dataset | null> {
 
         const dbResults = await this.datasetRepo.getDatasetsForCompetitionAndType(id, datasetType);
         if (!dbResults || dbResults.length === 0) {
-            throw new Error(`No dataset found for competition ID ${id} and dataset type ${datasetType}`);
+            return null; // No dataset found for the given competition and type
         }
         if (dbResults.length > 1) {
             throw new Error(`Multiple datasets found for competition ID ${id} and dataset type ${datasetType}`);
@@ -49,7 +49,25 @@ export class DatasetService {
         if(!fs.existsSync(dataset.file_path)) {
             throw new Error(`File not found for dataset ID ${dataset.id}`);
         }
-        
+        return dataset;
+    }
+
+    async deleteDatasetById(id: number): Promise<Dataset | null> {
+        const dataset = await this.datasetRepo.getById(id);
+        if (!dataset) {
+            return null; // No dataset found for the given ID
+        }
+
+        // Delete the file from the filesystem
+        if (fs.existsSync(dataset.file_path)) {
+            fs.unlinkSync(dataset.file_path);
+        }
+
+        // Delete the dataset from the database
+        const success = await this.datasetRepo.deleteById(id);
+        if (!success) {
+            throw new Error(`Failed to delete dataset with ID ${id} from the database`);
+        }
         return dataset;
     }
 }
