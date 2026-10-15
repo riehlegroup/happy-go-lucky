@@ -58,7 +58,7 @@ async function generateMockData(db: Database, deleteOnly: boolean = false) {
     console.log('Creating courses...');
     const amosResult = await db.run(
       `INSERT INTO courses (courseName, termId, enabledFeatures) VALUES (?, ?, ?)`,
-      ['AMOS Course Mock', termId, JSON.stringify([CourseFeature.HAPPINESS_INDEX, CourseFeature.STANDUPS, CourseFeature.CODE_ACTIVITY])]
+      ['AMOS Course Mock', termId, JSON.stringify([CourseFeature.HAPPINESS_INDEX, CourseFeature.STANDUPS, CourseFeature.CODE_ACTIVITY, CourseFeature.COMPETITION])]
     );
     const amosCourseId = amosResult.lastID;
     console.log(`  ✓ AMOS Course Mock created with ID: ${amosCourseId}`);

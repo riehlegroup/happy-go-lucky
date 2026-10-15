@@ -1,0 +1,311 @@
+import { BadRequestException } from "../errors/badrequest.error";
+import { DatasetRepo } from "../repositories/dataset.repository";
+import { SubmissionRepo } from "../repositories/submission.repository";
+import { Competition, DatasetType, Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/competition.types";
+import fastCsv from "fast-csv";
+
+import { EvaluationRepo } from "../repositories/evaluation.repository";
+import { NotFoundException } from "../errors/notfound.error";
+import { DatasetRoundCache } from "./datasetround.cache";
+
+
+export class EvaluationService {
+	private datasetRepo: DatasetRepo;
+	private submissionRepo: SubmissionRepo;
+	private evaluationRepo: EvaluationRepo;
+	private datasetRoundCache: DatasetRoundCache;
+
+    private static readonly DEADLINE_LIMIT_MS = 10 * 60 * 1000; // 15 minutes in milliseconds
+
+	constructor(
+		datasetRepo: DatasetRepo,
+		submissionRepo: SubmissionRepo,
+		evaluationRepo: EvaluationRepo,
+		datasetRoundCache: DatasetRoundCache,
+	) {
+		this.datasetRepo = datasetRepo;
+		this.submissionRepo = submissionRepo;
+		this.evaluationRepo = evaluationRepo;
+		this.datasetRoundCache = datasetRoundCache;
+	}
+
+	async startEvaluation(competition: Competition, round: number) {
+		// check if the current date is within the competition's start and end dates
+		const now = new Date().getTime();
+		if (now < competition.startDate.getTime() || now > competition.endDate.getTime()) {
+			throw new BadRequestException("Competition is not currently active");
+		}
+
+		// check if competition round has already been evaluated by checking if there are any evaluation records for the given competition and round
+		const existingEvaluations = await this.evaluationRepo.getEvaluationsByCompetitionAndRound(competition.id, round);
+		if (existingEvaluations.length > 0) {
+			throw new BadRequestException(
+				`Evaluation for competition ID ${competition.id} and round ${round} has already been started`,
+			);
+		}
+
+		const datasets = await this.datasetRepo.getDatasetsForCompetitionRound(competition.id, round);
+		if (datasets.length != 2) {
+			throw new Error(
+				`Found ${datasets.length} datasets for competition ID ${competition.id} and round ${round}. Expected exactly 2 datasets (input and ground truth).`,
+			);
+		}
+		const inputDataset = datasets.find((d) => d.dataset_type === DatasetType.INPUT);
+
+		if (!inputDataset) {
+			throw new Error(`No input dataset found for competition ID ${competition.id} and round ${round}`);
+		}
+
+		// call asynchrounously the requests to student apis
+		console.log(`Starting evaluation for competition ID and round: ${competition.id}`);
+		await this.callSubmissionApis(competition.id, round);
+	}
+
+	async requireEvaluationEntryExists(
+		token: string,
+		expectedStatus: EvaluationStatus,
+	): Promise<Evaluation & { competitionId: number }> {
+		const evaluation = await this.evaluationRepo.getEvaluationWithCompetitionByToken(token);
+		if (!evaluation) {
+			throw new BadRequestException("No evaluation entry found for the provided token");
+		}
+		if (evaluation.status !== expectedStatus) {
+			throw new BadRequestException("Evaluation entry is not in the expected status");
+		}
+		return evaluation;
+	}
+
+	async updateEvaluation(evaluationId: number, updateDto: UpdateEvaluationDto): Promise<boolean> {
+		return this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
+	}
+
+	async getInputDatasetFilePathForCompetiitionAndRound(competitionId: number, round: number): Promise<string> {
+		return this.datasetRepo.getDatasetForCompetitionRoundAndType(competitionId, round, DatasetType.INPUT).then((dataset) => {
+			if (!dataset) {
+				throw new NotFoundException(`No input dataset found for competition ID ${competitionId} and round ${round}`);
+			}
+			return dataset.file_path;
+		});
+	}
+
+	async evaluateStudentPrediction(
+		competitionId: number,
+		evaluation: Evaluation,
+		csvString: string,
+		receivedAt: number,
+	): Promise<{ score: number; status: EvaluationStatus }> {
+        const createdAtMs = new Date(evaluation.created_at).getTime();
+        const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
+        const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
+        
+		try {
+			// Get Datasets from Cache
+			const { groundTruthRows, inputRows } = await this.datasetRoundCache.getOrLoadDatasets(
+				competitionId,
+				evaluation.round,
+			);
+
+			const score = await this.calculateScore(groundTruthRows, csvString, inputRows);
+			const inferenceTimeMs = receivedAt - new Date(evaluation.started_at).getTime();
+			const updateSuccess = await this.updateEvaluation(evaluation.id, {
+				status: status,
+				score: score,
+				completed_at: new Date(receivedAt),
+				inference_time_ms: inferenceTimeMs,
+			});
+			if (!updateSuccess) {
+				throw new Error("Failed to update evaluation");
+			}
+			return { score, status };
+		} catch (error) {
+			console.error(`Error calculating score: ${error}`);
+			let errorMessage;
+			let exceptionToThrow;
+			if (error instanceof NotFoundException) {
+				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
+				exceptionToThrow = new NotFoundException(errorMessage);
+			} else if (error instanceof BadRequestException) {
+				errorMessage = `Invalid request: ${error.message}`;
+				exceptionToThrow = new BadRequestException(errorMessage);
+			} else {
+				errorMessage = `Error calculating score: ${error instanceof Error ? error.message : String(error)}`;
+				exceptionToThrow = new Error(errorMessage);
+			}
+			await this.updateEvaluation(evaluation.id, {
+				status: EvaluationStatus.FAILED,
+				error_message: errorMessage,
+				completed_at: new Date(receivedAt),
+			});
+			throw exceptionToThrow;
+		}
+	}
+
+	private async calculateScore(
+		groundTruthRows: string[][],
+		studentPredictionCsv: string,
+		inputRows: string[][],
+	): Promise<number> {
+		// assumes that both CSVs have the same number of rows and columns, and that they are aligned (i.e., the first row of the ground truth corresponds to the first row of the student's prediction, etc.)
+		const parseCsv = async (csvString: string): Promise<string[][]> => {
+			const rows: string[][] = [];
+			await new Promise<void>((resolve, reject) => {
+				fastCsv
+					.parseString(csvString, { headers: false })
+					.on("error", (error) => reject(error))
+					.on("data", (row) => rows.push(row))
+					.on("end", () => resolve());
+			});
+			return rows;
+		};
+		const studentPredictionRows = await parseCsv(studentPredictionCsv);
+		if (groundTruthRows.length !== studentPredictionRows.length || groundTruthRows.length !== inputRows.length) {
+			throw new BadRequestException(
+				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows, and input has ${inputRows.length} rows.`,
+			);
+		}
+		let sumSquaredErrors = 0;
+		let targetCount = 0;
+		for (let i = 0; i < groundTruthRows.length; i++) {
+			const groundTruthRow = groundTruthRows[i];
+			const studentPredictionRow = studentPredictionRows[i];
+			const inputRow = inputRows[i];
+			if (groundTruthRow.length !== studentPredictionRow.length || groundTruthRow.length !== inputRow.length) {
+				throw new BadRequestException(
+					`Column count mismatch in row ${i}: Ground truth has ${groundTruthRow.length} columns, student prediction has ${studentPredictionRow.length} columns, and input has ${inputRow.length} columns.`,
+				);
+			}
+			for (let j = 0; j < groundTruthRow.length; j++) {
+				const inVal = inputRow[j] ? inputRow[j].trim() : "";
+				// Only calculate score for columns where the input dataset has an empty value
+				const isTargetColumn = inVal === "" || inVal === null || inVal === undefined;
+
+				if (isTargetColumn) {
+					const groundTruthValue = this.toNumbericValue(groundTruthRow[j]);
+					const studentPredictionValue = this.toNumbericValue(studentPredictionRow[j]);
+					sumSquaredErrors += Math.pow(groundTruthValue - studentPredictionValue, 2);
+					targetCount++;
+				}
+			}
+		}
+		return Math.sqrt(sumSquaredErrors / targetCount); // Root Mean Squared Error (RMSE)
+	}
+
+	private async callSubmissionApis(competitionId: number, round: number) {
+		const submissions = await this.submissionRepo.getAllSubmissionsByCompetition(competitionId);
+		if (!submissions || submissions.length === 0) {
+			console.warn(`No submissions found for competition ID: ${competitionId}`);
+			return;
+		}
+		// create evaluation entry for each submission before calling the student API
+		const preparedEvaluations = submissions.map((submission) => ({
+			submissionId: submission.id,
+			apiUrl: submission.apiUrl,
+			token: crypto.randomUUID(),
+			round: round,
+		}));
+
+		const createdEvaluations = await Promise.all(
+			preparedEvaluations.map(async (evalData) => {
+				const evaluation = await this.evaluationRepo.createEvaluation(
+					evalData.submissionId,
+					evalData.token,
+					evalData.round,
+				);
+				if (!evaluation) {
+					console.error(`Failed to create evaluation for submission ID: ${evalData.submissionId}`);
+					return null;
+				}
+				return {
+					id: evaluation.id,
+					apiUrl: evalData.apiUrl,
+					submissionId: evaluation.submissionId,
+					token: evalData.token,
+				};
+			}),
+		);
+
+		for (const evaluation of createdEvaluations) {
+			if (!evaluation) {
+				continue;
+			}
+			// Call the student's API asynchronously (no await)
+			this.callStudentApi(evaluation.id, evaluation.apiUrl, evaluation.token);
+		}
+	}
+
+	private async callStudentApi(evaluationId: number, apiUrl: string, evaluationToken: string) {
+		const baseUrl = process.env.PUBLIC_COMPETITION_API_URL || (process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/competition` : null) || `${process.env.CLIENT_URL}/api/competition`;
+		const testDataDownloadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/download`;
+		const predictionUploadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/upload`;
+
+		const body = {
+			testdata_download_endpoint: testDataDownloadEndpoint,
+			prediction_upload_endpoint: predictionUploadEndpoint,
+		};
+		try {
+			const studentPredictionEndpoint = apiUrl.endsWith("/") ? `${apiUrl}predict` : `${apiUrl}/predict`;
+			const response = await fetch(`${studentPredictionEndpoint}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(body),
+				signal: AbortSignal.timeout(10000), // 10 seconds timeout
+			});
+
+			if (!response.ok) {
+				throw new Error(`Student submission API call failed with status ${response.status}`);
+			}
+		} catch (error: any) {
+			const errorMessage =
+				error.name === "TimeoutError"
+					? "Student submission API did not respond within 10 seconds"
+					: error instanceof Error
+						? error.message
+						: String(error);
+			console.error(`Evaluation ${evaluationId} Student API call failed: ${errorMessage}`);
+			try {
+				const updateDto: UpdateEvaluationDto = {
+					status: EvaluationStatus.FAILED,
+					error_message: errorMessage,
+					completed_at: new Date(),
+				};
+				await this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
+			} catch (error) {
+				console.error(`Failed to update evaluation status to FAILED for ${evaluationId}: ${error}`);
+			}
+		}
+	}
+
+	private toNumbericValue(value: unknown): number {
+		if (value === null || value === undefined || value === "") {
+			return 0; // TODO : Decide how to handle null/undefined/empty string values. For now, returning 0.
+		}
+		switch (typeof value) {
+			case "number":
+				return value;
+			case "boolean":
+				return value ? 1 : 0;
+			case "string":
+				const str = String(value).trim();
+				// handle boolean strings
+				if (str.toLowerCase() === "true") return 1;
+				if (str.toLowerCase() === "false") return 0;
+
+				// check if the string can be converted to a number (float or integer)
+				const num = Number(str);
+				if (!isNaN(num) && isFinite(num)) {
+					return num;
+				}
+				// deterministic hashing for non-numeric strings to convert them to a number (djb2 hash function)
+				let hash = 5381;
+				for (let i = 0; i < str.length; i++) {
+					const char = str.charCodeAt(i);
+					hash = (hash << 5) + hash + char;
+					hash |= 0; // Convert to 32bit integer
+				}
+				return Math.abs(hash);
+			default:
+				break;
+		}
+		throw new Error(`Cannot convert ${value} to a number`);
+	}
+}

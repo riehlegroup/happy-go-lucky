@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import express, { Express } from "express";
+import  { Application} from "express";
 import request from "supertest";
 import { Database } from "sqlite";
-import { createCompetitionRouter } from "../../src/routes/competition.routes";
+
 import {
   createTestDatabase,
   resetTestDatabase,
@@ -11,17 +11,16 @@ import {
 } from "./helpers/testDb.helper";
 import { generateTestToken } from "./helpers/auth.helper";
 import { CreateCompetitionDto } from "../../src/types/competition.types";
+import { createApp } from "../../src/createApp";
 
 describe("Competition API Integrationtest", () => {
   let db: Database;
-  let app: Express;
+  let app: Application;
 
   beforeAll(async () => {
     // Initialize the database and application here
     db = await createTestDatabase();
-    app = express();
-    app.use(express.json());
-    app.use("/competitions", createCompetitionRouter(db));
+    app = createApp(db);
   });
 
   afterAll(async () => {
@@ -91,6 +90,7 @@ describe("Competition API Integrationtest", () => {
     const response = await request(app)
       .get(`/competitions/${TEST_COMPETITIONS.COMPETITION_1.id}`)
       .set("Authorization", `Bearer ${token}`);
+
     expect(response.status).toBe(200);
     expect(response.body).toEqual(
       expect.objectContaining({
@@ -116,12 +116,13 @@ describe("Competition API Integrationtest", () => {
     await db.run(
       `INSERT INTO courses (id, courseName, termId) VALUES (3, 'Test Course 3', 1)`,
     ); // New empty course for the new competition
-
+    const startDate = new Date().toISOString().split("T")[0]; // now
+    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]; // one week from now
     const newCompetition: CreateCompetitionDto = {
       name: "New Test Competition",
       description: "Description for New Test Competition",
-      start_date: "2026-01-01",
-      end_date: "2026-01-08",
+      start_date: startDate,
+      end_date: endDate,
       courseId: 3,
     };
 
@@ -129,8 +130,6 @@ describe("Competition API Integrationtest", () => {
       .post("/competitions")
       .set("Authorization", `Bearer ${token}`)
       .send(newCompetition);
-
-    console.log("Response body:", response.body); // Log the response body for debugging
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual(
@@ -141,6 +140,7 @@ describe("Competition API Integrationtest", () => {
             courseId: newCompetition.courseId,
             start_date: newCompetition.start_date,
             end_date: newCompetition.end_date,
+            isActive: true,
         }),
     );
     let countResult = await db.get(
