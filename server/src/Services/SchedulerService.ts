@@ -1,5 +1,6 @@
 import { Database } from "sqlite";
 import cron from "node-cron";
+import { CourseFeature } from "../Models/CourseFeature";
 
 export class SchedulerService {
 	constructor(private db: Database) {}
@@ -33,6 +34,16 @@ export class SchedulerService {
 
 			for (const submission of dueSubmissions) {
                 // Fetch all submissions for the course in ascending order to determine the round number
+                const enabledFeaturesJSONstring = await this.db.get(
+                    `SELECT enabledFeatures FROM courses WHERE id = ?`,
+                    [submission.courseId],
+                );
+                const enabledFeatures = enabledFeaturesJSONstring ? JSON.parse(enabledFeaturesJSONstring.enabledFeatures) : [];
+                if (!enabledFeatures.includes(CourseFeature.COMPETITION)) {
+                    console.log(`Skipping submission ${submission.submissionId} for course ${submission.courseId} as competition feature is not enabled.`);
+                    continue;
+                }
+
 				const allSubmissionsOfCourse = await this.db.all(
 					`SELECT id FROM submissions WHERE scheduleId = ? ORDER BY submissionDate ASC`,
 					[submission.courseId],
