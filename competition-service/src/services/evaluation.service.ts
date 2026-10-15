@@ -2,7 +2,7 @@ import { BadRequestException } from "../errors/badrequest.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import { SubmissionRepo } from "../repositories/submission.repository";
 import { Competition, DatasetType, Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/competition.types";
-import fastCsv from "fast-csv";
+import * as fastCsv from "fast-csv";
 
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
@@ -151,7 +151,7 @@ export class EvaluationService {
 			await new Promise<void>((resolve, reject) => {
 				fastCsv
 					.parseString(csvString, { headers: false })
-					.on("error", (error) => reject(error))
+					.on("error", (error: Error) => reject(error))
 					.on("data", (row) => rows.push(row))
 					.on("end", () => resolve());
 			});

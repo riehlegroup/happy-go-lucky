@@ -1,7 +1,7 @@
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import fs from "fs";
-import fastCsv from "fast-csv";
+import * as fastCsv from "fast-csv";
 
 export class DatasetRoundCache {
 	private datasetRepo: DatasetRepo;
@@ -49,8 +49,8 @@ export class DatasetRoundCache {
 		await new Promise<void>((resolve, reject) => {
 			fastCsv
 				.parseString(csvString, { headers: false })
-				.on("error", (error) => reject(error))
-				.on("data", (row) => rows.push(row))
+				.on("error", (error: Error) => reject(error))
+				.on("data", (row: string[]) => rows.push(row))
 				.on("end", () => resolve());
 		});
 		return rows;
