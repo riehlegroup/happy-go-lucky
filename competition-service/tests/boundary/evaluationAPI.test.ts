@@ -256,10 +256,10 @@ describe("Evaluation API integration test", () => {
 
         // Assert
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("status");
-        expect(response.body.status).toBe("EVALUATED");
-        expect(response.body).toHaveProperty("score");
-        expect(response.body.score).toBe(0); // Based on the provided ground truth and prediction, the score should be 0
+        expect(response.body).toHaveProperty("message");
+        expect(response.body.message).toBe("Prediction received and queued for evaluation");
+        // wait for async evaluation to complete
+        await new Promise<void>((resolve) => setTimeout(resolve, 150));
 
         // Check that the evaluation record was updated with the score and status
         const evaluationRecord: any = await db.get(
@@ -317,7 +317,7 @@ describe("Evaluation API integration test", () => {
         expect(response.body).toHaveProperty("message");
         expect(response.body.message).toBe("Evaluation entry is not in the expected status");
     });
-    it("should return 400 when uploading a student prediction with invalid CSV format", async () => {
+    it(" when uploading a student prediction with invalid CSV format the error should be in the db record", async () => {
         // Arrange: Create a submission and evaluation with PENDING status for the test
         const submissionId = await createTestSubmissionForUser(
             db,
@@ -343,9 +343,18 @@ describe("Evaluation API integration test", () => {
             .attach("predictions", Buffer.from(invalidPredictionCsvContent), "prediction.csv");
 
         // Assert
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toContain("Invalid request: Column count mismatch");
+        expect(response.body.message).toBe("Prediction received and queued for evaluation");
+        // wait for async evaluation to complete
+        await new Promise<void>((resolve) => setTimeout(resolve, 150));
+        // check that the evaluation record was updated with the FAILED status and error message
+        const evaluationRecord: any = await db.get(
+            `SELECT * FROM competition_evaluations WHERE token = ?`,
+            [evaluationToken],
+        );
+        expect(evaluationRecord.status).toBe("FAILED");
+        expect(evaluationRecord.error_message).toContain("Column count mismatch");
     });
     it("should return 200 and det DELAYED status if evaluation takes too long", async () => {
         // Arrange: Create a submission and evaluation with PENDING status for the test
@@ -374,8 +383,10 @@ describe("Evaluation API integration test", () => {
 
         // Assert
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("status");
-        expect(response.body.status).toBe("DELAYED");
+        expect(response.body).toHaveProperty("message");
+        expect(response.body.message).toBe("Prediction received and queued for evaluation");
+        // wait for async evaluation to complete
+        await new Promise<void>((resolve) => setTimeout(resolve, 150));
         // Check that the evaluation record was updated with the DELAYED status
         const evaluationRecord: any = await db.get(
             `SELECT * FROM competition_evaluations WHERE token = ?`,
