@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 /**
  * Database model for a competition
  */
@@ -47,9 +48,9 @@ export type CompetitionOutboundDto = z.infer<typeof CompetitionOutboundDtoSchema
  * validation Schema for creating a competition
  */
 export const CreateCompetitionSchema = z.object({
-	name: z.string().min(3, "name must be at least 3 characters long"),
+	name: z.string().trim().min(3, "name must be at least 3 characters long"),
 	courseId: z.number().int().positive(),
-	description: z.string().min(20, "description must be at least 20 characters long"),
+	description: z.string().trim().min(20, "description must be at least 20 characters long"),
 	start_date: z.iso.date(),
 	end_date: z.iso.date(),
 });
@@ -79,7 +80,8 @@ export const SubmissionInboundDtoSchema = z.object({
 	apiUrl: z.url("apiUrl must be a valid URL"),
 	pseudonym: z
 		.string()
-		.min(1, "pseudonym must be at least 1 character long")
+		.trim()
+		.min(3, "pseudonym must be at least 3 characters long")
 		.max(40, "pseudonym must be at most 40 characters long"),
 });
 
