@@ -21,33 +21,38 @@ This guide covers production deployment using Docker with automatic HTTPS certif
 
 ## Architecture Overview
 
-The application uses a **3-container Docker Compose setup**:
+The application uses a **4-container Docker Compose setup**:
 
-1. **Backend (`server`)**: Node.js + Express API server
-2. **Frontend Builder (`client`)**: Builds React app, stores static files in volume
-3. **Reverse Proxy (`caddy`)**: Serves frontend, proxies API, manages HTTPS
+1. **Backend (`server`)**: Node.js + Express API server handling core HGL logic.
+2. **Competition Service (`competition-service`)**: Autonomous Node.js microservice handling all competition logic, datasets, and evaluations.
+3. **Frontend Builder (`client`)**: Builds React app, stores static files in volume.
+4. **Reverse Proxy (`caddy`)**: Serves frontend, proxies API to the respective backends, and manages HTTPS.
 
 ### Request Flow
 
 ```
 Internet → Caddy (port 80/443)
-            ├─→ /api/* → Strip /api → Backend server:3000
-            └─→ /* → Serve frontend static files
+├─→ /api/competition/* → Strip /api → Competition Service:8081
+├─→ /api/*             → Strip /api → Backend server:3000
+└─→ /*                 → Serve frontend static files
+
 ```
 
 **Key Points:**
 - ✅ Backend receives clean URLs (`/user`, `/session`, etc.) without `/api` prefix
-- ✅ Frontend makes requests to `/api/user`, `/api/session`
-- ✅ Caddy strips `/api` prefix when proxying to backend
+- ✅ Competition Service receives clean URLs (`/competition`, `/submissions`, etc.)
+- ✅ Frontend makes requests to `/api/user`, `/api/competition`
+- ✅ Caddy strips `/api` prefix when proxying to the respective backend
 - ✅ Automatic HTTPS with Let's Encrypt via Caddy
-- ✅ One process per container (Docker best practice)
+- ✅ Shared SQLite Database with WAL (Write-Ahead Logging) for concurrent access by both services
 
 ### Container Details
 
 | Container | Purpose | Exposed Ports | Volumes |
 |-----------|---------|---------------|---------|
-| `server` | Backend API | None (internal only) | `happy-go-lucky-db` (database) |
-| `client` | Builds frontend | None (exits after build) | `client-dist` (build output) |
+| `server` | Core Backend API | None (internal) | `happy-go-lucky-db` (database) |
+| `competition-service` | Competition Backend | None (internal) | `happy-go-lucky-db`, `competition-uploads` |
+| `client` | Builds frontend | None (exits) | `client-dist` (build output) |
 | `caddy` | Web server & reverse proxy | 80, 443 | `client-dist`, `caddy-data`, `caddy-config`, `Caddyfile` |
 
 ---
@@ -74,47 +79,62 @@ dig your-domain.com
 ### Initial Setup
 
 1. **Clone the repository on your server:**
-   ```bash
-   git clone <repository-url>
-   cd happy-go-lucky
-   ```
+```bash
+git clone <repository-url>
+cd happy-go-lucky
+```
+
 
 2. **Create production environment file:**
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cp .env.example .env
+```
+
 
 3. **Edit `.env` with your production values:**
-   ```bash
-   nano .env
-   ```
+```bash
+nano .env
+```
 
-   **Critical variables to update:**
-   ```env
-   # Your domain name (required for automatic HTTPS)
-   DOMAIN=your-domain.com
 
-   # Email for Let's Encrypt notifications (certificate expiry warnings)
-   ACME_EMAIL=admin@your-domain.com
+**Critical variables to update:**
+```env
+# Your domain name (required for automatic HTTPS)
+DOMAIN=your-domain.com
 
-   # Application URLs (update with your domain)
-   CLIENT_URL=https://your-domain.com
-   VITE_API_URL=https://your-domain.com/api
+# Email for Let's Encrypt notifications
+ACME_EMAIL=admin@your-domain.com
 
-   # Generate a strong random secret for JWT
-   # Run: openssl rand -base64 32
-   JWT_SECRET=your_secure_random_jwt_secret_here
+# Application URLs (update with your domain)
+CLIENT_URL=[https://your-domain.com](https://your-domain.com)
+VITE_API_URL=[https://your-domain.com/api](https://your-domain.com/api)
 
-   # SMTP credentials for sending emails
-   # For Gmail, use an app password (not your regular account password)
-   EMAIL_SMTP_USER=your.email@fau.de
-   EMAIL_SMTP_PASS=your_secure_password
+# Public URL for the competition API (called by student VMs)
+PUBLIC_COMPETITION_API_URL=[https://your-domain.com/api/competition](https://your-domain.com/api/competition)
 
-   # Optional: GitHub token for code activity features
-   VITE_GITHUB_TOKEN=your_github_personal_access_token
-   ```
+# Internal URL for the server scheduler to trigger evaluations
+INTERNAL_COMPETITION_SERVICE_URL=http://competition-service:8081
 
-   **Important**: The `DB_PATH` should remain as `/app/server/data/happyGoLucky.db` (container path).
+# Generate strong random secrets
+# Run: openssl rand -base64 32
+JWT_SECRET=your_secure_random_jwt_secret_here
+INTERNAL_API_SECRET=your_secure_internal_api_secret_here
+
+# SMTP credentials for sending emails
+EMAIL_SMTP_USER=your.email@fau.de
+EMAIL_SMTP_PASS=your_secure_password
+
+# Optional: GitHub token for code activity features
+VITE_GITHUB_TOKEN=your_github_personal_access_token
+
+```
+
+
+**Important Docker Paths:**
+* `DB_PATH` MUST remain as `/app/server/data/happyGoLucky.db`. This specific path ensures the shared volume maps correctly for WAL-mode synchronization across both services.
+* `STORAGE_PATH` MUST remain as `/app/uploads`. This ensures datasets are stored in the correct `competition-uploads` Docker volume.
+
+
 
 ### HTTPS Configuration
 
@@ -139,15 +159,17 @@ docker compose up -d
 ```
 
 This will:
-- Build the backend Docker image
-- Build the frontend and store static files in a volume
-- Start Caddy to serve frontend and proxy API requests
-- Create four Docker volumes:
-  - `happy-go-lucky-db`: SQLite database
-  - `client-dist`: Frontend static files
-  - `caddy-data`: Caddy certificates and data
-  - `caddy-config`: Caddy configuration
-- Obtain HTTPS certificate on first run (if DOMAIN is set)
+* Build the backend Docker image and competition service image
+* Build the frontend and store static files in a volume
+* Start Caddy to serve frontend and proxy API requests
+* Create five Docker volumes:
+* `happy-go-lucky-db`: SQLite database and WAL files
+* `competition-uploads`: Training and test datasets for competitions
+* `client-dist`: Frontend static files
+* `caddy-data`: Caddy certificates and data
+* `caddy-config`: Caddy configuration
+
+
 
 **Monitor the startup process:**
 ```bash
@@ -165,20 +187,19 @@ serving HTTPS on :443
 ### Verifying Deployment
 
 1. **Check container status:**
-   ```bash
-   docker compose ps
-   ```
+```bash
+docker compose ps
+```
 
-   Should show `server` and `caddy` as "Up". `client` will show as "Exited" (normal - it only builds).
 
+Should show `server`, `competition-service` and `caddy` as "Up". `client` will show as "Exited" (normal - it only builds).
 2. **Test HTTPS connection:**
-   ```bash
-   curl -I https://your-domain.com
-   ```
+```bash
+curl -I [https://your-domain.com](https://your-domain.com)
+```
 
-   Should return `200 OK` with security headers.
 
-3. **Verify certificate:**
+. **Verify certificate:**
    ```bash
    openssl s_client -connect your-domain.com:443 -servername your-domain.com
    ```
@@ -200,21 +221,27 @@ serving HTTPS on :443
 For local testing without a domain or HTTPS:
 
 1. **Leave `DOMAIN` empty in `.env` (or don't set it):**
-   ```env
-   DOMAIN=
-   CLIENT_URL=http://localhost
-   VITE_API_URL=http://localhost/api
-   ACME_EMAIL=
-   ```
+```env
+DOMAIN=
+CLIENT_URL=http://localhost
+VITE_API_URL=http://localhost/api
+PUBLIC_COMPETITION_API_URL=http://localhost/api/competition
+INTERNAL_COMPETITION_SERVICE_URL=http://competition-service:8081
+ACME_EMAIL=
+
+```
+
 
 2. **Start containers:**
-   ```bash
-   docker compose up
-   ```
+```bash
+docker compose up
+```
+
 
 3. **Access via HTTP:**
-   - Frontend: `http://localhost`
-   - API: `http://localhost/api/user` (example)
+* Frontend: `http://localhost`
+* API: `http://localhost/api/user` (example)
+* Competition API: `http://localhost/api/competition` (example)
 
 **Note**: Caddy will use a self-signed certificate for localhost (browser will show warning, this is expected).
 
@@ -232,25 +259,28 @@ For local testing without a domain or HTTPS:
 ### Application URLs
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
+| --- | --- | --- | --- |
 | `CLIENT_URL` | No | `http://localhost:5173` | Frontend URL for CORS and email links |
-| `VITE_API_URL` | No | `http://localhost:3000` | Backend API base URL (should be `https://domain.com/api` in production) |
+| `VITE_API_URL` | No | `http://localhost:3000` | Backend API base URL  (should be `https://domain.com/api` in production)|
+| `PUBLIC_COMPETITION_API_URL` | Production | `http://localhost/api/competition` | Base URL for student VMs to submit predictions |
+| `INTERNAL_COMPETITION_SERVICE_URL` | Yes | `http://competition-service:8081` | Internal Docker URL used by the HGL scheduler to trigger competition evaluations |
 
-**Important**: The backend receives requests WITHOUT the `/api` prefix. Caddy strips it during reverse proxying.
-
+**Important**: The backend services receive requests WITHOUT the `/api` or `/api/competition` prefix. Caddy strips it during reverse proxying.
 ### Backend Configuration
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NODE_ENV` | No | `development` | Set to `production` for production deployment |
-| `PORT` | No | `3000` | Internal port for backend server (not exposed outside container) |
-| `DB_PATH` | No | `./happyGoLucky.db` | Path to SQLite database file |
-| `JWT_SECRET` | **Yes** | `your_jwt_secret` | Secret key for JWT token signing (use strong random value!) |
+| --- | --- | --- | --- |
+| `NODE_ENV` | No | `development` | Set to `production` for deployment |
+| `PORT` | No | `3000` | Internal port for core backend server |
+| `DB_PATH` | No | `/app/server/data/happyGoLucky.db` | Shared path to SQLite database. MUST reside in the `data` folder to ensure WAL files sync. |
+| `STORAGE_PATH` | No | `/app/uploads` | Path inside the container where competition datasets are stored. Maps to the `competition-uploads` volume. |
+| `JWT_SECRET` | **Yes** | `your_jwt_secret` | Secret key for JWT token signing |
+| `INTERNAL_API_SECRET` | **Yes** | `your_internal_secret` | Key for secure communication between Server and Competition-Service |
 
 ### Email Configuration
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
+| --- | --- | --- | --- |
 | `EMAIL_SMTP_USER` | Production | - | SMTP username for sending emails (FAU email or Gmail address) |
 | `EMAIL_SMTP_PASS` | Production | - | SMTP password or app password for sending emails |
 | `EMAIL_FROM_NAME` | No | `Happy Go Lucky` | Sender name displayed in emails |
@@ -260,10 +290,11 @@ For local testing without a domain or HTTPS:
 | `EMAIL_SMTP_SECURE` | No | `true` | Whether to use TLS/SSL for SMTP connection (true/false) |
 
 **Email Behavior:**
-- **Development** (`NODE_ENV !== 'production'`): Emails logged to console, not sent
-- **Production** (`NODE_ENV === 'production'`): 
-  - If `EMAIL_SMTP_USER` and `EMAIL_SMTP_PASS` are set: Emails sent via configured SMTP server
-  - Otherwise: Falls back to local MTA (if available)
+
+* **Development** (`NODE_ENV !== 'production'`): Emails logged to console, not sent
+* **Production** (`NODE_ENV === 'production'`):
+* If `EMAIL_SMTP_USER` and `EMAIL_SMTP_PASS` are set: Emails sent via configured SMTP server
+* Otherwise: Falls back to local MTA (if available)
 
 **Supported Email Providers:**
 - **FAU**: Uses default settings (`smtp-auth.fau.de:465`)
@@ -277,62 +308,78 @@ For local testing without a domain or HTTPS:
 ### Optional Features
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
+| --- | --- | --- | --- |
 | `VITE_GITHUB_TOKEN` | Optional | - | GitHub personal access token for code activity features |
 
 ---
 
 ## Database Management
 
-The SQLite database is stored in a Docker named volume for persistence across container restarts.
+The SQLite database is stored in a Docker named volume (`happy-go-lucky-db`) and runs in **WAL (Write-Ahead Logging)** mode. This ensures the `server` and `competition-service` can read and write concurrently without locking conflicts.
 
-### Backup Database
+Because of WAL-mode, the database consists of three files (`.db`, `.db-wal`, `.db-shm`). Special care must be taken during backups.
 
-**Method 1: Copy from running container**
-```bash
-docker cp $(docker compose ps -q server):/app/server/data/happyGoLucky.db ./backup-$(date +%Y%m%d-%H%M%S).db
-```
+### Backup Database (WAL-Safe Method)
 
-**Method 2: Export via docker compose**
-```bash
-docker compose exec server cat /app/server/data/happyGoLucky.db > ./backup-$(date +%Y%m%d-%H%M%S).db
-```
+⚠️ **CRITICAL:** Do NOT use `cp` or `cat` directly on the `.db` file while the containers are running. This will result in a corrupt or incomplete backup because pending writes exist in the `-wal` file. Always use the SQLite `.backup` command.
 
-**Method 3: Automated backup script**
+**Method 1: Automated safe backup script**
+
 ```bash
 #!/bin/bash
 # backup-db.sh
 BACKUP_DIR="./backups"
 mkdir -p $BACKUP_DIR
-docker compose exec -T server cat /app/server/data/happyGoLucky.db > \
-  $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db
-echo "Backup completed: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).db"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+# Tell SQLite to create a clean, consolidated snapshot into a temp file
+docker compose exec -T server sqlite3 /app/server/data/happyGoLucky.db ".backup /app/server/data/snapshot.db"
+
+# Copy the consolidated snapshot to the host
+docker cp $(docker compose ps -q server):/app/server/data/snapshot.db $BACKUP_DIR/backup-$TIMESTAMP.db
+
+# Remove the temp snapshot from the container
+docker compose exec -T server rm /app/server/data/snapshot.db
+
+echo "Backup completed: $BACKUP_DIR/backup-$TIMESTAMP.db"
+
+```
+
+### Backup Competition Datasets
+
+Competition datasets (training/test files) are stored in the `competition-uploads` volume. To back them up:
+
+```bash
+docker run --rm -v happy-go-lucky_competition-uploads:/uploads -v $(pwd)/backups:/backup alpine tar -czf /backup/datasets-backup-$(date +%Y%m%d).tar.gz -C /uploads .
+
 ```
 
 ### Restore Database
 
 1. **Stop the containers:**
-   ```bash
-   docker compose down
-   ```
+```bash
+docker compose down
+```
 
 2. **Copy backup to volume:**
-   ```bash
-   docker run --rm -v happy-go-lucky-db:/app/server/data -v $(pwd):/backup alpine \
-     cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/myDatabase.db
-   ```
+```bash
+docker run --rm -v happy-go-lucky-db:/app/server/data -v $(pwd):/backup alpine \
+  cp /backup/backup-YYYYMMDD-HHMMSS.db /app/server/data/happyGoLucky.db
+```
 
 3. **Restart containers:**
-   ```bash
-   docker compose up -d
-   ```
+```bash
+docker compose up -d
+```
+
+
 
 ### Reset/Delete Database
 
 ```bash
-   docker compose exec server rm /app/server/data/happyGoLucky.db
-```
+docker compose exec server rm /app/server/data/happyGoLucky.db /app/server/data/happyGoLucky.db-wal /app/server/data/happyGoLucky.db-shm
 
+```
 ### Manual Database Access
 
 ```bash
@@ -364,28 +411,34 @@ Certificates are stored in the `caddy-data` Docker volume and persist across con
 
 ### Certificate Renewal
 
-- **Automatic**: Caddy checks and renews certificates automatically
-- **Timing**: Renewal starts 30 days before expiration
-- **No downtime**: Renewal happens in the background
-- **Notifications**: Expiry warnings sent to `ACME_EMAIL` if renewal fails
+* **Automatic**: Caddy checks and renews certificates automatically
+* **Timing**: Renewal starts 30 days before expiration
+* **No downtime**: Renewal happens in the background
+* **Notifications**: Expiry warnings sent to `ACME_EMAIL` if renewal fails
 
 ### Manual Certificate Operations
 
 **View certificate details:**
+
 ```bash
 # Check current certificates
 docker compose exec caddy caddy list-certificates
+
 ```
 
 **Force certificate renewal:**
+
 ```bash
 # Restart Caddy to trigger re-check
 docker compose restart caddy
+
 ```
 
 **View certificate expiry:**
+
 ```bash
 echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com 2>/dev/null | openssl x509 -noout -dates
+
 ```
 
 ### Certificate Troubleshooting
@@ -393,27 +446,35 @@ echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com
 **If certificate acquisition fails:**
 
 1. **Check DNS:**
-   ```bash
-   nslookup your-domain.com
-   ```
+```bash
+nslookup your-domain.com
+
+```
+
 
 2. **Verify ports 80 and 443 are accessible:**
-   ```bash
-   # From another machine
-   nc -zv your-domain.com 80
-   nc -zv your-domain.com 443
-   ```
+```bash
+# From another machine
+nc -zv your-domain.com 80
+nc -zv your-domain.com 443
+
+```
+
 
 3. **Check Caddy logs:**
-   ```bash
-   docker compose logs caddy | grep -i certificate
-   ```
+```bash
+docker compose logs caddy | grep -i certificate
+
+```
+
 
 4. **Common issues:**
-   - Domain DNS not propagated (wait 1-24 hours after DNS changes)
-   - Firewall blocking ports 80/443
-   - Port already in use by another service
-   - Rate limit exceeded (Let's Encrypt has rate limits)
+* Domain DNS not propagated (wait 1-24 hours after DNS changes)
+* Firewall blocking ports 80/443
+* Port already in use by another service
+* Rate limit exceeded (Let's Encrypt has rate limits)
+
+
 
 ---
 
@@ -422,37 +483,48 @@ echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com
 ### Standard Update Process
 
 1. **Pull latest code:**
-   ```bash
-   git pull
-   ```
+```bash
+git pull
+
+```
+
 
 2. **Rebuild and restart containers:**
-   ```bash
-   docker compose down
-   docker compose build --no-cache
-   docker compose up -d
-   ```
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 
-   The database and certificates persist in volumes, so your data is safe.
+```
 
+
+The database, datasets, and certificates persist in volumes, so your data is safe.
 3. **Verify update:**
-   ```bash
-   docker compose logs -f
-   ```
+```bash
+docker compose logs -f
+
+```
+
+
 
 ### Zero-Downtime Update (Advanced)
 
 For production environments where downtime must be minimized:
 
 1. **Build new images without stopping current containers:**
-   ```bash
-   docker compose build
-   ```
+```bash
+docker compose build
+
+```
+
 
 2. **Quickly swap containers:**
-   ```bash
-   docker compose up -d --no-deps --force-recreate server caddy
-   ```
+```bash
+docker compose up -d --no-deps --force-recreate server competition-service caddy
+
+```
+
+
 
 This minimizes downtime to a few seconds during container swap.
 
@@ -477,6 +549,7 @@ docker compose logs -f
 
 # View logs (specific service)
 docker compose logs -f server
+docker compose logs -f competition-service
 docker compose logs -f caddy
 
 # View logs with timestamps
@@ -487,6 +560,7 @@ docker compose ps
 
 # View resource usage
 docker stats
+
 ```
 
 ### Rebuild and Deploy
@@ -503,6 +577,7 @@ docker compose up -d
 # Complete reset (removes containers, keeps volumes)
 docker compose down
 docker compose up -d --force-recreate
+
 ```
 
 ### Shell Access
@@ -510,6 +585,9 @@ docker compose up -d --force-recreate
 ```bash
 # Access server container shell
 docker compose exec server sh
+
+# Access competition-service container shell
+docker compose exec competition-service sh
 
 # Access Caddy container shell
 docker compose exec caddy sh
@@ -520,6 +598,7 @@ docker compose exec caddy caddy version
 
 # Access backend directory
 docker compose exec server sh -c "cd /app/server && ls -la"
+
 ```
 
 ### Volume Management
@@ -530,11 +609,13 @@ docker volume ls | grep happy-go-lucky
 
 # Inspect volumes
 docker volume inspect happy-go-lucky-db
+docker volume inspect competition-uploads
 docker volume inspect caddy-data
 docker volume inspect client-dist
 
 # Remove unused volumes (CAUTION: data loss!)
 docker volume prune
+
 ```
 
 ### Cleanup
@@ -549,6 +630,7 @@ docker image prune -a
 # Complete cleanup (REMOVES ALL DATA!)
 docker compose down -v
 docker system prune -a
+
 ```
 
 ---
@@ -558,95 +640,125 @@ docker system prune -a
 ### Container Won't Start
 
 **Check logs:**
+
 ```bash
 docker compose logs server
+docker compose logs competition-service
 docker compose logs caddy
+
 ```
 
 **Common issues:**
-- **Ports 80/443 in use**: Stop other services or change port mapping in `docker-compose.yml`
-- **Environment variables missing**: Check `.env` file exists and has correct values
-- **Build errors**: Try `docker compose build --no-cache`
-- **Out of disk space**: Check `df -h` and clean up Docker resources
+
+* **Ports 80/443 in use**: Stop other services or change port mapping in `docker-compose.yml`
+* **Environment variables missing**: Check `.env` file exists and has correct values
+* **Build errors**: Try `docker compose build --no-cache`
+* **Out of disk space**: Check `df -h` and clean up Docker resources
+* **Database Initialization Loop**: If the `competition-service` keeps restarting or logging "Wait for database initialization", the main `server` has crashed or hasn't created the `competitions` table yet. Check the `server` logs first!
 
 ### HTTPS Not Working
 
 **Certificate acquisition failed:**
 
 1. **Verify domain DNS:**
-   ```bash
-   nslookup your-domain.com
-   dig your-domain.com
-   ```
+```bash
+nslookup your-domain.com
+dig your-domain.com
+
+```
+
 
 2. **Check port 80 accessibility (required for Let's Encrypt):**
-   ```bash
-   # From another machine
-   curl -I http://your-domain.com
-   ```
+```bash
+# From another machine
+curl -I [http://your-domain.com](http://your-domain.com)
+
+```
+
 
 3. **Check Caddy logs for certificate errors:**
-   ```bash
-   docker compose logs caddy | grep -i "certificate\|acme\|let's encrypt"
-   ```
+```bash
+docker compose logs caddy | grep -i "certificate\|acme\|let's encrypt"
+
+```
+
 
 4. **Common solutions:**
-   - Wait for DNS propagation (24-48 hours after DNS changes)
-   - Check firewall allows ports 80 and 443
-   - Verify `DOMAIN` in `.env` matches actual domain
-   - Ensure no other service is using port 80 during certificate acquisition
+* Wait for DNS propagation (24-48 hours after DNS changes)
+* Check firewall allows ports 80 and 443
+* Verify `DOMAIN` in `.env` matches actual domain
+* Ensure no other service is using port 80 during certificate acquisition
+
+
 
 **Browser shows "Not Secure":**
-- Certificate may still be acquiring (wait 30 seconds)
-- Hard refresh browser (Ctrl+Shift+R)
-- Check certificate expiry date
+
+* Certificate may still be acquiring (wait 30 seconds)
+* Hard refresh browser (Ctrl+Shift+R)
+* Check certificate expiry date
 
 ### Backend API Not Responding
 
-**Check if backend is running:**
+**Check if backends are running:**
+
 ```bash
 docker compose exec server ps aux | grep node
+docker compose exec competition-service ps aux | grep node
+
 ```
 
 **Test backend internally (from Caddy container):**
+
 ```bash
 docker compose exec caddy wget -O- http://server:3000/user
+docker compose exec caddy wget -O- http://competition-service:8081/health
+
 ```
 
 **Check backend logs:**
+
 ```bash
 docker compose logs server | grep -i "error\|listening"
+docker compose logs competition-service | grep -i "error\|connected"
+
 ```
 
 **Common issues:**
-- Backend crashed on startup (check logs for errors)
-- Database connection issues
-- Missing environment variables (JWT_SECRET, etc.)
-- Network configuration issue (containers not on same network)
+
+* Backend crashed on startup (check logs for errors)
+* Database connection issues
+* Missing environment variables (JWT_SECRET, etc.)
+* Network configuration issue (containers not on same network)
 
 ### API 404 Errors
 
 **Problem**: Frontend requests to `/api/...` return 404.
 
 **Check Caddyfile syntax:**
+
 ```bash
 docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile
+
 ```
 
 **Verify reverse proxy is working:**
+
 ```bash
 # From host machine
 curl -I http://localhost/api/user
+
 ```
 
 **Common causes:**
-- Caddyfile not mounted correctly
-- Backend container not reachable (check network)
-- Typo in Caddyfile route configuration
+
+* Caddyfile not mounted correctly
+* Backend container not reachable (check network)
+* Typo in Caddyfile route configuration
 
 ### Database Issues
 
 **Database not persisting:**
+
 ```bash
 # Verify volume exists
 docker volume ls | grep happy-go-lucky-db
@@ -656,84 +768,127 @@ docker volume inspect happy-go-lucky-db
 
 # Check database file
 docker compose exec server ls -la /app/server/data/
+
 ```
 
 **Database corruption:**
+
 ```bash
 # Restore from backup (see Database Management section)
+
 ```
 
-**Database locked:**
+**Database locked (`SQLITE_BUSY`):**
+If you see `SQLITE_BUSY` errors in the logs:
+
+* This indicates the `busy_timeout` pragma wasn't applied correctly or an extremely long transaction blocked the DB.
+* Check if multiple manual processes are accessing the database:
 ```bash
-# Check for multiple processes accessing database
 docker compose exec server sh -c "cd /app/server/data && fuser happyGoLucky.db"
 
-# Restart container
-docker compose restart server
 ```
+
+
+* Restart the containers:
+```bash
+docker compose restart server competition-service
+
+```
+
+
+
+### Competition Evaluation Not Starting
+
+If the scheduler triggers but student APIs aren't called:
+
+1. Verify `PUBLIC_COMPETITION_API_URL` is set correctly in `.env`.
+2. Verify `INTERNAL_COMPETITION_SERVICE_URL` is correct (`http://competition-service:8081`).
+3. Check the `competition-service` logs for failed API calls or timeouts.
+4. Verify that the student VM's IP address and endpoints are reachable from your server.
 
 ### Email Not Sending (Production)
 
 **Check configuration:**
+
 1. Verify `NODE_ENV=production` in docker-compose.yml
 2. Verify `EMAIL_SMTP_USER` and `EMAIL_SMTP_PASS` are correct in `.env`
 3. Check server logs for SMTP errors:
-   ```bash
-   docker compose logs server | grep -i "email\|smtp"
-   ```
+```bash
+docker compose logs server | grep -i "email\|smtp"
+
+```
+
+
 
 **Test email credentials:**
+
 ```bash
 # From inside server container
 docker compose exec server sh
 cd /app/server
 node -e "require('dotenv').config(); console.log(process.env.EMAIL_SMTP_USER);"
+
 ```
 
 ### Frontend Not Loading
 
 **Check if Caddy is serving files:**
+
 ```bash
 docker compose exec caddy ls -la /srv/
+
 ```
 
 **Check client-dist volume:**
+
 ```bash
 docker volume inspect client-dist
+
 ```
 
 **Rebuild client if needed:**
+
 ```bash
 docker compose build client --no-cache
 docker compose up -d
+
 ```
 
 **Test static file serving:**
+
 ```bash
 curl -I http://localhost
+
 ```
 
 ### High Memory/CPU Usage
 
 **Check resource usage:**
+
 ```bash
 docker stats
+
 ```
 
 **Inspect container processes:**
+
 ```bash
 docker compose exec server ps aux
+docker compose exec competition-service ps aux
 docker compose exec caddy ps aux
+
 ```
 
 **Optimize if needed:**
-- Restart containers to clear memory leaks: `docker compose restart`
-- Check for database optimization opportunities
-- Review application logs for errors causing high CPU
+
+* Restart containers to clear memory leaks: `docker compose restart`
+* Check for database optimization opportunities
+* Review application logs for errors causing high CPU
 
 ### Build Failures
 
 **Clean rebuild:**
+
 ```bash
 # Remove all containers and images
 docker compose down
@@ -742,32 +897,39 @@ docker system prune -a
 # Rebuild from scratch
 docker compose build --no-cache
 docker compose up -d
+
 ```
 
 **Node modules issues:**
+
 ```bash
 # On host machine
-rm -rf node_modules client/node_modules server/node_modules
+rm -rf node_modules client/node_modules server/node_modules competition-service/node_modules
 npm install
 
 # Then rebuild Docker
 docker compose build --no-cache
+
 ```
 
 ### Firewall Configuration
 
 **For Ubuntu/Debian with UFW:**
+
 ```bash
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw status
+
 ```
 
 **For CentOS/RHEL with firewalld:**
+
 ```bash
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --reload
+
 ```
 
 ---
@@ -775,35 +937,45 @@ sudo firewall-cmd --reload
 ## Security Best Practices
 
 1. **Keep secrets secure:**
-   - Never commit `.env` to version control
-   - Use strong, randomly generated `JWT_SECRET`
-   - Rotate secrets regularly
+* Never commit `.env` to version control
+* Use strong, randomly generated secrets (`JWT_SECRET`, `INTERNAL_API_SECRET`)
+* Rotate secrets regularly
+
 
 2. **Regular updates:**
-   ```bash
-   # Pull latest code and rebuild monthly
-   git pull
-   docker compose build --no-cache
-   docker compose up -d
-   ```
+```bash
+# Pull latest code and rebuild monthly
+git pull
+docker compose build --no-cache
+docker compose up -d
+
+```
+
 
 3. **Backup regularly:**
-   - Automated daily database backups
-   - Test restore process quarterly
+* Automated daily database backups (using WAL-safe snapshot method)
+* Automated backups of competition datasets
+* Test restore process quarterly
+
 
 4. **Monitor logs:**
-   ```bash
-   # Check for suspicious activity
-   docker compose logs | grep -i "error\|warning\|unauthorized"
-   ```
+```bash
+# Check for suspicious activity
+docker compose logs | grep -i "error\|warning\|unauthorized"
+
+```
+
 
 5. **Firewall:**
-   - Only expose ports 80 and 443
-   - Use fail2ban for brute-force protection
+* Only expose ports 80 and 443
+* Use fail2ban for brute-force protection
+
 
 6. **Certificate monitoring:**
-   - Ensure `ACME_EMAIL` receives notifications
-   - Monitor expiry dates
+* Ensure `ACME_EMAIL` receives notifications
+* Monitor expiry dates
+
+
 
 ---
 
@@ -811,26 +983,31 @@ sudo firewall-cmd --reload
 
 Before going live:
 
-- [ ] Domain DNS configured and propagated
-- [ ] Ports 80 and 443 accessible from internet
-- [ ] `.env` file configured with production values
-- [ ] `JWT_SECRET` is strong and random (use `openssl rand -base64 32`)
-- [ ] `ACME_EMAIL` is valid and monitored
-- [ ] Email credentials tested
-- [ ] Database backup strategy in place
-- [ ] Firewall configured properly
-- [ ] HTTPS certificate acquired successfully
-- [ ] Application accessible via HTTPS
-- [ ] Default admin password changed
-- [ ] API routes work correctly (test `/api/user` etc.)
-- [ ] Monitoring/alerting configured (optional)
+* [ ] Domain DNS configured and propagated
+* [ ] Ports 80 and 443 accessible from internet
+* [ ] `.env` file configured with production values
+* [ ] `JWT_SECRET` and `INTERNAL_API_SECRET` are strong and random (use `openssl rand -base64 32`)
+* [ ] `ACME_EMAIL` is valid and monitored
+* [ ] Email credentials tested
+* [ ] Database backup strategy in place (WAL-safe script)
+* [ ] Dataset backup strategy in place
+* [ ] Firewall configured properly
+* [ ] HTTPS certificate acquired successfully
+* [ ] Application accessible via HTTPS
+* [ ] Default admin password changed
+* [ ] API routes work correctly (test `/api/user` and `/api/competition/health`)
+* [ ] Monitoring/alerting configured (optional)
 
 ---
 
 ## Support and Documentation
 
-- **Caddy Documentation**: https://caddyserver.com/docs/
-- **Docker Compose Documentation**: https://docs.docker.com/compose/
-- **Let's Encrypt Documentation**: https://letsencrypt.org/docs/
+* **Caddy Documentation**: https://caddyserver.com/docs/
+* **Docker Compose Documentation**: https://docs.docker.com/compose/
+* **Let's Encrypt Documentation**: https://letsencrypt.org/docs/
 
 For application-specific issues, refer to the project README and source code documentation.
+
+```
+
+```
