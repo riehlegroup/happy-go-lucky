@@ -27,6 +27,12 @@ describe("Dataset API Integrationtest", () => {
 		"lodash,4.17.21,8000,true",
 	].join("\n");
 
+	const csvWithSemicolonDelimiter = [
+		"package_name;version;lines_of_code;has_cve",
+		"express;4.18.2;1500;false",
+		"lodash;4.17.21;8000;true",
+	].join("\n");
+
 	const invalidCsvContent = ["package_name,version", "express,4.18.2"].join("\n");
 
 	beforeAll(async () => {
@@ -543,19 +549,19 @@ describe("Dataset API Integrationtest", () => {
 		const responseInputRound1 = await request(app)
 			.get(`/competitions/${competitionId}/datasets?type=INPUT&round=1`)
 			.set("Authorization", `Bearer ${token}`);
-		
+
 		const responseOnlyRound1 = await request(app)
 			.get(`/competitions/${competitionId}/datasets?round=1`)
 			.set("Authorization", `Bearer ${token}`);
-		
+
 		const responseOnlyGroundTruth = await request(app)
 			.get(`/competitions/${competitionId}/datasets?type=GROUND_TRUTH`)
 			.set("Authorization", `Bearer ${token}`);
-		
+
 		const responseNoMatch = await request(app)
 			.get(`/competitions/${competitionId}/datasets?type=INPUT&round=3`)
 			.set("Authorization", `Bearer ${token}`);
-		
+
 		const responseTrainOnly = await request(app)
 			.get(`/competitions/${competitionId}/datasets?type=TRAIN`)
 			.set("Authorization", `Bearer ${token}`);
@@ -608,5 +614,85 @@ describe("Dataset API Integrationtest", () => {
 		expect(response.body.length).toBe(1); // Only the TRAIN dataset should be visible to student users
 		expect(response.body[0].dataset_type).toBe("TRAIN");
 		expect(response.body[0].round).toBe(null);
+	});
+
+	// ==== csv delimiter tests ====
+	it("should reject CSV files with semicolon delimiters and return a 400 error in round dataset uploads", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		const round = 1;
+
+		// Create a dummy CSV file with semicolon delimiters for testing
+		const semicolonCsvPath = path.join(__dirname, "semicolon_dummy_dataset.csv");
+		fs.writeFileSync(semicolonCsvPath, csvWithSemicolonDelimiter);
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("inputFile", semicolonCsvPath)
+			.attach("groundTruthFile", semicolonCsvPath);
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toContain("they do not use ',' as delimiter");
+
+		// Clean up the dummy file
+		if (fs.existsSync(semicolonCsvPath)) {
+			fs.unlinkSync(semicolonCsvPath);
+		}
+	});
+	it("should reject CSV files with semicolon delimiters and return a 400 error in test dataset uploads", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+
+		// Create a dummy CSV file with semicolon delimiters for testing
+		const semicolonCsvPath = path.join(__dirname, "semicolon_dummy_dataset.csv");
+		fs.writeFileSync(semicolonCsvPath, csvWithSemicolonDelimiter);
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets/train`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("dataset", semicolonCsvPath);
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toContain("Uploaded CSV file does not use ',' as delimiter.");
+
+		// Clean up the dummy file
+		if (fs.existsSync(semicolonCsvPath)) {
+			fs.unlinkSync(semicolonCsvPath);
+		}
+	});
+	it("should reject CSV files with different structure and return a 400 error in round dataset uploads", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		const round = 1;
+
+		// Create a dummy CSV file with different structure for testing
+		const validCsvContentWithoutLinesOfCode = [
+			"package_name,version,has_cve",
+			"express,4.18.2,false",
+			"lodash,4.17.21,true",
+		].join("\n");
+
+		const differentStructureCsvPath = path.join(__dirname, "different_structure_dummy_dataset.csv");
+		fs.writeFileSync(differentStructureCsvPath, validCsvContentWithoutLinesOfCode);
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
+			.set("Authorization", `Bearer ${token}`)
+			.attach("inputFile", validCsvPath)
+			.attach("groundTruthFile", differentStructureCsvPath);
+
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toContain(
+			"Structure of ground truth and input files do not match",
+		);
+
+		// Clean up the dummy file
+		if (fs.existsSync(differentStructureCsvPath)) {
+			fs.unlinkSync(differentStructureCsvPath);
+		}
 	});
 });

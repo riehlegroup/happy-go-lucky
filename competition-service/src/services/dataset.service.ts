@@ -2,6 +2,7 @@ import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import { Dataset, DatasetType } from "../types/competition.types";
 import fs from "fs";
+import { CSVHelper } from "./helper/csv.helper";
 
 export class DatasetService {
    
@@ -87,4 +88,23 @@ export class DatasetService {
         }
         return dataset;
     }
+
+    async validateRoundFiles(inputFilePath: string, groundTruthFilePath: string): Promise<boolean> {
+		try {
+			const inputDelimiter = await CSVHelper.detectDelimiter(inputFilePath);
+			const groundTruthDelimiter = await CSVHelper.detectDelimiter(groundTruthFilePath);
+
+			if (inputDelimiter !== "," || groundTruthDelimiter !== ",") {
+				return false;
+			}
+
+			const inputCsv = await CSVHelper.parseCsv(fs.readFileSync(inputFilePath, "utf8"), ",");
+			const groundTruthCsv = await CSVHelper.parseCsv(fs.readFileSync(groundTruthFilePath, "utf8"), ",");
+
+			return CSVHelper.validateCSVStructure(inputCsv, groundTruthCsv);
+		} catch (error) {
+			console.error("Error validating round files:", error);
+			return false;
+		}
+	}
 }
