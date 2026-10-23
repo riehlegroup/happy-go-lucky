@@ -67,7 +67,7 @@ export const DatasetUploader: React.FC<DatasetUploaderProps> = ({
 			) : (
 				/* case 3: no file selected or uploaded -> show upload button */
 				<Button type="button" onClick={() => fileInputRef.current?.click()} disabled={disabled}>
-					+ Choose {label} (.csv)
+					+ Choose Dataset File
 				</Button>
 			)}
 		</div>
