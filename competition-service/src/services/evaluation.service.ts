@@ -7,7 +7,7 @@ import * as fastCsv from "fast-csv";
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRoundCache } from "./datasetround.cache";
-
+import { CSVHelper } from "./helper/csv.helper";
 
 export class EvaluationService {
 	private datasetRepo: DatasetRepo;
@@ -15,7 +15,7 @@ export class EvaluationService {
 	private evaluationRepo: EvaluationRepo;
 	private datasetRoundCache: DatasetRoundCache;
 
-    private static readonly DEADLINE_LIMIT_MS = 10 * 60 * 1000; // 15 minutes in milliseconds
+	private static readonly DEADLINE_LIMIT_MS = 10 * 60 * 1000; // 15 minutes in milliseconds
 
 	constructor(
 		datasetRepo: DatasetRepo,
@@ -56,7 +56,6 @@ export class EvaluationService {
 			throw new Error(`No input dataset found for competition ID ${competition.id} and round ${round}`);
 		}
 
-		// call asynchrounously the requests to student apis
 		console.log(`Starting evaluation for competition ID and round: ${competition.id}`);
 		await this.callSubmissionApis(competition.id, round);
 	}
@@ -79,7 +78,7 @@ export class EvaluationService {
 		return this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
 	}
 
-	async getInputDatasetFilePathForCompetiitionAndRound(competitionId: number, round: number): Promise<string> {
+	async getInputDatasetFilePathForCompetitionAndRound(competitionId: number, round: number): Promise<string> {
 		return this.datasetRepo.getDatasetForCompetitionRoundAndType(competitionId, round, DatasetType.INPUT).then((dataset) => {
 			if (!dataset) {
 				throw new NotFoundException(`No input dataset found for competition ID ${competitionId} and round ${round}`);
@@ -93,11 +92,11 @@ export class EvaluationService {
 		evaluation: Evaluation,
 		csvString: string,
 		receivedAt: number,
-	): Promise<{ score: number; status: EvaluationStatus }> {
-        const createdAtMs = new Date(evaluation.created_at).getTime();
-        const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
-        const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
-        
+	): Promise<void> {
+		const createdAtMs = new Date(evaluation.created_at).getTime();
+		const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
+		const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
+
 		try {
 			// Get Datasets from Cache
 			const { groundTruthRows, inputRows } = await this.datasetRoundCache.getOrLoadDatasets(
@@ -116,27 +115,21 @@ export class EvaluationService {
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
-			return { score, status };
 		} catch (error) {
-			console.error(`Error calculating score: ${error}`);
+			console.error(`Error calculating score for evaluation ${evaluation.id}: ${error}`);
 			let errorMessage;
-			let exceptionToThrow;
 			if (error instanceof NotFoundException) {
 				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
-				exceptionToThrow = new NotFoundException(errorMessage);
 			} else if (error instanceof BadRequestException) {
 				errorMessage = `Invalid request: ${error.message}`;
-				exceptionToThrow = new BadRequestException(errorMessage);
 			} else {
 				errorMessage = `Error calculating score: ${error instanceof Error ? error.message : String(error)}`;
-				exceptionToThrow = new Error(errorMessage);
 			}
 			await this.updateEvaluation(evaluation.id, {
 				status: EvaluationStatus.FAILED,
 				error_message: errorMessage,
 				completed_at: new Date(receivedAt),
 			});
-			throw exceptionToThrow;
 		}
 	}
 
@@ -146,18 +139,8 @@ export class EvaluationService {
 		inputRows: string[][],
 	): Promise<number> {
 		// assumes that both CSVs have the same number of rows and columns, and that they are aligned (i.e., the first row of the ground truth corresponds to the first row of the student's prediction, etc.)
-		const parseCsv = async (csvString: string): Promise<string[][]> => {
-			const rows: string[][] = [];
-			await new Promise<void>((resolve, reject) => {
-				fastCsv
-					.parseString(csvString, { headers: false })
-					.on("error", (error: Error) => reject(error))
-					.on("data", (row) => rows.push(row))
-					.on("end", () => resolve());
-			});
-			return rows;
-		};
-		const studentPredictionRows = await parseCsv(studentPredictionCsv);
+		const delimiter = await CSVHelper.detectStudentPredictionDelimiter(studentPredictionCsv);
+		const studentPredictionRows = await CSVHelper.parseCsv(studentPredictionCsv, delimiter);
 		if (groundTruthRows.length !== studentPredictionRows.length || groundTruthRows.length !== inputRows.length) {
 			throw new BadRequestException(
 				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows, and input has ${inputRows.length} rows.`,
@@ -196,45 +179,52 @@ export class EvaluationService {
 			console.warn(`No submissions found for competition ID: ${competitionId}`);
 			return;
 		}
-		// create evaluation entry for each submission before calling the student API
-		const preparedEvaluations = submissions.map((submission) => ({
-			submissionId: submission.id,
-			apiUrl: submission.apiUrl,
-			token: crypto.randomUUID(),
-			round: round,
-		}));
+		// to avoid too many open connections, we batch the calls to student APIs. Evaluation records are created first for every batch and then the student APIs are called asynchronously.
+		// that way neither the database, the number of open connections nor the upload prediction endpoint is overwhelmed.
 
-		const createdEvaluations = await Promise.all(
-			preparedEvaluations.map(async (evalData) => {
-				const evaluation = await this.evaluationRepo.createEvaluation(
-					evalData.submissionId,
-					evalData.token,
-					evalData.round,
-				);
-				if (!evaluation) {
-					console.error(`Failed to create evaluation for submission ID: ${evalData.submissionId}`);
-					return null;
+		const BATCH_SIZE = 20;
+		const DELAY_BETWEEN_BATCHES_MS = 500;
+
+		for (let i = 0; i < submissions.length; i += BATCH_SIZE) {
+			const batchedSubmissions = submissions.slice(i, i + BATCH_SIZE);
+			// create database entries for the evaluations in the current batch
+			const createdEvaluations = await Promise.all(
+				batchedSubmissions.map(async (submission) => {
+					const token = crypto.randomUUID();
+					const evaluationEntry = await this.evaluationRepo.createEvaluation(submission.id, token, round);
+					if (!evaluationEntry) {
+						console.error(`Failed to create evaluation for submission ID: ${submission.id}`);
+						return null;
+					} else {
+						return {
+							id: evaluationEntry.id,
+							apiUrl: submission.apiUrl,
+							submissionId: evaluationEntry.submissionId,
+							token: token,
+						};
+					}
+				}),
+			);
+
+			for (const evaluation of createdEvaluations) {
+				if (evaluation) {
+					// do not await the call to the student API, let it run asynchronously. The evaluation status will be updated when the student API responds.
+					this.callStudentApi(evaluation.id, evaluation.apiUrl, evaluation.token);
 				}
-				return {
-					id: evaluation.id,
-					apiUrl: evalData.apiUrl,
-					submissionId: evaluation.submissionId,
-					token: evalData.token,
-				};
-			}),
-		);
-
-		for (const evaluation of createdEvaluations) {
-			if (!evaluation) {
-				continue;
 			}
-			// Call the student's API asynchronously (no await)
-			this.callStudentApi(evaluation.id, evaluation.apiUrl, evaluation.token);
+
+			// Delay before processing the next batch
+			if (i + BATCH_SIZE < submissions.length) {
+				await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES_MS));
+			}
 		}
 	}
 
 	private async callStudentApi(evaluationId: number, apiUrl: string, evaluationToken: string) {
-		const baseUrl = process.env.PUBLIC_COMPETITION_API_URL || (process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/competition` : null) || `${process.env.CLIENT_URL}/api/competition`;
+		const baseUrl =
+			process.env.PUBLIC_COMPETITION_API_URL ||
+			(process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/competition` : null) ||
+			`${process.env.CLIENT_URL}/api/competition`;
 		const testDataDownloadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/download`;
 		const predictionUploadEndpoint = `${baseUrl}/evaluations/${evaluationToken}/upload`;
 
@@ -248,7 +238,7 @@ export class EvaluationService {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),
-				signal: AbortSignal.timeout(10000), // 10 seconds timeout
+				signal: AbortSignal.timeout(40000), // 40 seconds timeout for possible cold start of the student API
 			});
 
 			if (!response.ok) {
@@ -257,7 +247,7 @@ export class EvaluationService {
 		} catch (error: any) {
 			const errorMessage =
 				error.name === "TimeoutError"
-					? "Student submission API did not respond within 10 seconds"
+					? "Student submission API did not respond within 40 seconds"
 					: error instanceof Error
 						? error.message
 						: String(error);

@@ -3,9 +3,12 @@ import { errorResponse, handleError } from "../errors/errorhandling.helper";
 import { EvaluationStatus } from "../types/competition.types";
 
 import fs from "fs";
+import { ScoringQueue } from "../services/scoring.queue";
+
 
 export class EvaluationController {
 	private evaluationService: EvaluationService;
+	private scoringQueue: ScoringQueue = new ScoringQueue();
 
 	constructor(evaluationService: EvaluationService) {
 		this.evaluationService = evaluationService;
@@ -21,7 +24,7 @@ export class EvaluationController {
 			if (isNaN(round) || round < 1) {
 				return errorResponse("Invalid round number", 400, res);
 			}
-			
+
 			const competition = req.competition;
 			if (!competition) {
 				return errorResponse("No information about the competition in request", 400, res);
@@ -62,7 +65,17 @@ export class EvaluationController {
 			}
 
 			const evaluation = await this.evaluationService.requireEvaluationEntryExists(token, EvaluationStatus.PENDING);
-			const inputFilePath = await this.evaluationService.getInputDatasetFilePathForCompetiitionAndRound(
+
+			const evaluationCreatedAt = new Date(evaluation.created_at).getTime();
+			const deadline = evaluationCreatedAt + 15 * 60 * 1000; // 15 minutes in milliseconds
+			if (Date.now() - evaluationCreatedAt > deadline) {
+				this.evaluationService.updateEvaluation(evaluation.id, {
+					status: EvaluationStatus.FAILED,
+					error_message: "Deadline for downloading the input CSV has passed.",
+				});
+				return errorResponse("Deadline for downloading the input CSV has passed.", 410, res);
+			}
+			const inputFilePath = await this.evaluationService.getInputDatasetFilePathForCompetitionAndRound(
 				evaluation.competitionId,
 				evaluation.round,
 			);
@@ -75,7 +88,7 @@ export class EvaluationController {
 			}
 
 			res.setHeader("Content-Type", "text/csv");
-			res.setHeader("Content-Disposition", `attachment; filename="test_dataset.csv"`);
+			res.setHeader("Content-Disposition", `attachment; filename="input_dataset.csv"`);
 
 			return res.download(inputFilePath, "input_dataset.csv", (err: any) => {
 				if (err && !res.headersSent) {
@@ -105,11 +118,12 @@ export class EvaluationController {
 
 			const csvString = req.file.buffer.toString("utf-8");
 
-			const result = await this.evaluationService.evaluateStudentPrediction(evaluation.competitionId, evaluation, csvString, receivedAt);
+			this.scoringQueue.enqueue(() =>
+				this.evaluationService.evaluateStudentPrediction(evaluation.competitionId, evaluation, csvString, receivedAt),
+			);
 
 			return res.status(200).json({
-				status: result.status,
-				score: result.score,
+				message: "Prediction received and queued for evaluation",
 			});
 		} catch (error) {
 			handleError(error, "Failed to upload student predictions", res);

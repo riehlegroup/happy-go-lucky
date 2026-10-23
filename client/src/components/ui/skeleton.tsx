@@ -1,21 +1,20 @@
-
+import React from "react";
 
 function Skeleton({
-  className,
+  className = "",
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-     className={`relative overflow-hidden rounded-md bg-slate-200/80 before:absolute 
-        before:inset-0 before:-translate-x-full before:animate-[shimmer_1.6s_infinite] 
-        before:bg-gradient-to-r 
-        before:from-transparent 
-        before:via-white/40 before:to-transparent motion-reduce:animate-none motion-reduce:before:animate-none
-        dark:bg-slate-800/80 dark:before:via-white/10
+      className={`relative overflow-hidden rounded-md bg-slate-300 dark:bg-slate-700 
+        before:absolute before:inset-0 
+        before:bg-gradient-to-r before:from-transparent before:via-white before:to-transparent 
+        before:animate-[shimmer_1.5s_infinite] 
+        dark:before:via-white/20 
         ${className}`}
       {...props}
     />
-  )
+  );
 }
 
-export { Skeleton }
+export { Skeleton };

@@ -25,6 +25,9 @@ export async function getDb(): Promise<Database> {
   });
 
   await dbInstance.run('PRAGMA foreign_keys = ON;');
+  await dbInstance.run('PRAGMA journal_mode = WAL;');
+  await dbInstance.run('PRAGMA busy_timeout = 5000;');
+  await dbInstance.run('PRAGMA synchronous = NORMAL;');
 
   return dbInstance;
 }
