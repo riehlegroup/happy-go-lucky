@@ -183,7 +183,7 @@ describe("Evaluation API integration test", () => {
         // Assert
         expect(response.status).toBe(200);
         expect(response.headers["content-type"]).toBe("text/csv");
-        expect(response.headers["content-disposition"]).toContain("attachment; filename=\"input");
+        expect(response.headers["content-disposition"]).toContain("attachment; filename=input_dataset.csv");
         expect(response.text).toContain("package_name,version,lines_of_code,has_cve"); // Input of csv data in createDatasetsForCompetitionRound
         // Check that the evaluation's started_at timestamp was updated
         const evaluationRecord: any = await db.get(

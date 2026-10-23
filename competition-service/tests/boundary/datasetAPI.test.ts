@@ -686,9 +686,7 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain(
-			"Structure of ground truth and input files do not match",
-		);
+		expect(response.body.message).toContain("Structure of ground truth and input files do not match");
 
 		// Clean up the dummy file
 		if (fs.existsSync(differentStructureCsvPath)) {

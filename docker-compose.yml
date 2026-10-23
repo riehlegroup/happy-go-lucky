@@ -59,6 +59,7 @@ services:
     depends_on:
       - server
       - client
+      - competition-service
     restart: unless-stopped
     networks:
       - app-network

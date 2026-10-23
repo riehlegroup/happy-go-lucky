@@ -88,7 +88,7 @@ export class EvaluationController {
 			}
 
 			res.setHeader("Content-Type", "text/csv");
-			res.setHeader("Content-Disposition", `attachment; filename="test_dataset.csv"`);
+			res.setHeader("Content-Disposition", `attachment; filename="input_dataset.csv"`);
 
 			return res.download(inputFilePath, "input_dataset.csv", (err: any) => {
 				if (err && !res.headersSent) {
