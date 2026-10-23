@@ -67,7 +67,7 @@ export class EvaluationController {
 			const evaluation = await this.evaluationService.requireEvaluationEntryExists(token, EvaluationStatus.PENDING);
 
 			const evaluationCreatedAt = new Date(evaluation.created_at).getTime();
-			const deadline = evaluationCreatedAt + 5 * 60 * 1000; // 5 minutes in milliseconds
+			const deadline = evaluationCreatedAt + 15 * 60 * 1000; // 15 minutes in milliseconds
 			if (Date.now() - evaluationCreatedAt > deadline) {
 				this.evaluationService.updateEvaluation(evaluation.id, {
 					status: EvaluationStatus.FAILED,
