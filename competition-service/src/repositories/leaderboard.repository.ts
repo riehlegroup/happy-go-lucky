@@ -1,4 +1,4 @@
-import { LeaderboardEntry, PaginationDatabaseResult, PaginationQuery, RoundResultForUserDto } from "../types/competition.types";
+import { EvaluationStatus, LeaderboardEntry, PaginationDatabaseResult, PaginationQuery, RoundResultForUserDto } from "../types/competition.types";
 import { EvaluationRepo } from "./evaluation.repository";
 import { SubmissionRepo } from "./submission.repository";
 
@@ -14,7 +14,7 @@ export class LeaderboardRepo {
             SELECT COUNT(*) as totalItems
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ? AND e.round = ? AND e.status = 'EVALUATED';
+            WHERE s.competitionId = ? AND e.round = ? AND e.status = ${EvaluationStatus.EVALUATED};
         `;
         const countRow = await this.db.get(countQuery, [competitionId, round]);
         const totalItems = countRow ? countRow.totalItems : 0;
@@ -23,7 +23,7 @@ export class LeaderboardRepo {
             SELECT s.pseudonym, e.score, e.inference_time_ms, e.completed_at
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ? AND e.round = ? AND e.status = 'EVALUATED'
+            WHERE s.competitionId = ? AND e.round = ? AND e.status = ${EvaluationStatus.EVALUATED}
             ORDER BY e.score ASC, e.inference_time_ms ASC
             LIMIT ? OFFSET ?;
         `;
@@ -59,7 +59,7 @@ export class LeaderboardRepo {
             SELECT COUNT(DISTINCT s.id) as totalItems
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ? AND e.status = 'EVALUATED';
+            WHERE s.competitionId = ? AND e.status = ${EvaluationStatus.EVALUATED};
         `;
         const countRow = await this.db.get(countQuery, [competitionId]);
         const totalItems = countRow ? countRow.totalItems : 0;
@@ -69,19 +69,19 @@ export class LeaderboardRepo {
             SELECT s.pseudonym, 
             SUM(
             CASE 
-                WHEN e.status = 'EVALUATED' THEN e.score * e.round
+                WHEN e.status = ${EvaluationStatus.EVALUATED} THEN e.score * e.round
                 ELSE COALESCE(
                 (SELECT MAX(score) * 1.1 
                 FROM ${EvaluationRepo.TABLE_NAME} e2 
                 JOIN ${SubmissionRepo.TABLE_NAME} s2 ON e2.submissionId = s2.id 
-                WHERE s2.competitionId = s.competitionId AND e2.round = e.round AND e2.status = 'EVALUATED'), 
+                WHERE s2.competitionId = s.competitionId AND e2.round = e.round AND e2.status = ${EvaluationStatus.EVALUATED}), 
                 100) * e.round
             END
             ) as score,
-            SUM(COALESCE(e.inference_time_ms, 900000)) as inference_time_ms
+            SUM(CASE WHEN e.status = ${EvaluationStatus.EVALUATED} THEN e.inference_time_ms ELSE 900000 END) as inference_time_ms
             FROM ${EvaluationRepo.TABLE_NAME} e
             LEFT JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ?
+            WHERE s.competitionId = ? AND e.status != ${EvaluationStatus.PENDING}
             GROUP BY s.id, s.pseudonym
             ORDER BY score ASC, inference_time_ms ASC
             LIMIT ? OFFSET ?;
@@ -97,7 +97,7 @@ export class LeaderboardRepo {
             SELECT DISTINCT e.round
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ? AND e.status = 'EVALUATED'
+            WHERE s.competitionId = ? AND e.status = ${EvaluationStatus.EVALUATED}
             ORDER BY e.round ASC;
         `;
         const rows = await this.db.all(query, [competitionId]);

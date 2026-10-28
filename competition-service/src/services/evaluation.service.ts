@@ -93,7 +93,7 @@ export class EvaluationService {
 		csvString: string,
 		receivedAt: number,
 	): Promise<void> {
-		const startMs = new Date(evaluation.started_at ?? evaluation.created_at).getTime();
+		const startMs = new Date(evaluation.started_at).getTime();
 		const isDelayed = (receivedAt - startMs) > EvaluationService.DEADLINE_LIMIT_MS;
 		const inferenceTimeMs = receivedAt - startMs;
 		const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
@@ -111,6 +111,7 @@ export class EvaluationService {
 				score: score,
 				completed_at: new Date(receivedAt),
 				inference_time_ms: inferenceTimeMs,
+				error_message: isDelayed ? "Submission exceeded the deadline and is therefore penalized on the leaderboard." : null,
 			});
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
