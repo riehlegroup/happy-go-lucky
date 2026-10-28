@@ -26,7 +26,7 @@ export const createUploader = (
 	const storage = multer.diskStorage({
 		destination: (req, file, cb) => {
 			const competitionId = req.params.id || req.body.competitionId;
-			const round = req.query.round;
+			const round = req.query.round || req.params.round;
 			
 			const baseDestination = path.isAbsolute(UPLOAD_FOLDER) ? UPLOAD_FOLDER : path.join(process.cwd(), UPLOAD_FOLDER);
 			let folderPath = path.join(baseDestination, `competition_${String(competitionId)}`);

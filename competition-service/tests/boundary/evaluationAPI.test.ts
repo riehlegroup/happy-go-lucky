@@ -171,8 +171,8 @@ describe("Evaluation API integration test", () => {
         await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
         const evaluationToken = crypto.randomUUID();
         await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "PENDING"],
+            `INSERT INTO competition_evaluations (submissionId, round, token, status, created_at) VALUES (?, ?, ?, ?, ?)`,
+            [submissionId, 1, evaluationToken, "PENDING", new Date().toISOString()],
         );
 
         // Act: Download the input CSV

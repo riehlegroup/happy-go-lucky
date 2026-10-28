@@ -20,7 +20,7 @@ export function handleError(
 	if (error instanceof z.ZodError) {
 		return res.status(400).json({
 			statusCode: 400,
-			message: "Validation failed: " + z.treeifyError(error),
+			message: "Validation failed: " + error.issues.map((i) => i.message).join(", "),
 			error: http.STATUS_CODES[400],
 		});
 	}

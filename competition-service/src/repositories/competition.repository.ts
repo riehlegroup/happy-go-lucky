@@ -73,13 +73,15 @@ export class CompetitionRepo extends BaseRepo<Competition> {
 			}
 			return new Date(val);
 		};
+		const endDate = parseDbDate(row.end_date);
+		endDate.setUTCHours(23, 59, 59, 999); // Set to the end of the day in UTC
 		return {
 			id: row.id,
 			name: row.name,
 			courseId: row.courseId,
 			description: row.description,
 			startDate: parseDbDate(row.start_date),
-			endDate: parseDbDate(row.end_date),
+			endDate: endDate,
 		};
 	}
 }

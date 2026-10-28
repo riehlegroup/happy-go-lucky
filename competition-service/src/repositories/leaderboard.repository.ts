@@ -14,7 +14,7 @@ export class LeaderboardRepo {
             SELECT COUNT(*) as totalItems
             FROM ${EvaluationRepo.TABLE_NAME} e
             JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
-            WHERE s.competitionId = ? AND e.round = ?;
+            WHERE s.competitionId = ? AND e.round = ? AND e.status = 'EVALUATED';
         `;
         const countRow = await this.db.get(countQuery, [competitionId, round]);
         const totalItems = countRow ? countRow.totalItems : 0;
@@ -70,7 +70,12 @@ export class LeaderboardRepo {
             SUM(
             CASE 
                 WHEN e.status = 'EVALUATED' THEN e.score * e.round
-                ELSE (SELECT MAX(score) * 1.1 FROM ${EvaluationRepo.TABLE_NAME} WHERE round = e.round AND status = 'EVALUATED') * e.round
+                ELSE COALESCE(
+                (SELECT MAX(score) * 1.1 
+                FROM ${EvaluationRepo.TABLE_NAME} e2 
+                JOIN ${SubmissionRepo.TABLE_NAME} s2 ON e2.submissionId = s2.id 
+                WHERE s2.competitionId = s.competitionId AND e2.round = e.round AND e2.status = 'EVALUATED'), 
+                100) * e.round
             END
             ) as score,
             SUM(COALESCE(e.inference_time_ms, 900000)) as inference_time_ms

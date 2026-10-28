@@ -93,8 +93,9 @@ export class EvaluationService {
 		csvString: string,
 		receivedAt: number,
 	): Promise<void> {
-		const createdAtMs = new Date(evaluation.created_at).getTime();
-		const isDelayed = (receivedAt - createdAtMs) > EvaluationService.DEADLINE_LIMIT_MS;
+		const startMs = new Date(evaluation.started_at ?? evaluation.created_at).getTime();
+		const isDelayed = (receivedAt - startMs) > EvaluationService.DEADLINE_LIMIT_MS;
+		const inferenceTimeMs = receivedAt - startMs;
 		const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
 
 		try {
@@ -105,7 +106,6 @@ export class EvaluationService {
 			);
 
 			const score = await this.calculateScore(groundTruthRows, csvString, inputRows);
-			const inferenceTimeMs = receivedAt - new Date(evaluation.started_at).getTime();
 			const updateSuccess = await this.updateEvaluation(evaluation.id, {
 				status: status,
 				score: score,
@@ -267,7 +267,7 @@ export class EvaluationService {
 
 	private toNumbericValue(value: unknown): number {
 		if (value === null || value === undefined || value === "") {
-			return 0; // TODO : Decide how to handle null/undefined/empty string values. For now, returning 0.
+			throw new BadRequestException("Prediction contains empty target values."); // must throw an error here, otherwise the score calculation will be incorrect and the student might get a better score by submitting an empty value.
 		}
 		switch (typeof value) {
 			case "number":

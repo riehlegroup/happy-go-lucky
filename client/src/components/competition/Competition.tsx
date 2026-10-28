@@ -146,7 +146,7 @@ const Competition: React.FC = () => {
 						<TableHeader>
 							<TableRow>
 								<TableHead>Round</TableHead>
-								<TableHead>Score (RSME)</TableHead>
+								<TableHead>Score (RMSE)</TableHead>
 								<TableHead>Inference time (ms)</TableHead>
 								<TableHead>started at</TableHead>
 								<TableHead>Completed at</TableHead>
@@ -158,7 +158,7 @@ const Competition: React.FC = () => {
 							{evaluationResults.sort((a, b) => a.round - b.round).map((entry) => (
 								<TableRow key={entry.round}>
 									<TableCell>{entry.round}</TableCell>
-									<TableCell>{Number(entry.score).toFixed(4)}</TableCell>
+									<TableCell>{entry.score !== null ? Number(entry.score).toFixed(4) : "N/A"}</TableCell>
 									<TableCell>{entry.inference_time_ms}</TableCell>
 									<TableCell>
 										{entry.started_at ? new Date(entry.started_at).toLocaleString() : "N/A"}
