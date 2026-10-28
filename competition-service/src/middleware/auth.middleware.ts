@@ -31,7 +31,7 @@ export const requireAuth = (authRepo: AuthentificationRepo) => {
 			}
 			req.user = userFromTokenId; // Attach the user to the request object for further use
 		} catch (error) {
-			handleError(error, "Invalid token", res);
+			handleError(error, "Invalid token", res, 401);
 			return;
 		}
 

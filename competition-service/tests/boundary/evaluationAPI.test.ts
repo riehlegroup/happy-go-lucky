@@ -336,8 +336,8 @@ describe("Evaluation API integration test", () => {
 			1,
 			evaluationToken,
 			"PENDING",
-			new Date().getTime(),
-			new Date().getTime(),
+			new Date().toISOString(),
+			new Date().toISOString(),
 		]);
 
 		// Act: Attempt to upload an invalid student prediction CSV

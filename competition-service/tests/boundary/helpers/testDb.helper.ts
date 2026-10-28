@@ -318,3 +318,12 @@ export async function createDatasetsForCompetitionRound(db: Database, competitio
 
   return { inputDatasetId: inputDatasetId.id, groundTruthDatasetId: groundTruthDatasetId.id };
 }
+
+export async function createEvaluationEntryForLeaderboard(db: Database, submissionId: number, round: number, score: number, status: string = 'PENDING', created_at: string = new Date().toISOString(), start_time: string = new Date().toISOString(), inference_time_ms: number = 10  ): Promise<number> {
+  await db.run(`
+    INSERT INTO competition_evaluations (submissionId, round, score, status, created_at, started_at, inference_time_ms) VALUES
+    (?, ?, ?, ?, ?, ?, ?)
+  `, [submissionId, round, score, status, created_at, start_time, inference_time_ms]);
+  const evaluationId = await db.get("SELECT last_insert_rowid() as id");
+  return evaluationId.id;
+} 
