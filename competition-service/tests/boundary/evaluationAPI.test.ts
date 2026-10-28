@@ -1,6 +1,6 @@
 import request from "supertest";
 import http from "http";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createDatasetsForCompetitionRound,
 	createTestDatabase,
@@ -49,8 +49,8 @@ describe("Evaluation API integration test", () => {
 					res.end(JSON.stringify({ status: "accepted" }));
 				});
 			} else if (req.method === "GET" && req.url === "/api/health") {
-                    res.writeHead(200, { "Content-Type": "application/json" });
-				    res.end(JSON.stringify({ health: "up" }));
+				res.writeHead(200, { "Content-Type": "application/json" });
+				res.end(JSON.stringify({ health: "up" }));
 			} else {
 				res.writeHead(404);
 				res.end();
@@ -99,7 +99,7 @@ describe("Evaluation API integration test", () => {
 		expect(response.status).toBe(200);
 
 		//assert:
-       
+
 		// Check that the evaluation record was created in the database
 		const evaluationRecord: any = await db.get(
 			`SELECT * FROM competition_evaluations AS e JOIN competition_submissions AS s ON e.submissionId = s.id WHERE competitionId = ? AND round = ?`,
@@ -109,14 +109,14 @@ describe("Evaluation API integration test", () => {
 		expect(evaluationRecord).toHaveProperty("token");
 		const evaluationToken = evaluationRecord.token;
 
-         // wait for asynchronous student API calls to complete
+		// wait for asynchronous student API calls to complete
 		await vi.waitFor(
 			() => {
 				expect(lastReceivedPayload).not.toBeNull();
 			},
 			{ timeout: 2000, interval: 50 },
 		);
-		
+
 		// Check that the payload sent to the student API is correct
 		expect(lastReceivedPayload).toHaveProperty("testdata_download_endpoint");
 		expect(lastReceivedPayload.testdata_download_endpoint).toBe(
@@ -128,274 +128,288 @@ describe("Evaluation API integration test", () => {
 		);
 	});
 
-    it("should return 400 if round number is invalid when starting evaluation", async () => {
-        const response = await request(app)
-            .post("/evaluations/competitions/" + TEST_COMPETITIONS.COMPETITION_1.id + "/start?round=0")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Invalid round number");
-    });
+	it("should return 400 if round number is invalid when starting evaluation", async () => {
+		const response = await request(app)
+			.post("/evaluations/competitions/" + TEST_COMPETITIONS.COMPETITION_1.id + "/start?round=0")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Invalid round number");
+	});
 
-    it("should return 404 if competition does not exist when starting evaluation", async () => {
-        const response = await request(app)
-            .post("/evaluations/competitions/9999/start?round=1") // Assuming 9999 is a non-existent competition ID
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
-        expect(response.status).toBe(404);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Competition not found");
-    });
+	it("should return 404 if competition does not exist when starting evaluation", async () => {
+		const response = await request(app)
+			.post("/evaluations/competitions/9999/start?round=1") // Assuming 9999 is a non-existent competition ID
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		expect(response.status).toBe(404);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Competition not found");
+	});
 
-    it("should return 400 if competition is not active when starting evaluation", async () => {
-        // First, set the competition to inactive
-        const dateInPast = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(); // 1 day in the past
-        await db.run(`UPDATE competitions SET end_date = ? WHERE id = ?`, [dateInPast, TEST_COMPETITIONS.COMPETITION_1.id]);
+	it("should return 400 if competition is not active when starting evaluation", async () => {
+		// First, set the competition to inactive
+		const dateInPast = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(); // 1 day in the past
+		await db.run(`UPDATE competitions SET end_date = ? WHERE id = ?`, [dateInPast, TEST_COMPETITIONS.COMPETITION_1.id]);
 
-        const response = await request(app)
-            .post("/evaluations/competitions/" + TEST_COMPETITIONS.COMPETITION_1.id + "/start?round=1")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Competition is not currently active");
-    });
+		const response = await request(app)
+			.post("/evaluations/competitions/" + TEST_COMPETITIONS.COMPETITION_1.id + "/start?round=1")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Competition is not currently active");
+	});
 
-    it("should download the input CSV for a valid evaluation token", async () => {
-        // Arrange: Create a submission and evaluation for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status, created_at) VALUES (?, ?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "PENDING", new Date().toISOString()],
-        );
+	it("should download the input CSV for a valid evaluation token", async () => {
+		// Arrange: Create a submission and evaluation for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(
+			`INSERT INTO competition_evaluations (submissionId, round, token, status, created_at) VALUES (?, ?, ?, ?, ?)`,
+			[submissionId, 1, evaluationToken, "PENDING", new Date().toISOString()],
+		);
 
-        // Act: Download the input CSV
-        const response = await request(app)
-            .get("/evaluations/" + evaluationToken + "/download")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		// Act: Download the input CSV
+		const response = await request(app)
+			.get("/evaluations/" + evaluationToken + "/download")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
 
-        // Assert
-        expect(response.status).toBe(200);
-        expect(response.headers["content-type"]).toBe("text/csv");
-        expect(response.headers["content-disposition"]).toContain("attachment; filename=input_dataset.csv");
-        expect(response.text).toContain("package_name,version,lines_of_code,has_cve"); // Input of csv data in createDatasetsForCompetitionRound
-        // Check that the evaluation's started_at timestamp was updated
-        const evaluationRecord: any = await db.get(
-            `SELECT * FROM competition_evaluations WHERE token = ?`,
-            [evaluationToken],
-        );
-        expect(evaluationRecord.started_at).not.toBeNull();
-    });
+		// Assert
+		expect(response.status).toBe(200);
+		expect(response.headers["content-type"]).toBe("text/csv");
+		expect(response.headers["content-disposition"]).toContain("attachment; filename=input_dataset.csv");
+		expect(response.text).toContain("package_name,version,lines_of_code,has_cve"); // Input of csv data in createDatasetsForCompetitionRound
+		// Check that the evaluation's started_at timestamp was updated
+		const evaluationRecord: any = await db.get(`SELECT * FROM competition_evaluations WHERE token = ?`, [evaluationToken]);
+		expect(evaluationRecord.started_at).not.toBeNull();
+	});
 
-    it("should return 400 when downloading input CSV with invalid token", async () => {
-        const response = await request(app)
-            .get("/evaluations/invalid-token/download")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("No evaluation entry found for the provided token");
-    });
+	it("should return 400 when downloading input CSV with invalid token", async () => {
+		const response = await request(app)
+			.get("/evaluations/invalid-token/download")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("No evaluation entry found for the provided token");
+	});
 
-    it("should return 404 when downloading input CSV for existing evaluation with not PENDING status", async () => {
-        // Arrange: Create a submission and evaluation for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "EVALUATED"],
-        );
+	it("should return 404 when downloading input CSV for existing evaluation with not PENDING status", async () => {
+		// Arrange: Create a submission and evaluation for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(`INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`, [
+			submissionId,
+			1,
+			evaluationToken,
+			"EVALUATED",
+		]);
 
-        // Act: Attempt to download the input CSV
-        const response = await request(app)
-            .get("/evaluations/" + evaluationToken + "/download")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+		// Act: Attempt to download the input CSV
+		const response = await request(app)
+			.get("/evaluations/" + evaluationToken + "/download")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
 
-        // Assert
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Evaluation entry is not in the expected status");
-    });
+		// Assert
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Evaluation entry is not in the expected status");
+	});
 
-    it("should upload and evaluate a student prediction successfully", async () => { 
-        // Arrange: Create a submission and evaluation with PENDING status and started for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "PENDING", new Date().toISOString(), new Date().toISOString()],
-        );
+	it("should upload and evaluate a student prediction successfully", async () => {
+		// Arrange: Create a submission and evaluation with PENDING status and started for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(
+			`INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			[submissionId, 1, evaluationToken, "PENDING", new Date().toISOString(), new Date().toISOString()],
+		);
 
-        // Act: Upload a student prediction CSV
-        const predictionCsvContent = ["package_name,version,lines_of_code,has_cve", // ground truth of createDatrsetsForCompetitionRound
-		"express,4.18.2,1500,false",
-		"lodash,4.17.21,8000,true",].join("\n");
-        const response = await request(app)
-            .post("/evaluations/" + evaluationToken + "/upload")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
-            .attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
+		// Act: Upload a student prediction CSV
+		const predictionCsvContent = [
+			"package_name,version,lines_of_code,has_cve", // ground truth of createDatrsetsForCompetitionRound
+			"express,4.18.2,1500,false",
+			"lodash,4.17.21,8000,true",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
 
-        // Assert
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Prediction received and queued for evaluation");
-        // wait for async evaluation to complete
-        await new Promise<void>((resolve) => setTimeout(resolve, 150));
+		// Assert
+		expect(response.status).toBe(200);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Prediction received and queued for evaluation");
+		// wait for async evaluation to complete
+		await new Promise<void>((resolve) => setTimeout(resolve, 150));
 
-        // Check that the evaluation record was updated with the score and status
-        const evaluationRecord: any = await db.get(
-            `SELECT * FROM competition_evaluations WHERE token = ?`,
-            [evaluationToken],
-        );
-        expect(evaluationRecord.status).toBe("EVALUATED");
-        expect(evaluationRecord.score).not.toBeNull();
-        expect(evaluationRecord.score).toBe(0);
-        expect(evaluationRecord.completed_at).not.toBeNull();
-        expect(evaluationRecord.inference_time_ms).not.toBeNull();
-        expect(evaluationRecord.error_message).toBeNull();
+		// Check that the evaluation record was updated with the score and status
+		const evaluationRecord: any = await db.get(`SELECT * FROM competition_evaluations WHERE token = ?`, [evaluationToken]);
+		expect(evaluationRecord.status).toBe("EVALUATED");
+		expect(evaluationRecord.score).not.toBeNull();
+		expect(evaluationRecord.score).toBe(0);
+		expect(evaluationRecord.completed_at).not.toBeNull();
+		expect(evaluationRecord.inference_time_ms).not.toBeNull();
+		expect(evaluationRecord.error_message).toBeNull();
+	});
+	it("should return 400 when uploading a student prediction with invalid token", async () => {
+		const predictionCsvContent = [
+			"package_name,version,lines_of_code,has_cve",
+			"express,4.18.2,1500,false",
+			"lodash,4.17.21,8000,true",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/invalid-token/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("No evaluation entry found for the provided token");
+	});
 
-    });
-    it("should return 400 when uploading a student prediction with invalid token", async () => {
-        const predictionCsvContent = ["package_name,version,lines_of_code,has_cve",
-        "express,4.18.2,1500,false",
-        "lodash,4.17.21,8000,true",].join("\n");
-        const response = await request(app)
-            .post("/evaluations/invalid-token/upload")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
-            .attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("No evaluation entry found for the provided token");
-    });
+	it("should return 400 when uploading a student prediction for an evaluation not in PENDING status", async () => {
+		// Arrange: Create a submission and evaluation with EVALUATED status for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(`INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`, [
+			submissionId,
+			1,
+			evaluationToken,
+			"EVALUATED",
+		]);
 
-    it("should return 400 when uploading a student prediction for an evaluation not in PENDING status", async () => {
-        // Arrange: Create a submission and evaluation with EVALUATED status for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "EVALUATED"],
-        );
+		// Act: Attempt to upload a student prediction CSV
+		const predictionCsvContent = [
+			"package_name,version,lines_of_code,has_cve",
+			"express,4.18.2,1500,false",
+			"lodash,4.17.21,8000,true",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
 
-        // Act: Attempt to upload a student prediction CSV
-        const predictionCsvContent = ["package_name,version,lines_of_code,has_cve",
-        "express,4.18.2,1500,false",
-        "lodash,4.17.21,8000,true",].join("\n");
-        const response = await request(app)
-            .post("/evaluations/" + evaluationToken + "/upload")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
-            .attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
+		// Assert
+		expect(response.status).toBe(400);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Evaluation entry is not in the expected status");
+	});
+	it(" when uploading a student prediction with invalid CSV format the error should be in the db record", async () => {
+		// Arrange: Create a submission and evaluation with PENDING status for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(`INSERT INTO competition_evaluations (submissionId, round, token, status, created_at, started_at) VALUES (?, ?, ?, ?, ?, ?)`, [
+			submissionId,
+			1,
+			evaluationToken,
+			"PENDING",
+			new Date().getTime(),
+			new Date().getTime(),
+		]);
 
-        // Assert
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Evaluation entry is not in the expected status");
-    });
-    it(" when uploading a student prediction with invalid CSV format the error should be in the db record", async () => {
-        // Arrange: Create a submission and evaluation with PENDING status for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status) VALUES (?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "PENDING"],
-        );
+		// Act: Attempt to upload an invalid student prediction CSV
+		const invalidPredictionCsvContent = [
+			"package_name,version,lines_of_code", // Missing 'has_cve' column
+			"express,4.18.2,1500",
+			"lodash,4.17.21,8000",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(invalidPredictionCsvContent), "prediction.csv");
 
-        // Act: Attempt to upload an invalid student prediction CSV
-        const invalidPredictionCsvContent = ["package_name,version,lines_of_code", // Missing 'has_cve' column
-        "express,4.18.2,1500",
-        "lodash,4.17.21,8000",].join("\n");
-        const response = await request(app)
-            .post("/evaluations/" + evaluationToken + "/upload")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
-            .attach("predictions", Buffer.from(invalidPredictionCsvContent), "prediction.csv");
+		// Assert
+		expect(response.status).toBe(200);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Prediction received and queued for evaluation");
+		// wait for async evaluation to complete
+		await new Promise<void>((resolve) => setTimeout(resolve, 150));
+		// check that the evaluation record was updated with the FAILED status and error message
+		const evaluationRecord: any = await db.get(`SELECT * FROM competition_evaluations WHERE token = ?`, [evaluationToken]);
+		expect(evaluationRecord.status).toBe("FAILED");
+		expect(evaluationRecord.error_message).toContain("Column count mismatch");
+	});
+	it("should return 200 and det DELAYED status if evaluation takes too long", async () => {
+		// Arrange: Create a submission and evaluation with PENDING status for the test
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym1",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		// Insert an evaluation record with a created_at timestamp set to 20 minutes ago
+		await db.run(
+			`INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			[
+				submissionId,
+				1,
+				evaluationToken,
+				"PENDING",
+				new Date(Date.now() - 19 * 60 * 1000).toISOString(),
+				new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+			],
+		);
+		// Act: Upload a student prediction CSV
+		const predictionCsvContent = [
+			"package_name,version,lines_of_code,has_cve",
+			"express,4.18.2,1500,false",
+			"lodash,4.17.21,8000,true",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
 
-        // Assert
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Prediction received and queued for evaluation");
-        // wait for async evaluation to complete
-        await new Promise<void>((resolve) => setTimeout(resolve, 150));
-        // check that the evaluation record was updated with the FAILED status and error message
-        const evaluationRecord: any = await db.get(
-            `SELECT * FROM competition_evaluations WHERE token = ?`,
-            [evaluationToken],
-        );
-        expect(evaluationRecord.status).toBe("FAILED");
-        expect(evaluationRecord.error_message).toContain("Column count mismatch");
-    });
-    it("should return 200 and det DELAYED status if evaluation takes too long", async () => {
-        // Arrange: Create a submission and evaluation with PENDING status for the test
-        const submissionId = await createTestSubmissionForUser(
-            db,
-            TEST_COMPETITIONS.COMPETITION_1.id,
-            TEST_USERS.USER_PROJECT_1.id,
-            MOCK_STUDENT_SERVER_URL,
-            "pseudonym1",
-        );
-        await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
-        const evaluationToken = crypto.randomUUID();
-        // Insert an evaluation record with a created_at timestamp set to 20 minutes ago
-        await db.run(
-            `INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-            [submissionId, 1, evaluationToken, "PENDING", new Date(Date.now() - 19 * 60 * 1000).toISOString(), new Date(Date.now() - 20 * 60 * 1000).toISOString()],
-        );
-        // Act: Upload a student prediction CSV
-        const predictionCsvContent = ["package_name,version,lines_of_code,has_cve",
-        "express,4.18.2,1500,false",
-        "lodash,4.17.21,8000,true",].join("\n");
-        const response = await request(app)
-            .post("/evaluations/" + evaluationToken + "/upload")
-            .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
-            .attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
-
-        // Assert
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("message");
-        expect(response.body.message).toBe("Prediction received and queued for evaluation");
-        // wait for async evaluation to complete
-        await new Promise<void>((resolve) => setTimeout(resolve, 150));
-        // Check that the evaluation record was updated with the DELAYED status
-        const evaluationRecord: any = await db.get(
-            `SELECT * FROM competition_evaluations WHERE token = ?`,
-            [evaluationToken],
-        );
-        expect(evaluationRecord.status).toBe("DELAYED");
-        expect(evaluationRecord.score).toBe(0);
-        expect(evaluationRecord.completed_at).not.toBeNull();
-        expect(evaluationRecord.inference_time_ms).not.toBeNull();
-        expect(evaluationRecord.error_message).toBeNull();
-    });
+		// Assert
+		expect(response.status).toBe(200);
+		expect(response.body).toHaveProperty("message");
+		expect(response.body.message).toBe("Prediction received and queued for evaluation");
+		// wait for async evaluation to complete
+		await new Promise<void>((resolve) => setTimeout(resolve, 150));
+		// Check that the evaluation record was updated with the DELAYED status
+		const evaluationRecord: any = await db.get(`SELECT * FROM competition_evaluations WHERE token = ?`, [evaluationToken]);
+		expect(evaluationRecord.status).toBe("DELAYED");
+		expect(evaluationRecord.score).toBe(0);
+		expect(evaluationRecord.completed_at).not.toBeNull();
+		expect(evaluationRecord.inference_time_ms).not.toBeNull();
+		expect(evaluationRecord.error_message).toBe(
+			"Submission exceeded the deadline and is therefore penalized on the leaderboard.",
+		);
+	});
 });

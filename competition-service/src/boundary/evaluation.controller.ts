@@ -115,6 +115,10 @@ export class EvaluationController {
 			}
 
 			const evaluation = await this.evaluationService.requireEvaluationEntryExists(token, EvaluationStatus.PENDING);
+			// check if download endpoint was called before upload endpoint (started_at is set when download endpoint is called)
+			if (!evaluation.started_at) {
+				return errorResponse("Input CSV must be downloaded before uploading predictions", 400, res);
+			}
 
 			const csvString = req.file.buffer.toString("utf-8");
 
