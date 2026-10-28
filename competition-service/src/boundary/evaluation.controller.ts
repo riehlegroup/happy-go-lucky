@@ -68,7 +68,7 @@ export class EvaluationController {
 
 			const evaluationCreatedAt = new Date(evaluation.created_at).getTime();
 			const deadline = evaluationCreatedAt + 15 * 60 * 1000; // 15 minutes in milliseconds
-			if (Date.now() - evaluationCreatedAt > deadline) {
+			if (Date.now() > deadline) {
 				this.evaluationService.updateEvaluation(evaluation.id, {
 					status: EvaluationStatus.FAILED,
 					error_message: "Deadline for downloading the input CSV has passed.",

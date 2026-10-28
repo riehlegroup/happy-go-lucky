@@ -15,7 +15,7 @@ export class EvaluationService {
 	private evaluationRepo: EvaluationRepo;
 	private datasetRoundCache: DatasetRoundCache;
 
-	private static readonly DEADLINE_LIMIT_MS = 10 * 60 * 1000; // 15 minutes in milliseconds
+	private static readonly DEADLINE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 	constructor(
 		datasetRepo: DatasetRepo,
