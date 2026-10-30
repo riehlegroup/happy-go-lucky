@@ -10,6 +10,8 @@ import fs from "fs";
 import { errorResponse, handleError } from "../errors/errorhandling.helper";
 import { BadRequestException } from "../errors/badrequest.error";
 import { z } from "zod";
+import { CSVHelper } from "../services/helper/csv.helper";
+
 
 
 export class DatasetController {
@@ -34,6 +36,11 @@ export class DatasetController {
 			const fileName = req.file.originalname;
 			const filePath = req.file.path;
 
+			const delimiter = await CSVHelper.detectDelimiter(filePath);
+			if(delimiter !== ",") {
+				throw new BadRequestException("Uploaded CSV file does not use ',' as delimiter. Please check the file and try again.");
+			}
+
 			// Call the service to handle the database entry. Dataset file ist already saved by multer in the upload middleware.
 			const createdDataset = await this.datasetService.createDatabaseEntryForUploadedFile(
 				competitionId,
@@ -41,6 +48,7 @@ export class DatasetController {
 				fileName,
 				filePath,
 			);
+
 
 			const responseDataset = SingleDatasetResponseSchema.parse(createdDataset);
 
@@ -70,6 +78,12 @@ export class DatasetController {
 			}
 			if (!inputFile || !groundTruthFile) {
 				throw new BadRequestException("File missing, please upload both input and ground truth files");
+			}
+			// Validate the the uploaded files to have "," as delimiter and same schema (same number of columns). If not, delete the uploaded files and return an error.
+			const isValid = await this.datasetService.validateRoundFiles(inputFile.path, groundTruthFile.path);
+
+			if (!isValid) {
+				throw new BadRequestException("Structure of ground truth and input files do not match or they do not use ',' as delimiter. Please check the files and try again.");
 			}
 
 			// Call the service to handle the database entry. Dataset file ist already saved by multer in the upload middleware.

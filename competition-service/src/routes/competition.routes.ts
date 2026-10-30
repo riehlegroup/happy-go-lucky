@@ -53,7 +53,6 @@ export function createCompetitionRouter(
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
-		requireCompetitionActive(),
 		controller.getCompetitionById.bind(controller),
 	);
 	competitionRouter.post("/", requireAuth(authRepo), requireAdmin(), controller.createCompetition.bind(controller));
@@ -63,7 +62,6 @@ export function createCompetitionRouter(
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
-		requireCompetitionActive(),
 		controller.getCompetitionByCourseId.bind(controller),
 	);
 	// --- Submission routes -- //
@@ -82,7 +80,6 @@ export function createCompetitionRouter(
 		requireAuth(authRepo),
 		requireCompetitionExists(competitionService),
 		requireCourseMember(authRepo),
-		requireCompetitionActive(),
 		submissionController.getMyCompetitionSubmission.bind(submissionController),
 	);
 

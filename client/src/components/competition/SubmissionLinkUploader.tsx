@@ -33,7 +33,7 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 		if (existingSubmissionLink && existingSubmissionLink !== data.submissionLink) {
 			handleChanges("submissionLink", existingSubmissionLink);
 		}
-		if( existingPseudonym && existingPseudonym !== data.pseudonym) {
+		if (existingPseudonym && existingPseudonym !== data.pseudonym) {
 			handleChanges("pseudonym", existingPseudonym);
 		}
 	}, [existingSubmissionLink, existingPseudonym]);
@@ -60,7 +60,7 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 	return (
 		<div>
 			<form onSubmit={handleSubmit}>
-				<div className="flex flex-col gap-4 mr-4">
+				<div className="mr-4 flex flex-col gap-4">
 					<div>
 						<Input
 							type="text"
@@ -107,20 +107,18 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 							)}
 						</div>
 					</div>
-          </div>
+				</div>
 
-					<div className="text-right col-span-2 mt-4">
-						<Button type="submit" className="h-14" disabled={!isValid || isSubmitting}>
-							{isSubmitting ? "Submitting..." : isSubmissionLinkExisting ? "Update Solution" : "Submit Solution"}
-						</Button>
-						<div className="">
-							{isSubmissionLinkExisting && lastUpdated && (
-								<p className="mt-1 text-xs text-gray-500">
-									Last update: {new Date(lastUpdated).toLocaleString()}
-								</p>
-							)}
-						</div>
+				<div className="col-span-2 mt-4 text-right">
+					<Button type="submit" className="h-14" disabled={!isValid || isSubmitting}>
+						{isSubmitting ? "Submitting..." : isSubmissionLinkExisting ? "Update Solution" : "Submit Solution"}
+					</Button>
+					<div className="">
+						{isSubmissionLinkExisting && lastUpdated && (
+							<p className="mt-1 text-xs text-gray-500">Last update: {new Date(lastUpdated).toLocaleString()}</p>
+						)}
 					</div>
+				</div>
 			</form>
 		</div>
 	);

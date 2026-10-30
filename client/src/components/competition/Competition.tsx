@@ -77,12 +77,16 @@ const Competition: React.FC = () => {
 	const submissionGuidelines = (
 		<div>
 			<p>
-				To participate in the competition, you need to submit a link to your solution. Your solution must be hosted in the
-				rrze clound and must implent the basic API structure as this example. For each competition a trainings dataset
-				will be provided to you to train your model. After training your model, different rounds with different evaluation
+				To participate in the competition, you need to deploy the provided student API example with your own implementation of the prediction ML-model.
+				It is important that your API is accessible and has a /health and a /predict endpoint and follows the same structure as the provided example. </p>
+				<p className="font-bold">The submission URL must be the base URL of your deployed API without /predict or /health. Example: Base URL required in solution submission field: https://your-api.com ; Health Endpoint: https://your-api.com/health; Prediction Endpoint: https://your-api.com/predict</p> 
+				<p>
+				The API should be deployed and accessible from the internet.
+				For each competition a trainings dataset will be provided to you to train your model. After training your model, different rounds with different evaluation
 				datasets will be evaluated. Your own score will be calculated based on the performance of your model on the
-				evaluation datasets and displayed on this page and on the leaderboards (under your pseudonym).
-			</p>
+				evaluation datasets and displayed on this page and on the leaderboard. To preserve anonymity, you must choose a pseudonym for your submission.
+				Please make sure to follow the submission guidelines and respect the competition rules.
+				</p>
 		</div>
 	);
 
@@ -119,7 +123,7 @@ const Competition: React.FC = () => {
 					<div className="text-left">{competition.description}</div>
 
 					<details className="my-4 text-left">
-						<summary className="cursor-pointer font-bold hover:text-blue-600">Submission Guidelines</summary>
+						<summary className="cursor-pointer font-bold hover:text-blue-600">Submission Guidelines (please read before first submission)</summary>
 						<div className="mt-2">
 							<p>{submissionGuidelines}</p>
 						</div>
@@ -142,7 +146,7 @@ const Competition: React.FC = () => {
 						<TableHeader>
 							<TableRow>
 								<TableHead>Round</TableHead>
-								<TableHead>Score (RSME)</TableHead>
+								<TableHead>Score (RMSE)</TableHead>
 								<TableHead>Inference time (ms)</TableHead>
 								<TableHead>started at</TableHead>
 								<TableHead>Completed at</TableHead>
@@ -154,7 +158,7 @@ const Competition: React.FC = () => {
 							{evaluationResults.sort((a, b) => a.round - b.round).map((entry) => (
 								<TableRow key={entry.round}>
 									<TableCell>{entry.round}</TableCell>
-									<TableCell>{Number(entry.score).toFixed(4)}</TableCell>
+									<TableCell>{entry.score !== null ? Number(entry.score).toFixed(4) : "N/A"}</TableCell>
 									<TableCell>{entry.inference_time_ms}</TableCell>
 									<TableCell>
 										{entry.started_at ? new Date(entry.started_at).toLocaleString() : "N/A"}

@@ -17,7 +17,10 @@ async function waitForDatabase(maxRetries = 10, delayMs = 2000) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const db = await getDb();
-      await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='competitions';");
+      const table = await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='competitions';");
+      if(!table) {
+        throw new Error("Competitions table not found. Database might not be initialized yet.");
+      }
       console.log('Competition Service connected to database successfully.');
       return db;
     } catch (error) {

@@ -91,11 +91,11 @@ const Leaderboard: React.FC = () => {
 					<Tabs  defaultValue="overall" value={activeTab} onValueChange={handleTabChange}>
 						<TabsList className="flex justify-start" aria-label="Select round to view leaderboard">
 							<TabsTrigger  value="overall">
-								Total for all evaluaded rounds
+								Total for all evaluated rounds
 							</TabsTrigger>
 							{rounds.map((roundNum: number) => (
 								<TabsTrigger key={roundNum} value={String(roundNum)}>
-									Runde {roundNum}
+									Round {roundNum}
 								</TabsTrigger>
 							))}
 						</TabsList>

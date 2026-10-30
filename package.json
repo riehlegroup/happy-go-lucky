@@ -13,6 +13,12 @@
     "generate-competition-mockdata": "npm run build --prefix server && node server/dist/scripts/generateCompetitionMockData.js",
     "mock:all": "npm run generate-mockdata && npm run generate-competition-mockdata"
   },
+  "overrides": {
+    "braces": "3.0.3",
+    "micromatch": "^4.0.8",
+    "postcss-selector-parser": "^7.1.6",
+    "brace-expansion": "^2.0.2"
+  },
   "devDependencies": {
     "@octokit/types": "^13.8.0",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
@@ -24,7 +30,7 @@
     "eslint-plugin-tailwindcss": "^3.17.5",
     "globals": "^15.14.0",
     "typescript": "^5.7.2",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.5"
   },
   "workspaces": [
     "client",
@@ -32,12 +38,8 @@
     "competition-service"
   ],
   "dependencies": {
-    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^7.0.12",
-    "sqlite": "^5.1.1"
+    "nodemailer": "^10.2.1"
   },
   "allowScripts": {
     "esbuild@0.25.12": true,

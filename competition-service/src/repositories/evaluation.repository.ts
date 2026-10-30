@@ -29,10 +29,10 @@ export class EvaluationRepo extends BaseRepo<Evaluation> {
 		const status = EvaluationStatus.PENDING;
 		const query = `
         INSERT INTO ${this.tableName} (submissionId, token, status, created_at, round)
-        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
+        VALUES (?, ?, ?, ?, ?)
         RETURNING *;
         `;
-		const evaluation = await this.db.get(query, [submissionId, token, status, round]);
+		const evaluation = await this.db.get(query, [submissionId, token, status, new Date().toISOString(), round]);
 		return evaluation as Evaluation | null;
 	}
 	async getEvaluationsByCompetitionAndRound(competitionId: number, round: number): Promise<Evaluation[]> {

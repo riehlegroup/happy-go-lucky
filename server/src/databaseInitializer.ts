@@ -52,6 +52,7 @@ export async function initializeDB(filename: string, createAdmin = true) {
 
   await db.exec(`PRAGMA journal_mode = WAL;`); // Enable Write-Ahead Logging for better concurrency
   await db.exec(`PRAGMA busy_timeout = 5000;`); // Set busy timeout to 5 seconds
+  await db.exec(`PRAGMA synchronous = NORMAL;`); 
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (

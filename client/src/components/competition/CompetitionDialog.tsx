@@ -119,7 +119,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 
 	// initialize form data with existing competition data or default values
 	useEffect(() => {
-		if (isOpen) {
+		if (isOpen && !isActionLoading) {
 			loadData();
 		}
 	}, [isOpen, competition]);
@@ -190,9 +190,11 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			}
 			if (selectedRoundFiles && Object.keys(selectedRoundFiles).length > 0) {
 				for (const [round, files] of Object.entries(selectedRoundFiles)) {
-					uploadPromises.push(
-						uploadRoundDataset(Number(round), files.inputFile!, files.groundTruthFile!, competitionId),
-					);
+					if (files.inputFile && files.groundTruthFile) {
+						uploadPromises.push(
+							uploadRoundDataset(Number(round), files.inputFile!, files.groundTruthFile!, competitionId),
+						);
+					}
 				}
 			}
 			if (uploadPromises.length > 0) {
@@ -229,7 +231,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			let message = "Failed to delete dataset. Please try again.";
 			if (error instanceof Error) {
 				message = error.message;
-			}else if (typeof error === "string") {
+			} else if (typeof error === "string") {
 				message = error;
 			}
 			setErrorMessage(message);
@@ -426,7 +428,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 												</div>
 												<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 													<DatasetUploader
-														label="Input dataset (CSV)"
+														label="Input dataset (comma separated CSV)"
 														type={DatasetType.INPUT}
 														existingMetadata={inputMetadata}
 														selectedFile={selectedInputFile}
@@ -440,14 +442,16 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 																},
 															}));
 														}}
-														onDownload={() => downloadDataset(inputMetadata!.id, inputMetadata!.file_name)}
+														onDownload={() =>
+															downloadDataset(inputMetadata!.id, inputMetadata!.file_name)
+														}
 														onDelete={() => {
 															handleDeleteDataset(inputMetadata!.id);
 														}}
 														disabled={isActionLoading}
 													/>
 													<DatasetUploader
-														label="Ground truth dataset (CSV)"
+														label="Ground truth dataset (comma separated CSV)"
 														type={DatasetType.GROUND_TRUTH}
 														existingMetadata={groundTruthMetadata}
 														selectedFile={selectedGroundTruthFile}
@@ -461,7 +465,12 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 																},
 															}));
 														}}
-														onDownload={() => downloadDataset(groundTruthMetadata!.id, groundTruthMetadata!.file_name)}
+														onDownload={() =>
+															downloadDataset(
+																groundTruthMetadata!.id,
+																groundTruthMetadata!.file_name,
+															)
+														}
 														onDelete={() => {
 															handleDeleteDataset(groundTruthMetadata!.id);
 														}}

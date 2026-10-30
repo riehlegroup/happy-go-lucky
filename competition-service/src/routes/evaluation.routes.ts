@@ -41,6 +41,7 @@ export function createEvaluationRouter(
 		evaluationController.startEvaluationForCourse.bind(evaluationController));
 
 	evaluationRouter.get("/:token/download", evaluationController.downloadInputCsv.bind(evaluationController));
+	
 	evaluationRouter.post("/:token/upload",
 		datasetUploader.singleStudentPrediction("predictions"),
 		evaluationController.uploadStudentPrediction.bind(evaluationController),
