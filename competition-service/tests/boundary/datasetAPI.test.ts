@@ -37,7 +37,7 @@ describe("Dataset API Integrationtest", () => {
 
 	beforeAll(async () => {
 		// Initialize the database and application here
-		process.env.UPLOAD_DIR = TEST_DATASET_DIR;
+		process.env.STORAGE_PATH = TEST_DATASET_DIR;
 		db = await createTestDatabase();
 		app = createApp(db);
 		fs.writeFileSync(validCsvPath, validCsvContent);
@@ -51,7 +51,7 @@ describe("Dataset API Integrationtest", () => {
 		if (fs.existsSync(TEST_DATASET_DIR)) {
 			fs.rmSync(TEST_DATASET_DIR, { recursive: true, force: true });
 		}
-		delete process.env.UPLOAD_DIR;
+		delete process.env.STORAGE_PATH;
 		db.close();
 	});
 

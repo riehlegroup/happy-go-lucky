@@ -8,8 +8,6 @@ COPY competition-service/package*.json ./competition-service/
 RUN npm ci
 
 COPY competition-service ./competition-service
-COPY tsconfig*.json ./
-
 
 RUN npm run build --prefix competition-service
 

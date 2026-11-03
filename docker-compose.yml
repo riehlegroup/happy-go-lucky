@@ -10,7 +10,7 @@ services:
       DB_PATH: ${DB_PATH}
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
-      INTERNAL_COMPETITION_SERVICE_URL: http://competition-service:8081
+      INTERNAL_COMPETITION_SERVICE_URL: ${INTERNAL_COMPETITION_SERVICE_URL:-http://competition-service:8081}
       EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
       EMAIL_SMTP_PASS: ${EMAIL_SMTP_PASS}
     volumes:
@@ -22,12 +22,14 @@ services:
   competition-service:
     build:
       context: .
-      dockerfile: Dockerfile.competition-service # Siehe Schritt 2 unten
+      dockerfile: Dockerfile.competition-service
     environment:
       NODE_ENV: production
       PORT: 8081
+      CLIENT_URL: ${CLIENT_URL}
+      DOMAIN: ${DOMAIN}
       DB_PATH: ${DB_PATH:-/app/server/data/happyGoLucky.db}
-      STORAGE_PATH: /app/uploads
+      STORAGE_PATH: ${STORAGE_PATH:-/app/uploads}
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
       PUBLIC_COMPETITION_API_URL: ${PUBLIC_COMPETITION_API_URL}

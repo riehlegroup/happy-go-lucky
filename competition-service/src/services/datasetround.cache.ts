@@ -1,7 +1,7 @@
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import fs from "fs";
-import * as fastCsv from "fast-csv";
+import { CSVHelper } from "./helper/csv.helper";
 
 export class DatasetRoundCache {
 	private datasetRepo: DatasetRepo;
@@ -9,11 +9,14 @@ export class DatasetRoundCache {
 	constructor(datasetRepo: DatasetRepo) {
 		this.datasetRepo = datasetRepo;
 	}
+	private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes sliding TTL (idle timeout) in milliseconds
 	private cache = new Map<string, { groundTruthRows: string[][]; inputRows: string[][] }>();
+	private timers = new Map<string, NodeJS.Timeout>();
 
 	public async getOrLoadDatasets(competitionId: number, round: number) {
 		const key = `${competitionId}_${round}`;
 		if (this.cache.has(key)) {
+			this.refreshTtl(key);
 			return this.cache.get(key)!;
 		}
 		const roundDatasets = await this.datasetRepo.getDatasetsForCompetitionRound(competitionId, round);
@@ -30,29 +33,34 @@ export class DatasetRoundCache {
 		]);
 
 		const [groundTruthRows, inputRows] = await Promise.all([
-			this.parseCsv(groundTruthCsv),
-			this.parseCsv(inputCsv),
+			CSVHelper.parseCsv(groundTruthCsv),
+			CSVHelper.parseCsv(inputCsv),
 		]);
 
 		const cacheEntry = { groundTruthRows, inputRows };
 		this.cache.set(key, cacheEntry);
+		this.refreshTtl(key); // Start or reset the TTL timer for this cache entry
 		return cacheEntry;
 	}
 
-    public clearCacheForCompetitionRound(competitionId: number, round: number) {
-        const key = `${competitionId}_${round}`;
-        this.cache.delete(key);
-    }
+	public clearCacheForCompetitionRound(competitionId: number, round: number) {
+		const key = `${competitionId}_${round}`;
+		if (this.timers.has(key)) {
+			clearTimeout(this.timers.get(key)!);
+			this.timers.delete(key);
+		}
+		this.cache.delete(key);
+	}
 
-	private async parseCsv(csvString: string): Promise<string[][]> {
-		const rows: string[][] = [];
-		await new Promise<void>((resolve, reject) => {
-			fastCsv
-				.parseString(csvString, { headers: false })
-				.on("error", (error: Error) => reject(error))
-				.on("data", (row: string[]) => rows.push(row))
-				.on("end", () => resolve());
-		});
-		return rows;
+	private refreshTtl(key: string) {
+		if (this.timers.has(key)) {
+			clearTimeout(this.timers.get(key)!);
+		}
+		const timer = setTimeout(() => {
+			this.cache.delete(key);
+			this.timers.delete(key);
+		}, DatasetRoundCache.CACHE_TTL);
+		timer.unref(); // allows the Node.js event loop to exit if this is the only active timer
+		this.timers.set(key, timer);
 	}
 }

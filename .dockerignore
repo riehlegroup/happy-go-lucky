@@ -2,11 +2,16 @@
 node_modules/
 client/node_modules/
 server/node_modules/
+competition-service/node_modules/
 
 # Build outputs
 client/dist/
 server/dist/
+competition-service/dist/
 dist/
+
+# Uploaded datasets (mounted via volume in production)
+competition-service/uploads/
 
 # Development files
 .env
