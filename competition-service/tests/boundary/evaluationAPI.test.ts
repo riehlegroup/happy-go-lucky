@@ -31,7 +31,7 @@ describe("Evaluation API integration test", () => {
 	const TEST_COMPETITION_BASE_URL = "http://test-domain.de/api/competition";
 
 	beforeAll(async () => {
-		process.env.UPLOAD_DIR = TEST_DATASET_DIR; // temp directory for test dataset storage
+		process.env.STORAGE_PATH = TEST_DATASET_DIR; // temp directory for test dataset storage
 		process.env.PUBLIC_COMPETITION_API_URL = `${TEST_COMPETITION_BASE_URL}`;
 		// Initialize the database and application here
 		db = await createTestDatabase();
@@ -69,7 +69,7 @@ describe("Evaluation API integration test", () => {
 		if (fs.existsSync(TEST_DATASET_DIR)) {
 			fs.rmSync(TEST_DATASET_DIR, { recursive: true, force: true });
 		}
-		delete process.env.UPLOAD_DIR;
+		delete process.env.STORAGE_PATH;
 		await db.close();
 	});
 

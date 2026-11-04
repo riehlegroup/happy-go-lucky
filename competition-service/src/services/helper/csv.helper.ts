@@ -82,7 +82,7 @@ export const CSVHelper = {
 	 * @param delimiter The delimiter used in the CSV string.
 	 * @returns A promise that resolves to a 2D array of strings.
 	 */
-	parseCsv: async (csvString: string, delimiter: string): Promise<string[][]> => {
+	parseCsv: async (csvString: string, delimiter: string = ","): Promise<string[][]> => {
 		const rows: string[][] = [];
 		await new Promise<void>((resolve, reject) => {
 			fastCsv

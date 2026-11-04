@@ -2,7 +2,6 @@ import { BadRequestException } from "../errors/badrequest.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import { SubmissionRepo } from "../repositories/submission.repository";
 import { Competition, DatasetType, Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/competition.types";
-import * as fastCsv from "fast-csv";
 
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
@@ -161,15 +160,18 @@ export class EvaluationService {
 			for (let j = 0; j < groundTruthRow.length; j++) {
 				const inVal = inputRow[j] ? inputRow[j].trim() : "";
 				// Only calculate score for columns where the input dataset has an empty value
-				const isTargetColumn = inVal === "" || inVal === null || inVal === undefined;
+				const isTargetColumn = inVal === "";
 
 				if (isTargetColumn) {
-					const groundTruthValue = this.toNumbericValue(groundTruthRow[j]);
-					const studentPredictionValue = this.toNumbericValue(studentPredictionRow[j]);
+					const groundTruthValue = this.convertToNumericValue(groundTruthRow[j]);
+					const studentPredictionValue = this.convertToNumericValue(studentPredictionRow[j]);
 					sumSquaredErrors += Math.pow(groundTruthValue - studentPredictionValue, 2);
 					targetCount++;
 				}
 			}
+		}
+		if (targetCount === 0) {
+			throw new BadRequestException("No target values found to evaluate (input dataset has no empty target cells).");
 		}
 		return Math.sqrt(sumSquaredErrors / targetCount); // Root Mean Squared Error (RMSE)
 	}
@@ -266,7 +268,7 @@ export class EvaluationService {
 		}
 	}
 
-	private toNumbericValue(value: unknown): number {
+	private convertToNumericValue(value: unknown): number {
 		if (value === null || value === undefined || value === "") {
 			throw new BadRequestException("Prediction contains empty target values."); // must throw an error here, otherwise the score calculation will be incorrect and the student might get a better score by submitting an empty value.
 		}
@@ -282,7 +284,8 @@ export class EvaluationService {
 				if (str.toLowerCase() === "false") return 0;
 
 				// check if the string can be converted to a number (float or integer)
-				const num = Number(str);
+				const normalizedStr = /^-?\d+,\d+$/.test(str) ? str.replace(",", ".") : str; // for european decimal format strings, replace comma with dot to allow Number() to parse it correctly
+				const num = Number(normalizedStr);
 				if (!isNaN(num) && isFinite(num)) {
 					return num;
 				}
