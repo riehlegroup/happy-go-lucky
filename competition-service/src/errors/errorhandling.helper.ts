@@ -42,6 +42,7 @@ export function handleError(
  * @returns 
  */
 export function errorResponse(message: string, statusCode: number, res: any) {
+	console.error("HTTP ERROR [" + statusCode + "]: ", message);
 	return res.status(statusCode).json({
 		statusCode: statusCode,
 		error: http.STATUS_CODES[statusCode],

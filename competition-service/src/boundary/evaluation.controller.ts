@@ -42,6 +42,7 @@ export class EvaluationController {
 		try {
 			const competition = req.competition;
 			const round = Number(req.query.round);
+			const forceRestart = req.query.forceRestart === "true" || req.query.forceRestart === true;
 			if (!competition) {
 				return errorResponse("Competition not found in request", 400, res);
 			}
@@ -49,7 +50,7 @@ export class EvaluationController {
 				return errorResponse("Invalid round number", 400, res);
 			}
 
-			await this.evaluationService.startEvaluation(competition, round);
+			await this.evaluationService.startEvaluation(competition, round, forceRestart);
 
 			res.status(200).json({ message: "Evaluation started successfully" });
 		} catch (error) {
@@ -75,6 +76,7 @@ export class EvaluationController {
 				});
 				return errorResponse("Deadline for downloading the input CSV has passed.", 410, res);
 			}
+			console.log(`[EVALUATION] Starting to download input CSV for evaluation with id: ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}`);
 			const inputFilePath = await this.evaluationService.getInputDatasetFilePathForCompetitionAndRound(
 				evaluation.competitionId,
 				evaluation.round,
@@ -103,7 +105,7 @@ export class EvaluationController {
 
 	async uploadStudentPrediction(req: any, res: any) {
 		try {
-			const receivedAt = Date.now(); // for more precise timing received at can be added to request with middleware
+			const receivedAt = req.receivedAt || Date.now();
 			const token = (req.params.token || req.query.token) as string | undefined;
 			if (!token) {
 				return errorResponse("Token is required", 400, res);
@@ -119,7 +121,7 @@ export class EvaluationController {
 			if (!evaluation.started_at) {
 				return errorResponse("Input CSV must be downloaded before uploading predictions", 400, res);
 			}
-
+			console.log(`[EVALUATION] Received submission for evaluation ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}. Enqueueing scoring job.`);
 			const csvString = req.file.buffer.toString("utf-8");
 
 			this.scoringQueue.enqueue(() =>

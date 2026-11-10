@@ -27,6 +27,11 @@ export function createEvaluationRouter(
 
 	const evaluationController = new EvaluationController(evaluationService);
 
+	const receivedAtMiddleware = (req: any, res: any, next: any) => {
+		req.receivedAt = Date.now();
+		next();
+	}; 
+	
 	evaluationRouter.post(
 		"/competitions/:id/start",
 		requireAuth(authRepo),
@@ -43,6 +48,7 @@ export function createEvaluationRouter(
 	evaluationRouter.get("/:token/download", evaluationController.downloadInputCsv.bind(evaluationController));
 	
 	evaluationRouter.post("/:token/upload",
+		receivedAtMiddleware,
 		datasetUploader.singleStudentPrediction("predictions"),
 		evaluationController.uploadStudentPrediction.bind(evaluationController),
 	);

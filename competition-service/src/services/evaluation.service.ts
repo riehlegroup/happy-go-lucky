@@ -28,7 +28,7 @@ export class EvaluationService {
 		this.datasetRoundCache = datasetRoundCache;
 	}
 
-	async startEvaluation(competition: Competition, round: number) {
+	async startEvaluation(competition: Competition, round: number, forceRestart: boolean = false) {
 		// check if the current date is within the competition's start and end dates
 		const now = new Date().getTime();
 		if (now < competition.startDate.getTime() || now > competition.endDate.getTime()) {
@@ -38,9 +38,12 @@ export class EvaluationService {
 		// check if competition round has already been evaluated by checking if there are any evaluation records for the given competition and round
 		const existingEvaluations = await this.evaluationRepo.getEvaluationsByCompetitionAndRound(competition.id, round);
 		if (existingEvaluations.length > 0) {
-			throw new BadRequestException(
-				`Evaluation for competition ID ${competition.id} and round ${round} has already been started`,
-			);
+			if (!forceRestart) {
+				throw new BadRequestException(
+					`Evaluation for competition ID ${competition.id} and round ${round} has already been started`,
+				);
+			}
+			await this.evaluationRepo.deleteEvaluationsByCompetitionAndRound(competition.id, round);
 		}
 
 		const datasets = await this.datasetRepo.getDatasetsForCompetitionRound(competition.id, round);
@@ -55,7 +58,7 @@ export class EvaluationService {
 			throw new Error(`No input dataset found for competition ID ${competition.id} and round ${round}`);
 		}
 
-		console.log(`Starting evaluation for competition ID and round: ${competition.id}`);
+		console.log(`[EVALUATION] Starting evaluation for competition ID ${competition.id} and round ${round}`);
 		await this.callSubmissionApis(competition.id, round);
 	}
 
@@ -96,7 +99,7 @@ export class EvaluationService {
 		const isDelayed = (receivedAt - startMs) > EvaluationService.DEADLINE_LIMIT_MS;
 		const inferenceTimeMs = receivedAt - startMs;
 		const status = isDelayed ? EvaluationStatus.DELAYED : EvaluationStatus.EVALUATED;
-
+		console.log(`[EVALUATION] Scoring started for evaluation id ${evaluation.id}.`);
 		try {
 			// Get Datasets from Cache
 			const { groundTruthRows, inputRows } = await this.datasetRoundCache.getOrLoadDatasets(
@@ -115,8 +118,9 @@ export class EvaluationService {
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
+			console.log(`[EVALUATION] Scoring completed for evaluation ${evaluation.id}. Score: ${score}, inference time: ${inferenceTimeMs}ms, status: ${status}`);
 		} catch (error) {
-			console.error(`Error calculating score for evaluation ${evaluation.id}: ${error}`);
+			console.error(`[EVALUATION] Error calculating score for evaluation ${evaluation.id}: ${error}`);
 			let errorMessage;
 			if (error instanceof NotFoundException) {
 				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
@@ -179,7 +183,7 @@ export class EvaluationService {
 	private async callSubmissionApis(competitionId: number, round: number) {
 		const submissions = await this.submissionRepo.getAllSubmissionsByCompetition(competitionId);
 		if (!submissions || submissions.length === 0) {
-			console.warn(`No submissions found for competition ID: ${competitionId}`);
+			console.warn(`[EVALUATION] No submissions found for competition ID: ${competitionId}`);
 			return;
 		}
 		// to avoid too many open connections, we batch the calls to student APIs. Evaluation records are created first for every batch and then the student APIs are called asynchronously.
@@ -196,7 +200,7 @@ export class EvaluationService {
 					const token = crypto.randomUUID();
 					const evaluationEntry = await this.evaluationRepo.createEvaluation(submission.id, token, round);
 					if (!evaluationEntry) {
-						console.error(`Failed to create evaluation for submission ID: ${submission.id}`);
+						console.error(`[EVALUATION] Failed to create evaluation for submission ID: ${submission.id}`);
 						return null;
 					} else {
 						return {
@@ -254,7 +258,7 @@ export class EvaluationService {
 					: error instanceof Error
 						? error.message
 						: String(error);
-			console.error(`Evaluation ${evaluationId} Student API call failed: ${errorMessage}`);
+			console.error(`[EVALUATION] Evaluation ${evaluationId} Student API call failed: ${errorMessage}`);
 			try {
 				const updateDto: UpdateEvaluationDto = {
 					status: EvaluationStatus.FAILED,
@@ -263,7 +267,7 @@ export class EvaluationService {
 				};
 				await this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
 			} catch (error) {
-				console.error(`Failed to update evaluation status to FAILED for ${evaluationId}: ${error}`);
+				console.error(`[EVALUATION] Failed to update evaluation status to FAILED for ${evaluationId}: ${error}`);
 			}
 		}
 	}
