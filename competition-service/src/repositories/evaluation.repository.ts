@@ -46,6 +46,16 @@ export class EvaluationRepo extends BaseRepo<Evaluation> {
 		return rows as Evaluation[];
 	}
 
+	async deleteEvaluationsByCompetitionAndRound(competitionId: number, round: number): Promise<void> {
+		const query = `
+            DELETE FROM ${this.tableName}
+            WHERE round = ? AND submissionId IN (
+                SELECT id FROM ${SubmissionRepo.TABLE_NAME} WHERE competitionId = ?
+            )
+        `;
+		await this.db.run(query, [round, competitionId]);
+	}
+
 	async updateEvaluationStatus(evaluationId: number, updateDto: UpdateEvaluationDto): Promise<boolean> {
 		const fieldsToUpdate: string[] = [];
 		const values: any[] = [];
