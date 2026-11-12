@@ -136,7 +136,7 @@ export const useCompetition = (courseId: number | undefined, options = { fetchSu
 			setIsActionLoading(false);
 		}
 	};
-	const uploadRoundDataset = async (round: number, inputFile: File, groundTruthFile: File, competitionId?: number) => {
+	const uploadRoundDataset = async (round: number, inputFile?: File, groundTruthFile?: File, competitionId?: number) => {
 		const compId = competitionId ?? competition?.id;
 		if (!compId) {
 			setError("No competition found to upload round dataset");

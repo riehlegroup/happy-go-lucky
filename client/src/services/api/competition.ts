@@ -82,10 +82,14 @@ const competitionApi = {
 		);
 	},
 
-	uploadRoundDatasets: async (competitionId: number, round: number, inputFile: File, groundTruthFile: File) => {
+	uploadRoundDatasets: async (competitionId: number, round: number, inputFile?: File, groundTruthFile?: File) => {
 		const formData = new FormData();
-		formData.append("inputFile", inputFile);
-		formData.append("groundTruthFile", groundTruthFile);
+		if (inputFile) {
+			formData.append("inputFile", inputFile);
+		}
+		if (groundTruthFile) {
+			formData.append("groundTruthFile", groundTruthFile);
+		}
 
 		return await ApiClient.getInstance().post(
 			`${COMPETITION_ENDPOINT_ADDITION}/${competitionId}/datasets/rounds/${round}`,

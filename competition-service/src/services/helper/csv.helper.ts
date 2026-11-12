@@ -119,4 +119,62 @@ export const CSVHelper = {
 		}
 		return true;
 	},
+
+	/**
+	 * Validates the structure of a round's input CSV (header + time-series rows).
+	 */
+	validateInputDataset: (inputCsv: string[][]): boolean => {
+		if (!inputCsv || inputCsv.length < 2 || !inputCsv[0] || inputCsv[0].length === 0) {
+			return false;
+		}
+		const inputHeaders = new Set<string>();
+		for (const h of inputCsv[0]) {
+			const trimmed = h ? h.trim() : "";
+			if (trimmed === "" || inputHeaders.has(trimmed)) {
+				return false; // Empty or duplicate header in input CSV
+			}
+			inputHeaders.add(trimmed);
+		}
+		return true;
+	},
+
+	/**
+	 * Validates the structure of a round's ground truth CSV (target headers + exactly 1 row of target values).
+	 */
+	validateGroundTruthDataset: (groundTruthCsv: string[][]): boolean => {
+		if (!groundTruthCsv || groundTruthCsv.length !== 2 || !groundTruthCsv[0] || groundTruthCsv[0].length === 0) {
+			return false;
+		}
+		const gtHeader = groundTruthCsv[0];
+		const gtRow = groundTruthCsv[1];
+		if (gtHeader.length !== gtRow.length) {
+			return false;
+		}
+		const gtHeaders = new Set<string>();
+		for (let j = 0; j < gtHeader.length; j++) {
+			const trimmedHeader = gtHeader[j] ? gtHeader[j].trim() : "";
+			if (trimmedHeader === "" || gtHeaders.has(trimmedHeader)) {
+				console.error(`Duplicate or empty ground truth header at index ${j}: "${gtHeader[j]}"`);
+				return false;
+			}
+			gtHeaders.add(trimmedHeader);
+			const val = gtRow[j] ? gtRow[j].trim() : "";
+			if (val === "" || /^-?\d+,\d+$/.test(val)) {
+				console.error(`Empty or european comma decimal format ground truth value at index ${j}: "${gtRow[j]}"`);
+				return false;
+			}
+		}
+		return true;
+	},
+
+	/**
+	 * Validates the structure of a round's input CSV (header + time-series rows)
+	 * and ground truth CSV (target headers + exactly 1 row of target values).
+	 * @param inputCsv parsed 2D array of the input CSV
+	 * @param groundTruthCsv parsed 2D array of the ground truth CSV
+	 * @returns true if both files match the expected round schema, false otherwise
+	 */
+	validateRoundDatasets: (inputCsv: string[][], groundTruthCsv: string[][]): boolean => {
+		return CSVHelper.validateInputDataset(inputCsv) && CSVHelper.validateGroundTruthDataset(groundTruthCsv);
+	},
 };

@@ -3,13 +3,16 @@ import { DatasetRepo } from "../repositories/dataset.repository";
 import { Dataset, DatasetType } from "../types/competition.types";
 import fs from "fs";
 import { CSVHelper } from "./helper/csv.helper";
+import { DatasetRoundCache } from "./datasetround.cache";
 
 export class DatasetService {
    
     private datasetRepo: DatasetRepo;
+    private datasetRoundCache: DatasetRoundCache;
     
-    constructor(datasetRepo: DatasetRepo) {
+    constructor(datasetRepo: DatasetRepo, datasetRoundCache: DatasetRoundCache) {
         this.datasetRepo = datasetRepo;
+        this.datasetRoundCache = datasetRoundCache;
     }
 
     async createDatabaseEntryForUploadedFile(
@@ -91,25 +94,45 @@ export class DatasetService {
         if (!success) {
             throw new Error(`Failed to delete dataset with ID ${id} from the database`);
         }
+        if (dataset.round !== null && dataset.round !== undefined) {
+            this.datasetRoundCache.clearCacheForCompetitionRound(dataset.competitionId, dataset.round);
+        }
         return dataset;
     }
 
-    async validateRoundFiles(inputFilePath: string, groundTruthFilePath: string): Promise<boolean> {
+    async validateInputFile(inputFilePath: string): Promise<boolean> {
 		try {
 			const inputDelimiter = await CSVHelper.detectDelimiter(inputFilePath);
-			const groundTruthDelimiter = await CSVHelper.detectDelimiter(groundTruthFilePath);
-
-			if (inputDelimiter !== "," || groundTruthDelimiter !== ",") {
+			if (inputDelimiter !== ",") {
 				return false;
 			}
-
 			const inputCsv = await CSVHelper.parseCsv(fs.readFileSync(inputFilePath, "utf8"), ",");
-			const groundTruthCsv = await CSVHelper.parseCsv(fs.readFileSync(groundTruthFilePath, "utf8"), ",");
-
-			return CSVHelper.validateCSVStructure(inputCsv, groundTruthCsv);
+			return CSVHelper.validateInputDataset(inputCsv);
 		} catch (error) {
-			console.error("Error validating round files:", error);
+			console.error("Error validating input file:", error);
 			return false;
 		}
+	}
+
+    async validateGroundTruthFile(groundTruthFilePath: string): Promise<boolean> {
+		try {
+			const groundTruthDelimiter = await CSVHelper.detectDelimiter(groundTruthFilePath);
+			if (groundTruthDelimiter !== ",") {
+				return false;
+			}
+			const groundTruthCsv = await CSVHelper.parseCsv(fs.readFileSync(groundTruthFilePath, "utf8"), ",");
+			return CSVHelper.validateGroundTruthDataset(groundTruthCsv);
+		} catch (error) {
+			console.error("Error validating ground truth file:", error);
+			return false;
+		}
+	}
+
+    async validateRoundFiles(inputFilePath: string, groundTruthFilePath: string): Promise<boolean> {
+		const [isInputValid, isGroundTruthValid] = await Promise.all([
+			this.validateInputFile(inputFilePath),
+			this.validateGroundTruthFile(groundTruthFilePath),
+		]);
+		return isInputValid && isGroundTruthValid;
 	}
 }

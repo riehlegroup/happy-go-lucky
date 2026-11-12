@@ -246,9 +246,8 @@ describe("Evaluation API integration test", () => {
 
 		// Act: Upload a student prediction CSV
 		const predictionCsvContent = [
-			"package_name,version,lines_of_code,has_cve", // ground truth of createDatrsetsForCompetitionRound
-			"express,4.18.2,1500,false",
-			"lodash,4.17.21,8000,true",
+			"target_cve,target_risk_score", // ground truth of createDatasetsForCompetitionRound
+			"0,0.25",
 		].join("\n");
 		const response = await request(app)
 			.post("/evaluations/" + evaluationToken + "/upload")
@@ -273,9 +272,8 @@ describe("Evaluation API integration test", () => {
 	});
 	it("should return 400 when uploading a student prediction with invalid token", async () => {
 		const predictionCsvContent = [
-			"package_name,version,lines_of_code,has_cve",
-			"express,4.18.2,1500,false",
-			"lodash,4.17.21,8000,true",
+			"target_cve,target_risk_score",
+			"0,0.25",
 		].join("\n");
 		const response = await request(app)
 			.post("/evaluations/invalid-token/upload")
@@ -306,9 +304,8 @@ describe("Evaluation API integration test", () => {
 
 		// Act: Attempt to upload a student prediction CSV
 		const predictionCsvContent = [
-			"package_name,version,lines_of_code,has_cve",
-			"express,4.18.2,1500,false",
-			"lodash,4.17.21,8000,true",
+			"target_cve,target_risk_score",
+			"0,0.25",
 		].join("\n");
 		const response = await request(app)
 			.post("/evaluations/" + evaluationToken + "/upload")
@@ -342,9 +339,8 @@ describe("Evaluation API integration test", () => {
 
 		// Act: Attempt to upload an invalid student prediction CSV
 		const invalidPredictionCsvContent = [
-			"package_name,version,lines_of_code", // Missing 'has_cve' column
-			"express,4.18.2,1500",
-			"lodash,4.17.21,8000",
+			"target_cve", // Missing 'target_risk_score' column
+			"0",
 		].join("\n");
 		const response = await request(app)
 			.post("/evaluations/" + evaluationToken + "/upload")
@@ -387,9 +383,8 @@ describe("Evaluation API integration test", () => {
 		);
 		// Act: Upload a student prediction CSV
 		const predictionCsvContent = [
-			"package_name,version,lines_of_code,has_cve",
-			"express,4.18.2,1500,false",
-			"lodash,4.17.21,8000,true",
+			"target_cve,target_risk_score",
+			"0,0.25",
 		].join("\n");
 		const response = await request(app)
 			.post("/evaluations/" + evaluationToken + "/upload")
@@ -410,6 +405,39 @@ describe("Evaluation API integration test", () => {
 		expect(evaluationRecord.inference_time_ms).not.toBeNull();
 		expect(evaluationRecord.error_message).toBe(
 			"Submission exceeded the deadline and is therefore penalized on the leaderboard.",
+		);
+	});
+	it("should fail evaluation when student prediction headers do not match ground truth headers", async () => {
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"pseudonym_mismatch",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(
+			`INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			[submissionId, 1, evaluationToken, "PENDING", new Date().toISOString(), new Date().toISOString()],
+		);
+
+		const predictionCsvContent = [
+			"target_cve,wrong_header",
+			"0,0.25",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
+
+		expect(response.status).toBe(200);
+		await new Promise<void>((resolve) => setTimeout(resolve, 150));
+
+		const evaluationRecord: any = await db.get(`SELECT * FROM competition_evaluations WHERE token = ?`, [evaluationToken]);
+		expect(evaluationRecord.status).toBe("FAILED");
+		expect(evaluationRecord.error_message).toContain(
+			"Header mismatch in column 1: expected 'target_risk_score', received 'wrong_header'.",
 		);
 	});
 });

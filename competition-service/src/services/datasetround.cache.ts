@@ -10,10 +10,10 @@ export class DatasetRoundCache {
 		this.datasetRepo = datasetRepo;
 	}
 	private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes sliding TTL (idle timeout) in milliseconds
-	private cache = new Map<string, { groundTruthRows: string[][]; inputRows: string[][] }>();
+	private cache = new Map<string, string[][]>();
 	private timers = new Map<string, NodeJS.Timeout>();
 
-	public async getOrLoadDatasets(competitionId: number, round: number) {
+	public async getOrLoadGroundTruthDataset(competitionId: number, round: number) {
 		const key = `${competitionId}_${round}`;
 		if (this.cache.has(key)) {
 			this.refreshTtl(key);
@@ -21,26 +21,17 @@ export class DatasetRoundCache {
 		}
 		const roundDatasets = await this.datasetRepo.getDatasetsForCompetitionRound(competitionId, round);
 		const groundTruthDataset = roundDatasets.find((dataset) => dataset.dataset_type === "GROUND_TRUTH");
-		const inputDataset = roundDatasets.find((dataset) => dataset.dataset_type === "INPUT");
 
-		if (!groundTruthDataset || !inputDataset) {
+		if (!groundTruthDataset) {
 			throw new NotFoundException(`Missing datasets for competition ${competitionId} and round ${round}`);
 		}
 
-		const [groundTruthCsv, inputCsv] = await Promise.all([
-			fs.promises.readFile(groundTruthDataset.file_path, "utf-8"),
-			fs.promises.readFile(inputDataset.file_path, "utf-8"),
-		]);
+		const groundTruthCsv = await fs.promises.readFile(groundTruthDataset.file_path, "utf-8");
+		const groundTruthRows = await CSVHelper.parseCsv(groundTruthCsv);
 
-		const [groundTruthRows, inputRows] = await Promise.all([
-			CSVHelper.parseCsv(groundTruthCsv),
-			CSVHelper.parseCsv(inputCsv),
-		]);
-
-		const cacheEntry = { groundTruthRows, inputRows };
-		this.cache.set(key, cacheEntry);
+		this.cache.set(key, groundTruthRows);
 		this.refreshTtl(key); // Start or reset the TTL timer for this cache entry
-		return cacheEntry;
+		return groundTruthRows;
 	}
 
 	public clearCacheForCompetitionRound(competitionId: number, round: number) {
