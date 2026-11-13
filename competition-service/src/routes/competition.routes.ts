@@ -21,6 +21,7 @@ import { LeaderboardController } from "../boundary/leaderboard.controller";
 import { LeaderboardService } from "../services/leaderboard.service";
 import { LeaderboardRepo } from "../repositories/leaderboard.repository";
 import { Database } from "sqlite";
+import { DatasetRoundCache } from "../services/datasetround.cache";
 
 export function createCompetitionRouter(
 	db: Database,
@@ -29,6 +30,7 @@ export function createCompetitionRouter(
 	submissionRepo: SubmissionRepo,
 	competitionService: CompetitionService,
 	datasetUploader: DatasetUploadMiddleware,
+	datasetRoundCache: DatasetRoundCache,
 ): Router {
 	const competitionRouter = Router();
 	// instances for competition service and controller
@@ -36,7 +38,7 @@ export function createCompetitionRouter(
 
 	// Dataset upload controller and service
 
-	const datasetService = new DatasetService(datasetRepo);
+	const datasetService = new DatasetService(datasetRepo, datasetRoundCache);
 	const datasetController = new DatasetController(datasetService);
 
 	// instanes for submission service, repo and controller

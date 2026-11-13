@@ -19,12 +19,18 @@ describe("Dataset API Integrationtest", () => {
 	let app: Application;
 	const TEST_DATASET_DIR = path.join(__dirname, "temp_test_datasets_dataset_api");
 	const validCsvPath = path.join(__dirname, "valid_dummy_dataset.csv");
+	const validGroundTruthCsvPath = path.join(__dirname, "valid_ground_truth_dataset.csv");
 	const invalidCsvPath = path.join(__dirname, "invalid_dummy_dataset.csv");
 
 	const validCsvContent = [
 		"package_name,version,lines_of_code,has_cve",
 		"express,4.18.2,1500,false",
 		"lodash,4.17.21,8000,true",
+	].join("\n");
+
+	const validGroundTruthCsvContent = [
+		"target_cve,target_risk_score",
+		"0,0.25",
 	].join("\n");
 
 	const csvWithSemicolonDelimiter = [
@@ -41,11 +47,13 @@ describe("Dataset API Integrationtest", () => {
 		db = await createTestDatabase();
 		app = createApp(db);
 		fs.writeFileSync(validCsvPath, validCsvContent);
+		fs.writeFileSync(validGroundTruthCsvPath, validGroundTruthCsvContent);
 		fs.writeFileSync(invalidCsvPath, invalidCsvContent);
 	});
 
 	afterAll(async () => {
 		if (fs.existsSync(validCsvPath)) fs.unlinkSync(validCsvPath);
+		if (fs.existsSync(validGroundTruthCsvPath)) fs.unlinkSync(validGroundTruthCsvPath);
 		if (fs.existsSync(invalidCsvPath)) fs.unlinkSync(invalidCsvPath);
 
 		if (fs.existsSync(TEST_DATASET_DIR)) {
@@ -104,7 +112,7 @@ describe("Dataset API Integrationtest", () => {
 			.post(`/competitions/${competitionId}/datasets/rounds/1`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
-			.attach("groundTruthFile", validCsvPath);
+			.attach("groundTruthFile", validGroundTruthCsvPath);
 		expect(uploadResponse.status).toBe(201);
 		expect(uploadResponse.body).toHaveProperty("datasets");
 		expect(uploadResponse.body.datasets).toHaveLength(2);
@@ -124,7 +132,7 @@ describe("Dataset API Integrationtest", () => {
 			.get(`/competitions/${competitionId}/datasets/${groundTruthDatasetID}/download`)
 			.set("Authorization", `Bearer ${token}`);
 		expect(gtRes.status).toBe(200);
-		expect(gtRes.text).toBe(validCsvContent);
+		expect(gtRes.text).toBe(validGroundTruthCsvContent);
 	});
 
 	it("should return 403 when trying to download a INPUT or GROUND_TRUTH dataset over general Endpoint as a non-admin user", async () => {
@@ -192,7 +200,7 @@ describe("Dataset API Integrationtest", () => {
 			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
-			.attach("groundTruthFile", validCsvPath);
+			.attach("groundTruthFile", validGroundTruthCsvPath);
 
 		expect(response.status).toBe(201);
 		expect(response.body).toHaveProperty("datasets");
@@ -203,7 +211,7 @@ describe("Dataset API Integrationtest", () => {
 		expect(inputDataset).toBeDefined();
 		expect(groundTruthDataset).toBeDefined();
 		expect(inputDataset.file_name).toBe("valid_dummy_dataset.csv");
-		expect(groundTruthDataset.file_name).toBe("valid_dummy_dataset.csv");
+		expect(groundTruthDataset.file_name).toBe("valid_ground_truth_dataset.csv");
 		expect(inputDataset.id).not.toBe(groundTruthDataset.id); // Ensure different IDs
 
 		// ensure that the file paths are different to avoid filename collision
@@ -257,7 +265,7 @@ describe("Dataset API Integrationtest", () => {
 		expect(response.body.message).toContain("User is not an admin");
 	});
 
-	it("should reject round dataset upload with missing GROUND_TRUTH dataset for a round and no dataset is stored", async () => {
+	it("should allow uploading only INPUT dataset for a round", async () => {
 		const token = generateTestToken(TEST_USERS.ADMIN.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 		const round = 1;
@@ -267,12 +275,13 @@ describe("Dataset API Integrationtest", () => {
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath);
 
-		expect(response.status).toBe(400);
-		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("File missing, please upload both input and ground truth files");
+		expect(response.status).toBe(201);
+		expect(response.body.datasets).toHaveLength(1);
+		expect(response.body.datasets[0].dataset_type).toBe("INPUT");
+		expect(response.body.datasets[0].round).toBe(round);
 	});
 
-	it("should reject round dataset upload with missing INPUT dataset for a round and no dataset is stored", async () => {
+	it("should allow uploading only GROUND_TRUTH dataset for a round", async () => {
 		const token = generateTestToken(TEST_USERS.ADMIN.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 		const round = 1;
@@ -280,11 +289,26 @@ describe("Dataset API Integrationtest", () => {
 		const response = await request(app)
 			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
-			.attach("groundTruthFile", validCsvPath);
+			.attach("groundTruthFile", validGroundTruthCsvPath);
+
+		expect(response.status).toBe(201);
+		expect(response.body.datasets).toHaveLength(1);
+		expect(response.body.datasets[0].dataset_type).toBe("GROUND_TRUTH");
+		expect(response.body.datasets[0].round).toBe(round);
+	});
+
+	it("should reject round dataset upload when neither INPUT nor GROUND_TRUTH file is provided", async () => {
+		const token = generateTestToken(TEST_USERS.ADMIN.id);
+		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
+		const round = 1;
+
+		const response = await request(app)
+			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
+			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("File missing, please upload both input and ground truth files");
+		expect(response.body.message).toContain("File missing, please upload at least an input or a ground truth file");
 	});
 
 	it("should return 404 for non existing competition ID when uploading round datasets or training datasets", async () => {
@@ -346,7 +370,7 @@ describe("Dataset API Integrationtest", () => {
 			.post(`/competitions/${competitionId}/datasets/rounds/${round}`)
 			.set("Authorization", `Bearer ${token}`)
 			.attach("inputFile", validCsvPath)
-			.attach("groundTruthFile", validCsvPath);
+			.attach("groundTruthFile", validGroundTruthCsvPath);
 
 		expect(uploadResponse.status).toBe(201);
 		expect(uploadResponse.body).toHaveProperty("datasets");
@@ -634,7 +658,7 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("they do not use ',' as delimiter");
+		expect(response.body.message).toContain("use ',' as delimiter");
 
 		// Clean up the dummy file
 		if (fs.existsSync(semicolonCsvPath)) {
@@ -686,7 +710,7 @@ describe("Dataset API Integrationtest", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message");
-		expect(response.body.message).toContain("Structure of ground truth and input files do not match");
+		expect(response.body.message).toContain("Structure of ground truth file is invalid");
 
 		// Clean up the dummy file
 		if (fs.existsSync(differentStructureCsvPath)) {

@@ -44,6 +44,7 @@ export class EvaluationService {
 				);
 			}
 			await this.evaluationRepo.deleteEvaluationsByCompetitionAndRound(competition.id, round);
+			this.datasetRoundCache.clearCacheForCompetitionRound(competition.id, round);
 		}
 
 		const datasets = await this.datasetRepo.getDatasetsForCompetitionRound(competition.id, round);
@@ -102,28 +103,29 @@ export class EvaluationService {
 		console.log(`[EVALUATION] Scoring started for evaluation id ${evaluation.id}.`);
 		try {
 			// Get Datasets from Cache
-			const { groundTruthRows, inputRows } = await this.datasetRoundCache.getOrLoadDatasets(
-				competitionId,
-				evaluation.round,
-			);
+			const groundTruthRows = await this.datasetRoundCache.getOrLoadGroundTruthDataset(competitionId, evaluation.round);
 
-			const score = await this.calculateScore(groundTruthRows, csvString, inputRows);
+			const score = await this.calculateScore(groundTruthRows, csvString);
 			const updateSuccess = await this.updateEvaluation(evaluation.id, {
 				status: status,
 				score: score,
 				completed_at: new Date(receivedAt),
 				inference_time_ms: inferenceTimeMs,
-				error_message: isDelayed ? "Submission exceeded the deadline and is therefore penalized on the leaderboard." : null,
+				error_message: isDelayed
+					? "Submission exceeded the deadline and is therefore penalized on the leaderboard."
+					: null,
 			});
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
-			console.log(`[EVALUATION] Scoring completed for evaluation ${evaluation.id}. Score: ${score}, inference time: ${inferenceTimeMs}ms, status: ${status}`);
+			console.log(
+				`[EVALUATION] Scoring completed for evaluation ${evaluation.id}. Score: ${score}, inference time: ${inferenceTimeMs}ms, status: ${status}`,
+			);
 		} catch (error) {
 			console.error(`[EVALUATION] Error calculating score for evaluation ${evaluation.id}: ${error}`);
 			let errorMessage;
 			if (error instanceof NotFoundException) {
-				errorMessage = `No ground truth or input dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
+				errorMessage = `No ground truth dataset found for competition ID ${competitionId} and round ${evaluation.round}`;
 			} else if (error instanceof BadRequestException) {
 				errorMessage = `Invalid request: ${error.message}`;
 			} else {
@@ -137,47 +139,50 @@ export class EvaluationService {
 		}
 	}
 
-	private async calculateScore(
-		groundTruthRows: string[][],
-		studentPredictionCsv: string,
-		inputRows: string[][],
-	): Promise<number> {
-		// assumes that both CSVs have the same number of rows and columns, and that they are aligned (i.e., the first row of the ground truth corresponds to the first row of the student's prediction, etc.)
-		const delimiter = await CSVHelper.detectStudentPredictionDelimiter(studentPredictionCsv);
-		const studentPredictionRows = await CSVHelper.parseCsv(studentPredictionCsv, delimiter);
-		if (groundTruthRows.length !== studentPredictionRows.length || groundTruthRows.length !== inputRows.length) {
+	private async calculateScore(groundTruthRows: string[][], studentPredictionCsv: string): Promise<number> {
+		const delimiter = CSVHelper.detectStudentPredictionDelimiter(studentPredictionCsv);
+		if (delimiter !== ",") {
+			throw new BadRequestException("Prediction CSV must use ',' as delimiter.");
+		}
+		const studentPredictionRows = await CSVHelper.parseCsv(studentPredictionCsv, ",");
+		if (groundTruthRows.length !== studentPredictionRows.length) {
 			throw new BadRequestException(
-				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows, and input has ${inputRows.length} rows.`,
+				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows.`,
 			);
 		}
+
+		const gtHeader = groundTruthRows[0];
+		const predHeader = studentPredictionRows[0];
+		if (gtHeader.length !== predHeader.length) {
+			throw new BadRequestException(
+				`Column count mismatch in row 0: Ground truth has ${gtHeader.length} columns, student prediction has ${predHeader.length} columns.`,
+			);
+		}
+		for (let j = 0; j < gtHeader.length; j++) {
+			if (gtHeader[j].trim() !== predHeader[j].trim()) {
+				throw new BadRequestException(
+					`Header mismatch in column ${j}: expected '${gtHeader[j].trim()}', received '${predHeader[j].trim()}'.`,
+				);
+			}
+		}
+
 		let sumSquaredErrors = 0;
-		let targetCount = 0;
-		for (let i = 0; i < groundTruthRows.length; i++) {
+		for (let i = 1; i < groundTruthRows.length; i++) {
 			const groundTruthRow = groundTruthRows[i];
 			const studentPredictionRow = studentPredictionRows[i];
-			const inputRow = inputRows[i];
-			if (groundTruthRow.length !== studentPredictionRow.length || groundTruthRow.length !== inputRow.length) {
+			if (groundTruthRow.length !== studentPredictionRow.length) {
 				throw new BadRequestException(
-					`Column count mismatch in row ${i}: Ground truth has ${groundTruthRow.length} columns, student prediction has ${studentPredictionRow.length} columns, and input has ${inputRow.length} columns.`,
+					`Column count mismatch in row ${i}: Ground truth has ${groundTruthRow.length} columns, student prediction has ${studentPredictionRow.length} columns.`,
 				);
 			}
 			for (let j = 0; j < groundTruthRow.length; j++) {
-				const inVal = inputRow[j] ? inputRow[j].trim() : "";
-				// Only calculate score for columns where the input dataset has an empty value
-				const isTargetColumn = inVal === "";
-
-				if (isTargetColumn) {
-					const groundTruthValue = this.convertToNumericValue(groundTruthRow[j]);
-					const studentPredictionValue = this.convertToNumericValue(studentPredictionRow[j]);
-					sumSquaredErrors += Math.pow(groundTruthValue - studentPredictionValue, 2);
-					targetCount++;
-				}
+				const groundTruthValue = this.convertToNumericValue(groundTruthRow[j]);
+				const studentPredictionValue = this.convertToNumericValue(studentPredictionRow[j]);
+				sumSquaredErrors += Math.pow(groundTruthValue - studentPredictionValue, 2);
+				
 			}
 		}
-		if (targetCount === 0) {
-			throw new BadRequestException("No target values found to evaluate (input dataset has no empty target cells).");
-		}
-		return Math.sqrt(sumSquaredErrors / targetCount); // Root Mean Squared Error (RMSE)
+		return Math.sqrt(sumSquaredErrors); // Euclidean distance (RSE)
 	}
 
 	private async callSubmissionApis(competitionId: number, round: number) {
@@ -283,13 +288,21 @@ export class EvaluationService {
 				return value ? 1 : 0;
 			case "string":
 				const str = String(value).trim();
+				if (str === "") {
+					throw new BadRequestException("Prediction contains empty target values.");
+				}
 				// handle boolean strings
 				if (str.toLowerCase() === "true") return 1;
 				if (str.toLowerCase() === "false") return 0;
 
+				if (/^-?\d+,\d+$/.test(str)) {
+					throw new BadRequestException(
+						`Invalid numeric value '${str}'. Please use US float format with '.' as decimal separator.`,
+					);
+				}
+
 				// check if the string can be converted to a number (float or integer)
-				const normalizedStr = /^-?\d+,\d+$/.test(str) ? str.replace(",", ".") : str; // for european decimal format strings, replace comma with dot to allow Number() to parse it correctly
-				const num = Number(normalizedStr);
+				const num = Number(str);
 				if (!isNaN(num) && isFinite(num)) {
 					return num;
 				}

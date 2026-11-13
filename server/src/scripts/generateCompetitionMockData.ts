@@ -33,11 +33,8 @@ const DUMMY_INPUT_CSV = [
 ].join("\n");
 
 const DUMMY_GROUND_TRUTH_CSV = [
-  "id,has_vulnerability",
-  "101,0",
-  "102,1",
-  "103,0",
-  "104,0"
+  "has_vulnerability,risk_score",
+  "1,0.42"
 ].join("\n");
 
 /**

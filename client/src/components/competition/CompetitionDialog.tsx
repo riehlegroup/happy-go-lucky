@@ -147,15 +147,6 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 		}
 
 		try {
-			// validate datasets
-			if (selectedRoundFiles && Object.keys(selectedRoundFiles).length > 0) {
-				for (const [round, files] of Object.entries(selectedRoundFiles)) {
-					if ((files.inputFile && !files.groundTruthFile) || (!files.inputFile && files.groundTruthFile)) {
-						setErrorMessage(`Both input and ground truth files must be selected for round ${round}.`);
-						return;
-					}
-				}
-			}
 			// create or update competition based on edit mode
 			let competitionId: number | undefined;
 			if (isEditMode && competition?.id) {
@@ -190,9 +181,9 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 			}
 			if (selectedRoundFiles && Object.keys(selectedRoundFiles).length > 0) {
 				for (const [round, files] of Object.entries(selectedRoundFiles)) {
-					if (files.inputFile && files.groundTruthFile) {
+					if (files.inputFile || files.groundTruthFile) {
 						uploadPromises.push(
-							uploadRoundDataset(Number(round), files.inputFile!, files.groundTruthFile!, competitionId),
+							uploadRoundDataset(Number(round), files.inputFile ?? undefined, files.groundTruthFile ?? undefined, competitionId),
 						);
 					}
 				}

@@ -104,7 +104,7 @@ const Leaderboard: React.FC = () => {
 								<TableRow>
 									<TableHead>Rank</TableHead>
 									<TableHead>Pseudonym</TableHead>
-									<TableHead>Score (RMSE)</TableHead>
+									<TableHead>Score (RSE)</TableHead>
 									<TableHead>Inference time (ms)</TableHead>
 									{activeTab != "overall" && (
 										<TableHead>Completed at</TableHead>

@@ -17,13 +17,13 @@ export function createEvaluationRouter(
 	competitionService: CompetitionService,
 	datasetRepo: DatasetRepo,
 	submissionRepo: SubmissionRepo,
-	competitionRepo: CompetitionRepo,
 	evaluationRepo: EvaluationRepo,
 	datasetUploader: DatasetUploadMiddleware,
+	datasetRoundCache: DatasetRoundCache
 ): Router {
 	const evaluationRouter = Router();
 
-	const evaluationService = new EvaluationService(datasetRepo, submissionRepo, evaluationRepo, new DatasetRoundCache(datasetRepo));
+	const evaluationService = new EvaluationService(datasetRepo, submissionRepo, evaluationRepo, datasetRoundCache);
 
 	const evaluationController = new EvaluationController(evaluationService);
 

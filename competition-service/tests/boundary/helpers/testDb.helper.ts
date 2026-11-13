@@ -283,14 +283,13 @@ export async function createTestSubmissionForUser(db: Database, competitionId: n
  */
 export async function createDatasetsForCompetitionRound(db: Database, competitionId: number, round: number,  basePath: string): Promise<{inputDatasetId: number, groundTruthDatasetId: number}> {
   const groundTruthDataset = [
-		"package_name,version,lines_of_code,has_cve",
-		"express,4.18.2,1500,false",
-		"lodash,4.17.21,8000,true",
+		"target_cve,target_risk_score",
+		"0,0.25",
 	].join("\n");
   const inputDataset = [
     "package_name,version,lines_of_code,has_cve",
-    "express,4.18.2,1500,",
-    "lodash,4.17.21,8000,",
+    "express,4.18.2,1500,0",
+    "lodash,4.17.21,8000,1",
   ].join("\n");
 
   const roundPath = path.join(basePath, `competition_${competitionId}`, `round_${round}`,);

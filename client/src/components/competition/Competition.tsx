@@ -78,15 +78,17 @@ const Competition: React.FC = () => {
 		<div>
 			<p>
 				To participate in the competition, you need to deploy the provided student API example with your own implementation of the prediction ML-model.
-				It is important that your API is accessible and has a /health and a /predict endpoint and follows the same structure as the provided example. </p>
-				<p className="font-bold">The submission URL must be the base URL of your deployed API without /predict or /health. Example: Base URL required in solution submission field: https://your-api.com ; Health Endpoint: https://your-api.com/health; Prediction Endpoint: https://your-api.com/predict</p> 
-				<p>
+				It is important that your API is accessible and has a /health and a /predict endpoint and follows the same structure as the provided example. 
+			</p>
+				<p className="font-bold">The submission URL must be the base URL of your deployed API without /predict or /health.</p> 
+				<p>  Example: Base URL required in solution submission field: https://your-api.com ; Health Endpoint: https://your-api.com/health; Prediction Endpoint: https://your-api.com/predict</p> 
+			<p>
 				The API should be deployed and accessible from the internet.
-				For each competition a trainings dataset will be provided to you to train your model. After training your model, different rounds with different evaluation
-				datasets will be evaluated. Your own score will be calculated based on the performance of your model on the
-				evaluation datasets and displayed on this page and on the leaderboard. To preserve anonymity, you must choose a pseudonym for your submission.
+				For each competition a training dataset will be provided to train your model. In each evaluation round, your API receives a comma-separated input CSV containing a time-series of package metrics (integers or US-format floats with &apos;.&apos;). Your API must return a comma-separated prediction CSV containing the target headers and exactly one row of predicted values (in integer or US float format).
+				Your score is calculated as the error between your predicted row and the ground truth row, and is displayed on this page and on the leaderboard. A perfect score is therefore 0.0.
+				To preserve anonymity, you must choose a pseudonym to be displayed on the leaderboard. Please do not use your real name or any personally identifiable information in your pseudonym.
 				Please make sure to follow the submission guidelines and respect the competition rules.
-				</p>
+			</p>
 		</div>
 	);
 
@@ -146,7 +148,7 @@ const Competition: React.FC = () => {
 						<TableHeader>
 							<TableRow>
 								<TableHead>Round</TableHead>
-								<TableHead>Score (RMSE)</TableHead>
+								<TableHead>Score (RSE)</TableHead>
 								<TableHead>Inference time (ms)</TableHead>
 								<TableHead>started at</TableHead>
 								<TableHead>Completed at</TableHead>

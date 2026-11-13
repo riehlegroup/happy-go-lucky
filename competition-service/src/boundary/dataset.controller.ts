@@ -76,33 +76,51 @@ export class DatasetController {
 			if (!competition) {
 				throw new BadRequestException("Competition not found in request");
 			}
-			if (!inputFile || !groundTruthFile) {
-				throw new BadRequestException("File missing, please upload both input and ground truth files");
-			}
-			// Validate the the uploaded files to have "," as delimiter and same schema (same number of columns). If not, delete the uploaded files and return an error.
-			const isValid = await this.datasetService.validateRoundFiles(inputFile.path, groundTruthFile.path);
-
-			if (!isValid) {
-				throw new BadRequestException("Structure of ground truth and input files do not match or they do not use ',' as delimiter. Please check the files and try again.");
+			if (!inputFile && !groundTruthFile) {
+				throw new BadRequestException("File missing, please upload at least an input or a ground truth file");
 			}
 
-			// Call the service to handle the database entry. Dataset file ist already saved by multer in the upload middleware.
-			const createdInputDataset = await this.datasetService.createDatabaseEntryForUploadedFile(
-				competition.id,
-				DatasetType.INPUT,
-				inputFile.originalname,
-				inputFile.path,
-				roundNumber,
-			);
-			const createdGroundTruthDataset = await this.datasetService.createDatabaseEntryForUploadedFile(
-				competition.id,
-				DatasetType.GROUND_TRUTH,
-				groundTruthFile.originalname,
-				groundTruthFile.path,
-				roundNumber,
-			);
+			if (inputFile) {
+				const isInputValid = await this.datasetService.validateInputFile(inputFile.path);
+				if (!isInputValid) {
+					throw new BadRequestException(
+						"Structure of input file is invalid (must contain header and time-series rows and use ',' as delimiter). Please check the file and try again.",
+					);
+				}
+			}
 
-			const datasets = [createdInputDataset, createdGroundTruthDataset];
+			if (groundTruthFile) {
+				const isGroundTruthValid = await this.datasetService.validateGroundTruthFile(groundTruthFile.path);
+				if (!isGroundTruthValid) {
+					throw new BadRequestException(
+						"Structure of ground truth file is invalid (must contain target headers and 1 data row in US float/int format and use ',' as delimiter). Please check the file and try again.",
+					);
+				}
+			}
+
+			const datasets = [];
+			if (inputFile) {
+				datasets.push(
+					await this.datasetService.createDatabaseEntryForUploadedFile(
+						competition.id,
+						DatasetType.INPUT,
+						inputFile.originalname,
+						inputFile.path,
+						roundNumber,
+					),
+				);
+			}
+			if (groundTruthFile) {
+				datasets.push(
+					await this.datasetService.createDatabaseEntryForUploadedFile(
+						competition.id,
+						DatasetType.GROUND_TRUTH,
+						groundTruthFile.originalname,
+						groundTruthFile.path,
+						roundNumber,
+					),
+				);
+			}
 
 			const responseDataset = RoundDatasetResponseSchema.parse({ datasets });
 

@@ -9,6 +9,7 @@ import { SubmissionRepo } from "../repositories/submission.repository";
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { CompetitionService } from "../services/competition.service";
 import { createUploader } from "../middleware/upload.middleware";
+import { DatasetRoundCache } from "../services/datasetround.cache";
 
 export function createApiRouter(db: Database): Router {
   const apiRouter = Router();
@@ -22,9 +23,10 @@ export function createApiRouter(db: Database): Router {
   const datasetUploader = createUploader();
 
   const competitionService = new CompetitionService(competitionRepo);
+  const datasetRoundCache = new DatasetRoundCache(datasetRepo);
 
-  apiRouter.use("/competitions", createCompetitionRouter(db, authRepo, datasetRepo, submissionRepo, competitionService, datasetUploader));
-  apiRouter.use("/evaluations", createEvaluationRouter(authRepo, competitionService, datasetRepo, submissionRepo, competitionRepo, evaluationRepo, datasetUploader));
+  apiRouter.use("/competitions", createCompetitionRouter(db, authRepo, datasetRepo, submissionRepo, competitionService, datasetUploader, datasetRoundCache));
+  apiRouter.use("/evaluations", createEvaluationRouter(authRepo, competitionService, datasetRepo, submissionRepo, evaluationRepo, datasetUploader, datasetRoundCache));
   
   return apiRouter;
 }
