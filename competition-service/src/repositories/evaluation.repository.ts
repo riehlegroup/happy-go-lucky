@@ -2,6 +2,21 @@ import { Evaluation, EvaluationStatus, UpdateEvaluationDto } from "../types/comp
 import { BaseRepo } from "./base.repository";
 import { SubmissionRepo } from "./submission.repository";
 
+export interface RoundSummaryRow {
+	evaluationId: number;
+	submissionId: number;
+	userId: number;
+	name: string;
+	email: string;
+	pseudonym: string;
+	status: string;
+	score: number | null;
+	inference_time_ms: number | null;
+	started_at: string | null;
+	completed_at: string | null;
+	error_message: string | null;
+}
+
 export class EvaluationRepo extends BaseRepo<Evaluation> {
 	public static readonly TABLE_NAME = "competition_evaluations";
 	constructor(db: any) {
@@ -78,5 +93,30 @@ export class EvaluationRepo extends BaseRepo<Evaluation> {
       `;
 		const result = await this.db.run(query, [...values, evaluationId]);
 		return result.changes > 0;
+	}
+
+	async getRoundSummaryRows(competitionId: number, round: number): Promise<RoundSummaryRow[]> {
+		const query = `
+            SELECT
+                e.id AS evaluationId,
+                e.submissionId,
+                s.userId,
+                u.name,
+                u.email,
+                s.pseudonym,
+                e.status,
+                e.score,
+                e.inference_time_ms,
+                e.started_at,
+                e.completed_at,
+                e.error_message
+            FROM ${this.tableName} e
+            JOIN ${SubmissionRepo.TABLE_NAME} s ON e.submissionId = s.id
+            JOIN users u ON s.userId = u.id
+            WHERE s.competitionId = ? AND e.round = ?
+            ORDER BY u.id ASC, e.id ASC
+        `;
+		const rows = await this.db.all(query, [competitionId, round]);
+		return rows as RoundSummaryRow[];
 	}
 }

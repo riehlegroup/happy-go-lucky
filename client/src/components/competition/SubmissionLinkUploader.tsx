@@ -75,8 +75,13 @@ export const SubmissionLinkUploader: React.FC<SubmissinLinkUploaderProps> = ({
 							}}
 							className="w-full"
 							placeholder="Enter your pseudonym"
-							disabled={isSubmitting}
+							disabled={isSubmitting || Boolean(existingPseudonym)}
 						/>
+						{existingPseudonym && (
+							<p className="mt-1 text-left text-xs text-gray-500">
+								Pseudonym is locked after your first submission.
+							</p>
+						)}
 						<div className="text-left">
 							{isTouched && errors.pseudonym && <p className="text-red-500">{errors.pseudonym}</p>}
 						</div>

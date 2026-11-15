@@ -440,4 +440,54 @@ describe("Evaluation API integration test", () => {
 			"Header mismatch in column 1: expected 'target_risk_score', received 'wrong_header'.",
 		);
 	});
+	it("should persist individual student prediction CSV and update round results.csv", async () => {
+		const submissionId = await createTestSubmissionForUser(
+			db,
+			TEST_COMPETITIONS.COMPETITION_1.id,
+			TEST_USERS.USER_PROJECT_1.id,
+			MOCK_STUDENT_SERVER_URL,
+			"team / alpha",
+		);
+		await createDatasetsForCompetitionRound(db, TEST_COMPETITIONS.COMPETITION_1.id, 1, TEST_DATASET_DIR);
+		const evaluationToken = crypto.randomUUID();
+		await db.run(
+			`INSERT INTO competition_evaluations (submissionId, round, token, status, started_at, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			[submissionId, 1, evaluationToken, "PENDING", new Date().toISOString(), new Date().toISOString()],
+		);
+
+		const predictionCsvContent = [
+			"target_cve,target_risk_score",
+			"0,0.25",
+		].join("\n");
+		const response = await request(app)
+			.post("/evaluations/" + evaluationToken + "/upload")
+			.set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+			.attach("predictions", Buffer.from(predictionCsvContent), "prediction.csv");
+
+		expect(response.status).toBe(200);
+		await new Promise<void>((resolve) => setTimeout(resolve, 150));
+
+		const roundFolder = path.join(
+			TEST_DATASET_DIR,
+			"predictions",
+			`competition_${TEST_COMPETITIONS.COMPETITION_1.id}`,
+			"round_1",
+		);
+		const expectedPredictionPath = path.join(
+			roundFolder,
+			`user_${TEST_USERS.USER_PROJECT_1.id}_team___alpha_round_1_prediction.csv`,
+		);
+		expect(fs.existsSync(expectedPredictionPath)).toBe(true);
+		expect(fs.readFileSync(expectedPredictionPath, "utf-8")).toBe(predictionCsvContent);
+
+		const resultsCsvPath = path.join(roundFolder, "results.csv");
+		expect(fs.existsSync(resultsCsvPath)).toBe(true);
+		const resultsContent = fs.readFileSync(resultsCsvPath, "utf-8");
+		expect(resultsContent).toContain(
+			"evaluationId,submissionId,userId,name,email,pseudonym,status,score,inferenceTimeMs,startedAt,completedAt,errorMessage",
+		);
+		expect(resultsContent).toContain(
+			`${TEST_USERS.USER_PROJECT_1.id},${TEST_USERS.USER_PROJECT_1.name},${TEST_USERS.USER_PROJECT_1.email},team / alpha,EVALUATED,0,`,
+		);
+	});
 });

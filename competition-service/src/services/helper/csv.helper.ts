@@ -1,6 +1,7 @@
 import * as fastCsv from "fast-csv";
 import fs from "fs";
 import readline from "readline";
+import { RoundSummaryRow } from "../../repositories/evaluation.repository";
 
 export const CSVHelper = {
 	/**
@@ -176,5 +177,38 @@ export const CSVHelper = {
 	 */
 	validateRoundDatasets: (inputCsv: string[][], groundTruthCsv: string[][]): boolean => {
 		return CSVHelper.validateInputDataset(inputCsv) && CSVHelper.validateGroundTruthDataset(groundTruthCsv);
+	},
+
+	escapeCsvField: (value: unknown): string => {
+		if (value === null || value === undefined) {
+			return "";
+		}
+		const str = String(value);
+		if (/[",\r\n]/.test(str)) { // If the string contains a comma, double quote, or newline, escape it
+			return `"${str.replace(/"/g, '""')}"`; // Escape double quotes by doubling them and wrap the entire field in double quotes
+		}
+		return str;
+	},
+
+	writeRoundResultCSV: async (csvPath: string, rows: RoundSummaryRow[]): Promise<void> => {
+		const header = "evaluationId,submissionId,userId,name,email,pseudonym,status,score,inferenceTimeMs,startedAt,completedAt,errorMessage\n";
+		const csvLines = rows.map((row) =>
+			[
+				row.evaluationId,
+				row.submissionId,
+				row.userId,
+				CSVHelper.escapeCsvField(row.name),
+				CSVHelper.escapeCsvField(row.email),
+				CSVHelper.escapeCsvField(row.pseudonym),
+				CSVHelper.escapeCsvField(row.status),
+				row.score ?? "",
+				row.inference_time_ms ?? "",
+				CSVHelper.escapeCsvField(row.started_at),
+				CSVHelper.escapeCsvField(row.completed_at),
+				CSVHelper.escapeCsvField(row.error_message),
+			].join(","),
+		);
+		const content = header + (csvLines.length > 0 ? csvLines.join("\n") + "\n" : "");
+		await fs.promises.writeFile(csvPath, content, "utf-8");
 	},
 };

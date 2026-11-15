@@ -104,7 +104,7 @@ describe("Submission API integration test", () => {
 		expect(healthCheckCalledCounter).toBe(1);
 	});
 
-	it("should update an existing submission with new pseudonym for a competition", async () => {
+	it("should reject updating pseudonym once a submission already exists", async () => {
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 		const userId = TEST_USERS.USER_PROJECT_1.id;
 		const token = generateTestToken(userId);
@@ -112,7 +112,7 @@ describe("Submission API integration test", () => {
 		// First, create a submission
 		await createTestSubmissionForUser(db, competitionId, userId, MOCK_STUDENT_API_BASE_URL, "test-pseudonym");
 
-		// Now, update the submission
+		// Attempt to update the submission with a different pseudonym
 		const updateResponse = await request(app)
 			.put(`/competitions/${competitionId}/submissions`)
 			.set("Authorization", `Bearer ${token}`)
@@ -121,13 +121,14 @@ describe("Submission API integration test", () => {
 				pseudonym: "test-pseudonym-updated",
 			});
 
-		expect(updateResponse.status).toBe(200);
-		expect(updateResponse.body).toHaveProperty("id");
-		expect(updateResponse.body).toHaveProperty("competitionId", competitionId);
-		expect(updateResponse.body).toHaveProperty("userId", userId);
-		expect(updateResponse.body).toHaveProperty("apiUrl", MOCK_STUDENT_API_BASE_URL);
-		expect(updateResponse.body).toHaveProperty("pseudonym", "test-pseudonym-updated");
-		expect(healthCheckCalledCounter).toBe(1);
+		expect(updateResponse.status).toBe(400);
+		expect(updateResponse.body).toHaveProperty("message", "Pseudonym cannot be changed after the initial submission.");
+
+		const savedSubmission: any = await db.get(
+			`SELECT pseudonym FROM competition_submissions WHERE competitionId = ? AND userId = ?`,
+			[competitionId, userId],
+		);
+		expect(savedSubmission.pseudonym).toBe("test-pseudonym");
 	});
 
 	it("should return 404 for non existing competition ID", async () => {
