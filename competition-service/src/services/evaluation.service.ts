@@ -7,6 +7,8 @@ import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRoundCache } from "./datasetround.cache";
 import { CSVHelper } from "./helper/csv.helper";
+import path from "path";
+import fs from "fs";
 
 export class EvaluationService {
 	private datasetRepo: DatasetRepo;
@@ -118,6 +120,8 @@ export class EvaluationService {
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
+			await this.writeRoundSummaryCSV(competitionId, evaluation.round);
+
 			console.log(
 				`[EVALUATION] Scoring completed for evaluation ${evaluation.id}. Score: ${score}, inference time: ${inferenceTimeMs}ms, status: ${status}`,
 			);
@@ -136,7 +140,54 @@ export class EvaluationService {
 				error_message: errorMessage,
 				completed_at: new Date(receivedAt),
 			});
+			await this.writeRoundSummaryCSV(competitionId, evaluation.round);
 		}
+	}
+
+	public async storePredictionFile(evaluation: Evaluation, csvString: string): Promise<void> {
+		const submission = await this.submissionRepo.getById(evaluation.submissionId);
+		if (!submission) {
+			throw new NotFoundException(`No submission found for evaluation ID ${evaluation.id}`);
+		}
+		const predictionFilePath = await this.getPredictionFilePath(
+			submission.competitionId,
+			evaluation.round,
+			submission.userId,
+			submission.pseudonym,
+		);
+		await fs.promises.writeFile(predictionFilePath, csvString, "utf-8");
+		console.log(`[EVALUATION] Stored student prediction for evaluation ${evaluation.id} at ${predictionFilePath}`);
+	}
+
+	private async writeRoundSummaryCSV(competitionId: number, round: number): Promise<void> {
+		try {
+			const folderPath = await this.getPredictionFolderPath(competitionId, round);
+			const resultCsvPath = path.join(folderPath, "results.csv");
+			const summaryRows = await this.evaluationRepo.getRoundSummaryRows(competitionId, round);
+			await CSVHelper.writeRoundResultCSV(resultCsvPath, summaryRows);
+		} catch (error) {
+			console.error(`[EVALUATION] Failed to write round summary CSV for competition ${competitionId}, round ${round}:`, error);
+		}
+	}
+
+	private async getPredictionFolderPath(competitionId: number, round: number): Promise<string> {
+		const BASE_UPLOAD_DIR = process.env.STORAGE_PATH || "uploads"; // same as in upload.middleware.ts
+		const subFolderName = path.join("predictions", `competition_${competitionId}`, `round_${round}`);
+		const predictionUploadPath = path.join(BASE_UPLOAD_DIR, subFolderName);
+		await fs.promises.mkdir(predictionUploadPath, { recursive: true });
+		return predictionUploadPath;
+	}
+
+	private async getPredictionFilePath(
+		competitionId: number,
+		round: number,
+		userId: number,
+		pseudonym: string,
+	): Promise<string> {
+		const predictionFolderPath = await this.getPredictionFolderPath(competitionId, round);
+		const safePseudonym = pseudonym.replace(/[^a-zA-Z0-9_-]/g, "_");
+		const predictionFileName = `user_${userId}_${safePseudonym}_round_${round}_prediction.csv`;
+		return path.join(predictionFolderPath, predictionFileName);
 	}
 
 	private async calculateScore(groundTruthRows: string[][], studentPredictionCsv: string): Promise<number> {
@@ -221,7 +272,7 @@ export class EvaluationService {
 			for (const evaluation of createdEvaluations) {
 				if (evaluation) {
 					// do not await the call to the student API, let it run asynchronously. The evaluation status will be updated when the student API responds.
-					this.callStudentApi(evaluation.id, evaluation.apiUrl, evaluation.token);
+					this.callStudentApi(evaluation.id, evaluation.apiUrl, evaluation.token, competitionId, round);
 				}
 			}
 
@@ -232,7 +283,13 @@ export class EvaluationService {
 		}
 	}
 
-	private async callStudentApi(evaluationId: number, apiUrl: string, evaluationToken: string) {
+	private async callStudentApi(
+		evaluationId: number,
+		apiUrl: string,
+		evaluationToken: string,
+		competitionId: number,
+		round: number,
+	) {
 		const baseUrl =
 			process.env.PUBLIC_COMPETITION_API_URL ||
 			(process.env.DOMAIN ? `https://${process.env.DOMAIN}/api/competition` : null) ||
@@ -271,6 +328,7 @@ export class EvaluationService {
 					completed_at: new Date(),
 				};
 				await this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
+				await this.writeRoundSummaryCSV(competitionId, round);
 			} catch (error) {
 				console.error(`[EVALUATION] Failed to update evaluation status to FAILED for ${evaluationId}: ${error}`);
 			}
@@ -319,4 +377,6 @@ export class EvaluationService {
 		}
 		throw new Error(`Cannot convert ${value} to a number`);
 	}
+
+
 }

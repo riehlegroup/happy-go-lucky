@@ -124,6 +124,9 @@ export class EvaluationController {
 			console.log(`[EVALUATION] Received submission for evaluation ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}. Enqueueing scoring job.`);
 			const csvString = req.file.buffer.toString("utf-8");
 
+			// Persist original student prediction CSV immediately before enqueueing so it cannot be lost 
+			await this.evaluationService.storePredictionFile(evaluation, csvString);
+
 			this.scoringQueue.enqueue(() =>
 				this.evaluationService.evaluateStudentPrediction(evaluation.competitionId, evaluation, csvString, receivedAt),
 			);

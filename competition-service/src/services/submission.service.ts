@@ -10,7 +10,11 @@ export class SubmissionService {
 		competitionId: number,
 		userId: number,
 	): Promise<Submission> {
-	
+		const existingSubmission = await this.submissionRepo.getSubmissionByCompetitionAndUser(competitionId, userId);
+		if (existingSubmission && existingSubmission.pseudonym !== submission.pseudonym) {
+			throw new BadRequestException("Pseudonym cannot be changed after the initial submission.");
+		}
+
 		//Health check for provided Url to ensure it is reachable
 		try {
             const healthUrl = submission.apiUrl.endsWith("/") ? `${submission.apiUrl}health` : `${submission.apiUrl}/health`;
