@@ -2,7 +2,7 @@ import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import { Dataset, DatasetType } from "../types/competition.types";
 import fs from "fs";
-import { CSVHelper } from "./helper/csv.helper";
+import { CSVFileHelper } from "./helper/csv.helper";
 import { DatasetRoundCache } from "./datasetround.cache";
 
 export class DatasetService {
@@ -102,12 +102,12 @@ export class DatasetService {
 
     async validateInputFile(inputFilePath: string): Promise<boolean> {
 		try {
-			const inputDelimiter = await CSVHelper.detectDelimiter(inputFilePath);
+			const inputDelimiter = await CSVFileHelper.detectDelimiter(inputFilePath);
 			if (inputDelimiter !== ",") {
 				return false;
 			}
-			const inputCsv = await CSVHelper.parseCsv(fs.readFileSync(inputFilePath, "utf8"), ",");
-			return CSVHelper.validateInputDataset(inputCsv);
+			const inputCSVFile = await CSVFileHelper.parseCsv(fs.readFileSync(inputFilePath, "utf8"), ",");
+			return CSVFileHelper.validateInputDataset(inputCSVFile);
 		} catch (error) {
 			console.error("Error validating input file:", error);
 			return false;
@@ -116,12 +116,12 @@ export class DatasetService {
 
     async validateGroundTruthFile(groundTruthFilePath: string): Promise<boolean> {
 		try {
-			const groundTruthDelimiter = await CSVHelper.detectDelimiter(groundTruthFilePath);
+			const groundTruthDelimiter = await CSVFileHelper.detectDelimiter(groundTruthFilePath);
 			if (groundTruthDelimiter !== ",") {
 				return false;
 			}
-			const groundTruthCsv = await CSVHelper.parseCsv(fs.readFileSync(groundTruthFilePath, "utf8"), ",");
-			return CSVHelper.validateGroundTruthDataset(groundTruthCsv);
+			const groundTruthCsv = await CSVFileHelper.parseCsv(fs.readFileSync(groundTruthFilePath, "utf8"), ",");
+			return CSVFileHelper.validateGroundTruthDataset(groundTruthCsv);
 		} catch (error) {
 			console.error("Error validating ground truth file:", error);
 			return false;

@@ -6,7 +6,7 @@ import { Competition, DatasetType, Evaluation, EvaluationStatus, UpdateEvaluatio
 import { EvaluationRepo } from "../repositories/evaluation.repository";
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRoundCache } from "./datasetround.cache";
-import { CSVHelper } from "./helper/csv.helper";
+import { CSVFileHelper } from "./helper/csv.helper";
 import path from "path";
 import fs from "fs";
 
@@ -120,7 +120,7 @@ export class EvaluationService {
 			if (!updateSuccess) {
 				throw new Error("Failed to update evaluation");
 			}
-			await this.writeRoundSummaryCSV(competitionId, evaluation.round);
+			await this.writeRoundSummaryCSVFile(competitionId, evaluation.round);
 
 			console.log(
 				`[EVALUATION] Scoring completed for evaluation ${evaluation.id}. Score: ${score}, inference time: ${inferenceTimeMs}ms, status: ${status}`,
@@ -140,7 +140,7 @@ export class EvaluationService {
 				error_message: errorMessage,
 				completed_at: new Date(receivedAt),
 			});
-			await this.writeRoundSummaryCSV(competitionId, evaluation.round);
+			await this.writeRoundSummaryCSVFile(competitionId, evaluation.round);
 		}
 	}
 
@@ -159,14 +159,14 @@ export class EvaluationService {
 		console.log(`[EVALUATION] Stored student prediction for evaluation ${evaluation.id} at ${predictionFilePath}`);
 	}
 
-	private async writeRoundSummaryCSV(competitionId: number, round: number): Promise<void> {
+	private async writeRoundSummaryCSVFile(competitionId: number, round: number): Promise<void> {
 		try {
 			const folderPath = await this.getPredictionFolderPath(competitionId, round);
 			const resultCsvPath = path.join(folderPath, "results.csv");
 			const summaryRows = await this.evaluationRepo.getRoundSummaryRows(competitionId, round);
-			await CSVHelper.writeRoundResultCSV(resultCsvPath, summaryRows);
+			await CSVFileHelper.writeRoundResultCSVFile(resultCsvPath, summaryRows);
 		} catch (error) {
-			console.error(`[EVALUATION] Failed to write round summary CSV for competition ${competitionId}, round ${round}:`, error);
+			console.error(`[EVALUATION] Failed to write round summary CSV file for competition ${competitionId}, round ${round}:`, error);
 		}
 	}
 
@@ -191,11 +191,11 @@ export class EvaluationService {
 	}
 
 	private async calculateScore(groundTruthRows: string[][], studentPredictionCsv: string): Promise<number> {
-		const delimiter = CSVHelper.detectStudentPredictionDelimiter(studentPredictionCsv);
+		const delimiter = CSVFileHelper.detectStudentPredictionDelimiter(studentPredictionCsv);
 		if (delimiter !== ",") {
-			throw new BadRequestException("Prediction CSV must use ',' as delimiter.");
+			throw new BadRequestException("Prediction CSV file must use ',' as delimiter.");
 		}
-		const studentPredictionRows = await CSVHelper.parseCsv(studentPredictionCsv, ",");
+		const studentPredictionRows = await CSVFileHelper.parseCsv(studentPredictionCsv, ",");
 		if (groundTruthRows.length !== studentPredictionRows.length) {
 			throw new BadRequestException(
 				`Row count mismatch: Ground truth has ${groundTruthRows.length} rows, student prediction has ${studentPredictionRows.length} rows.`,
@@ -328,7 +328,7 @@ export class EvaluationService {
 					completed_at: new Date(),
 				};
 				await this.evaluationRepo.updateEvaluationStatus(evaluationId, updateDto);
-				await this.writeRoundSummaryCSV(competitionId, round);
+				await this.writeRoundSummaryCSVFile(competitionId, round);
 			} catch (error) {
 				console.error(`[EVALUATION] Failed to update evaluation status to FAILED for ${evaluationId}: ${error}`);
 			}

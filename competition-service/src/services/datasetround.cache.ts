@@ -1,7 +1,7 @@
 import { NotFoundException } from "../errors/notfound.error";
 import { DatasetRepo } from "../repositories/dataset.repository";
 import fs from "fs";
-import { CSVHelper } from "./helper/csv.helper";
+import { CSVFileHelper } from "./helper/csv.helper";
 
 export class DatasetRoundCache {
 	private datasetRepo: DatasetRepo;
@@ -27,7 +27,7 @@ export class DatasetRoundCache {
 		}
 
 		const groundTruthCsv = await fs.promises.readFile(groundTruthDataset.file_path, "utf-8");
-		const groundTruthRows = await CSVHelper.parseCsv(groundTruthCsv);
+		const groundTruthRows = await CSVFileHelper.parseCsv(groundTruthCsv);
 
 		this.cache.set(key, groundTruthRows);
 		this.refreshTtl(key); // Start or reset the TTL timer for this cache entry

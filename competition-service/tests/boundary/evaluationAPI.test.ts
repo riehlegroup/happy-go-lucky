@@ -159,7 +159,7 @@ describe("Evaluation API integration test", () => {
 		expect(response.body.message).toBe("Competition is not currently active");
 	});
 
-	it("should download the input CSV for a valid evaluation token", async () => {
+	it("should download the input CSV file for a valid evaluation token", async () => {
 		// Arrange: Create a submission and evaluation for the test
 		const submissionId = await createTestSubmissionForUser(
 			db,
@@ -190,7 +190,7 @@ describe("Evaluation API integration test", () => {
 		expect(evaluationRecord.started_at).not.toBeNull();
 	});
 
-	it("should return 400 when downloading input CSV with invalid token", async () => {
+	it("should return 400 when downloading input CSV file with invalid token", async () => {
 		const response = await request(app)
 			.get("/evaluations/invalid-token/download")
 			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
@@ -199,7 +199,7 @@ describe("Evaluation API integration test", () => {
 		expect(response.body.message).toBe("No evaluation entry found for the provided token");
 	});
 
-	it("should return 404 when downloading input CSV for existing evaluation with not PENDING status", async () => {
+	it("should return 404 when downloading input CSV file for existing evaluation with not PENDING status", async () => {
 		// Arrange: Create a submission and evaluation for the test
 		const submissionId = await createTestSubmissionForUser(
 			db,
@@ -217,7 +217,7 @@ describe("Evaluation API integration test", () => {
 			"EVALUATED",
 		]);
 
-		// Act: Attempt to download the input CSV
+		// Act: Attempt to download the input CSV file
 		const response = await request(app)
 			.get("/evaluations/" + evaluationToken + "/download")
 			.set("Authorization", `Bearer ${ADMIN_TOKEN}`);
@@ -244,7 +244,7 @@ describe("Evaluation API integration test", () => {
 			[submissionId, 1, evaluationToken, "PENDING", new Date().toISOString(), new Date().toISOString()],
 		);
 
-		// Act: Upload a student prediction CSV
+		// Act: Upload a student prediction CSV file
 		const predictionCsvContent = [
 			"target_cve,target_risk_score", // ground truth of createDatasetsForCompetitionRound
 			"0,0.25",
@@ -302,7 +302,7 @@ describe("Evaluation API integration test", () => {
 			"EVALUATED",
 		]);
 
-		// Act: Attempt to upload a student prediction CSV
+		// Act: Attempt to upload a student prediction CSV file
 		const predictionCsvContent = [
 			"target_cve,target_risk_score",
 			"0,0.25",
@@ -317,7 +317,7 @@ describe("Evaluation API integration test", () => {
 		expect(response.body).toHaveProperty("message");
 		expect(response.body.message).toBe("Evaluation entry is not in the expected status");
 	});
-	it(" when uploading a student prediction with invalid CSV format the error should be in the db record", async () => {
+	it(" when uploading a student prediction with invalid CSV file format the error should be in the db record", async () => {
 		// Arrange: Create a submission and evaluation with PENDING status for the test
 		const submissionId = await createTestSubmissionForUser(
 			db,
@@ -337,7 +337,7 @@ describe("Evaluation API integration test", () => {
 			new Date().toISOString(),
 		]);
 
-		// Act: Attempt to upload an invalid student prediction CSV
+		// Act: Attempt to upload an invalid student prediction CSV file
 		const invalidPredictionCsvContent = [
 			"target_cve", // Missing 'target_risk_score' column
 			"0",
@@ -381,7 +381,7 @@ describe("Evaluation API integration test", () => {
 				new Date(Date.now() - 20 * 60 * 1000).toISOString(),
 			],
 		);
-		// Act: Upload a student prediction CSV
+		// Act: Upload a student prediction CSV file
 		const predictionCsvContent = [
 			"target_cve,target_risk_score",
 			"0,0.25",
@@ -440,7 +440,7 @@ describe("Evaluation API integration test", () => {
 			"Header mismatch in column 1: expected 'target_risk_score', received 'wrong_header'.",
 		);
 	});
-	it("should persist individual student prediction CSV and update round results.csv", async () => {
+	it("should persist individual student prediction CSV files and update round results.csv", async () => {
 		const submissionId = await createTestSubmissionForUser(
 			db,
 			TEST_COMPETITIONS.COMPETITION_1.id,

@@ -84,7 +84,7 @@ const Competition: React.FC = () => {
 				<p>  Example: Base URL required in solution submission field: https://your-api.com ; Health Endpoint: https://your-api.com/health; Prediction Endpoint: https://your-api.com/predict</p> 
 			<p>
 				The API should be deployed and accessible from the internet.
-				For each competition a training dataset will be provided to train your model. In each evaluation round, your API receives a comma-separated input CSV containing a time-series of package metrics (integers or US-format floats with &apos;.&apos;). Your API must return a comma-separated prediction CSV containing the target headers and exactly one row of predicted values (in integer or US float format).
+				For each competition a training dataset will be provided to train your model. In each evaluation round, your API receives a comma-separated value (CSV) file containing a time-series of package metrics (integers or US-format floats with &apos;.&apos;). Your API must return a prediction CSV file containing the target headers and exactly one row of predicted values (in integer or US float format).
 				Your score is calculated as the error between your predicted row and the ground truth row, and is displayed on this page and on the leaderboard. A perfect score is therefore 0.0.
 				To preserve anonymity, you must choose a pseudonym to be displayed on the leaderboard. Please do not use your real name or any personally identifiable information in your pseudonym.
 				Please make sure to follow the submission guidelines and respect the competition rules.

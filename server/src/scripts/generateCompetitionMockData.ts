@@ -15,7 +15,7 @@ const PSEUDONYMS = [
 ];
 
 // Sample CSV payloads for mock datasets
-const DUMMY_TRAIN_CSV = [
+const DUMMY_TRAIN_CSV_FILE = [
   "id,package_name,version,lines_of_code,cyclomatic_complexity,has_vulnerability",
   "1,express,4.18.2,1500,12,0",
   "2,lodash,4.17.21,8000,45,1",
@@ -24,7 +24,7 @@ const DUMMY_TRAIN_CSV = [
   "5,jsonwebtoken,9.0.2,950,8,1"
 ].join("\n");
 
-const DUMMY_INPUT_CSV = [
+const DUMMY_INPUT_CSV_FILE = [
   "id,package_name,version,lines_of_code,cyclomatic_complexity",
   "101,fastify,4.24.0,2100,14",
   "102,moment,2.29.4,4500,38",
@@ -32,7 +32,7 @@ const DUMMY_INPUT_CSV = [
   "104,winston,3.11.0,3800,22"
 ].join("\n");
 
-const DUMMY_GROUND_TRUTH_CSV = [
+const DUMMY_GROUND_TRUTH_CSV_FILE = [
   "has_vulnerability,risk_score",
   "1,0.42"
 ].join("\n");
@@ -139,7 +139,7 @@ async function generateCompetitionMockData(db: Database) {
 
     // A) Training dataset
     const trainFilePath = path.join(uploadsBase, "train_dataset.csv");
-    fs.writeFileSync(trainFilePath, DUMMY_TRAIN_CSV);
+    fs.writeFileSync(trainFilePath, DUMMY_TRAIN_CSV_FILE);
     await db.run(
       `INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name)
        VALUES (?, NULL, 'TRAIN', ?, 'train_dataset.csv')`,
@@ -149,8 +149,8 @@ async function generateCompetitionMockData(db: Database) {
     // B) Round 1 datasets (INPUT & GROUND_TRUTH)
     const r1InputPath = path.join(round1Dir, "round_1_input.csv");
     const r1GtPath = path.join(round1Dir, "round_1_ground_truth.csv");
-    fs.writeFileSync(r1InputPath, DUMMY_INPUT_CSV);
-    fs.writeFileSync(r1GtPath, DUMMY_GROUND_TRUTH_CSV);
+    fs.writeFileSync(r1InputPath, DUMMY_INPUT_CSV_FILE);
+    fs.writeFileSync(r1GtPath, DUMMY_GROUND_TRUTH_CSV_FILE);
 
     await db.run(
       `INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name)
@@ -166,8 +166,8 @@ async function generateCompetitionMockData(db: Database) {
     // C) Round 2 datasets (INPUT & GROUND_TRUTH)
     const r2InputPath = path.join(round2Dir, "round_2_input.csv");
     const r2GtPath = path.join(round2Dir, "round_2_ground_truth.csv");
-    fs.writeFileSync(r2InputPath, DUMMY_INPUT_CSV);
-    fs.writeFileSync(r2GtPath, DUMMY_GROUND_TRUTH_CSV);
+    fs.writeFileSync(r2InputPath, DUMMY_INPUT_CSV_FILE);
+    fs.writeFileSync(r2GtPath, DUMMY_GROUND_TRUTH_CSV_FILE);
 
     await db.run(
       `INSERT INTO competition_datasets (competitionId, round, dataset_type, file_path, file_name)
