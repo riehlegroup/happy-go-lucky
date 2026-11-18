@@ -419,7 +419,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 												</div>
 												<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 													<DatasetUploader
-														label="Input dataset (comma separated CSV)"
+														label="Input dataset (CSV file)"
 														type={DatasetType.INPUT}
 														existingMetadata={inputMetadata}
 														selectedFile={selectedInputFile}
@@ -442,7 +442,7 @@ const CompetitionDialog: React.FC<CompetitionDialogProps> = ({ course, isOpen, o
 														disabled={isActionLoading}
 													/>
 													<DatasetUploader
-														label="Ground truth dataset (comma separated CSV)"
+														label="Ground truth dataset (CSV file)"
 														type={DatasetType.GROUND_TRUTH}
 														existingMetadata={groundTruthMetadata}
 														selectedFile={selectedGroundTruthFile}

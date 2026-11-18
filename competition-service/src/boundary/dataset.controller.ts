@@ -10,7 +10,7 @@ import fs from "fs";
 import { errorResponse, handleError } from "../errors/errorhandling.helper";
 import { BadRequestException } from "../errors/badrequest.error";
 import { z } from "zod";
-import { CSVHelper } from "../services/helper/csv.helper";
+import { CSVFileHelper } from "../services/helper/csv.helper";
 
 
 
@@ -36,7 +36,7 @@ export class DatasetController {
 			const fileName = req.file.originalname;
 			const filePath = req.file.path;
 
-			const delimiter = await CSVHelper.detectDelimiter(filePath);
+			const delimiter = await CSVFileHelper.detectDelimiter(filePath);
 			if(delimiter !== ",") {
 				throw new BadRequestException("Uploaded CSV file does not use ',' as delimiter. Please check the file and try again.");
 			}

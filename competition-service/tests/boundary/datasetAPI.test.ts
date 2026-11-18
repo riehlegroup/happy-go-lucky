@@ -457,7 +457,7 @@ describe("Dataset API Integrationtest", () => {
 		expect(deleteResponse.body).toHaveProperty("message", "Dataset not found");
 	});
 
-	it("should reject non-CSV data uploads via multer and return a 400 error", async () => {
+	it("should reject non-CSV file data uploads via multer and return a 400 error", async () => {
 		const token = generateTestToken(TEST_USERS.ADMIN.id);
 		const competitionId = TEST_COMPETITIONS.COMPETITION_1.id;
 

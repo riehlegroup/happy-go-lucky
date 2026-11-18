@@ -72,11 +72,11 @@ export class EvaluationController {
 			if (Date.now() > deadline) {
 				await this.evaluationService.updateEvaluation(evaluation.id, {
 					status: EvaluationStatus.FAILED,
-					error_message: "Deadline for downloading the input CSV has passed.",
+					error_message: "Deadline for downloading the input CSV file has passed.",
 				});
-				return errorResponse("Deadline for downloading the input CSV has passed.", 410, res);
+				return errorResponse("Deadline for downloading the input CSV file has passed.", 410, res);
 			}
-			console.log(`[EVALUATION] Starting to download input CSV for evaluation with id: ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}`);
+			console.log(`[EVALUATION] Starting to download input CSV file for evaluation with id: ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}`);
 			const inputFilePath = await this.evaluationService.getInputDatasetFilePathForCompetitionAndRound(
 				evaluation.competitionId,
 				evaluation.round,
@@ -94,12 +94,12 @@ export class EvaluationController {
 
 			return res.download(inputFilePath, "input_dataset.csv", (err: any) => {
 				if (err && !res.headersSent) {
-					console.error(`Error downloading input CSV: ${err}`);
-					handleError(err, "Failed to download input CSV", res);
+					console.error(`Error downloading input CSV file: ${err}`);
+					handleError(err, "Failed to download input CSV file", res);
 				}
 			});
 		} catch (error) {
-			handleError(error, "Failed to download input CSV", res);
+			handleError(error, "Failed to download input CSV file", res);
 		}
 	}
 
@@ -119,12 +119,12 @@ export class EvaluationController {
 			const evaluation = await this.evaluationService.requireEvaluationEntryExists(token, EvaluationStatus.PENDING);
 			// check if download endpoint was called before upload endpoint (started_at is set when download endpoint is called)
 			if (!evaluation.started_at) {
-				return errorResponse("Input CSV must be downloaded before uploading predictions", 400, res);
+				return errorResponse("Input CSV file must be downloaded before uploading predictions", 400, res);
 			}
 			console.log(`[EVALUATION] Received submission for evaluation ${evaluation.id}, competitionId: ${evaluation.competitionId}, round: ${evaluation.round}. Enqueueing scoring job.`);
 			const csvString = req.file.buffer.toString("utf-8");
 
-			// Persist original student prediction CSV immediately before enqueueing so it cannot be lost 
+			// Persist original student prediction CSV file immediately before enqueueing so it cannot be lost 
 			await this.evaluationService.storePredictionFile(evaluation, csvString);
 
 			this.scoringQueue.enqueue(() =>
